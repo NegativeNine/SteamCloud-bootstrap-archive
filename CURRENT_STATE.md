@@ -31,7 +31,7 @@ No remote repository or deployed authority was observed. This package defines th
 
 - Campfire is not production-qualified
 - Credential vault and external agents do not exist
-- No operation catalog or live adapters exist
+- No production operation catalog or live adapters exist (this package ships a sample catalog and mock agent only)
 - No deployment or canary evidence exists
 
 ## Snapshot drift

@@ -35,4 +35,4 @@ Steam accounts, credential references/generations, sessions, runtime placement, 
 - Rust+ AuthToken/playerToken, push credentials and active socket objects
 - Signing private keys and product session secrets
 
-These values belong only in browser session storage for the delegated owner flow, or in a dedicated KMS-backed vault/runtime lease for persistent operational accounts.
+These values belong only in browser session storage for the delegated owner flow, or in a dedicated KMS-backed vault/runtime lease for persistent operational accounts. The sample rejects them as JSON object keys using `schemas/forbidden-fields.json`.

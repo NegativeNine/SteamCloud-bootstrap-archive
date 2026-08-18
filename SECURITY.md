@@ -16,6 +16,7 @@ Trust is explicit, external and versioned. A repository cannot manufacture its o
 
 - Least-privilege service identities and per-tenant authorization context.
 - No secrets in logs, queues, manifests, product DTOs, Campfire atoms or Hypergraph facts.
+- Sample JSON object keys are checked against `schemas/forbidden-fields.json` (shared by Node admit/execute and the package validator).
 - Bounded request/response bodies and untrusted allocation counts.
 - Short-lived one-action capabilities with replay protection.
 - Durable idempotency and monotonic resource fencing before external effects.

@@ -14,6 +14,7 @@ The repository consumes or produces only versioned contracts. Shared examples ar
 | `observation-publication/v1` | Publish admitted evidence | Steam Hypergraph |
 | `world-view/v1` | Project current operational state | SteamCloud projector |
 | `dependency-status/v1` | Pin sibling capability evidence | Releasing repository |
+| `forbidden-fields/v1` | Names that must never appear on grants, arguments or domain JSON | SteamCloud |
 
 ## Repository-specific contract rule
 
