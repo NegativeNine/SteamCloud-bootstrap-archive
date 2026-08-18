@@ -1,0 +1,18 @@
+{
+  "schema": "steamcloud.operation-definition/v1",
+  "operation": "steam.account.connect",
+  "version": 1,
+  "risk_class": "R2",
+  "policy_status": "PRIVATE_CANARY",
+  "account_classes": [
+    "CUSTOMER_LINKED",
+    "TEST_CANARY"
+  ],
+  "action_kind": "asf.steam.connect",
+  "credential_kind": "client_refresh_token",
+  "egress_role": "account-session",
+  "retry_class": "RECONCILE_BEFORE_RETRY",
+  "maximum_runtime_seconds": 180,
+  "result_schema": "steamcloud.world-view/v1",
+  "requires_human_approval": true
+}

@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.pyc
+target/
+.env
+.env.*
+!*.example
+coverage/
+dist/

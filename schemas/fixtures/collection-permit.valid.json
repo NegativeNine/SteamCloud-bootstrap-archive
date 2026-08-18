@@ -1,0 +1,18 @@
+{
+  "schema": "steam-hypergraph.collection-permit/v1",
+  "permit_id": "permit_demo",
+  "subject": "steam:76561198000000000",
+  "purpose": "scdb.profile.refresh",
+  "allowed_sources": [
+    "steam_web_api"
+  ],
+  "allowed_scopes": [
+    "profile",
+    "bans"
+  ],
+  "scrape_class": "public",
+  "maximum_calls": 4,
+  "policy_revision": "policy-1",
+  "erasure_epoch": 7,
+  "expires_at": "2026-08-18T16:01:00Z"
+}

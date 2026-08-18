@@ -1,0 +1,13 @@
+{
+  "repository": "NegativeNine/steamcloud",
+  "frozen_sha": "0000000000000000000000000000000000000000",
+  "observed_head_after_snapshot": null,
+  "review_date": "2026-08-18",
+  "acquisition": "GitHub connector static source/document review",
+  "original_commands_executed": false,
+  "finding_ids": [
+    "STEAMCLOUD.BLOCKER-001",
+    "STEAMCLOUD.SECRET-002",
+    "STEAMCLOUD.AGENT-003"
+  ]
+}

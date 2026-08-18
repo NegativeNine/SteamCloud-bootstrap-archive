@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.steamcloud.dev/source-artifact/v1",
+  "title": "SteamCloud source artifact v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "artifact_id",
+    "digest",
+    "content_type",
+    "bytes",
+    "source_surface",
+    "auth_method",
+    "scrape_class",
+    "subject",
+    "permit_id",
+    "credential_fingerprint",
+    "egress_id",
+    "observed_at",
+    "object_ref"
+  ],
+  "properties": {
+    "schema": {
+      "const": "steamcloud.source-artifact/v1"
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "content_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1073741824
+    },
+    "source_surface": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.-]{1,127}$"
+    },
+    "auth_method": {
+      "enum": [
+        "anonymous",
+        "webapi_key",
+        "publisher_key",
+        "openid",
+        "oauth",
+        "owner_web_token",
+        "community_session",
+        "client_refresh_token",
+        "game_auth_code",
+        "session_ticket"
+      ]
+    },
+    "scrape_class": {
+      "enum": [
+        "public",
+        "privileged",
+        "owner_session",
+        "restricted_demo",
+        "publisher",
+        "service_account_self"
+      ]
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^steam:[0-9]{17}$"
+    },
+    "permit_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "credential_fingerprint": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "egress_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "http_status": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 599
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "object_ref": {
+      "type": "string",
+      "pattern": "^(r2|s3|file)://[^\\s]{1,1024}$"
+    },
+    "parser_contract": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

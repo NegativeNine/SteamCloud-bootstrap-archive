@@ -1,0 +1,17 @@
+{
+  "schema": "steamcloud.operation-definition/v1",
+  "operation": "steam.synthetic_gameplay",
+  "version": 1,
+  "risk_class": "R4",
+  "policy_status": "REMOVED",
+  "account_classes": [
+    "TEST_CANARY"
+  ],
+  "action_kind": "asf.removed",
+  "credential_kind": null,
+  "egress_role": null,
+  "retry_class": "NEVER_AUTOMATICALLY_RETRY",
+  "maximum_runtime_seconds": 1,
+  "result_schema": "steamcloud.removed/v1",
+  "requires_human_approval": true
+}

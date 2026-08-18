@@ -1,0 +1,15 @@
+{
+  "schema": "steamcloud.world-view/v1",
+  "account_id": "acct_demo",
+  "tenant_id": "ten_demo",
+  "runtime_state": "online",
+  "steam_state": "logged_on",
+  "web_session_state": "ready",
+  "gc_state": "disconnected",
+  "runtime_id": "runtime_demo",
+  "egress_id": "egress_demo",
+  "runtime_generation": 4,
+  "credential_generation": 2,
+  "active_challenge_id": null,
+  "observed_at": "2026-08-18T16:00:00Z"
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "repository-shape/v1",
+  "repository": "NegativeNine/steamcloud",
+  "display_name": "SteamCloud",
+  "frozen_sha": "0000000000000000000000000000000000000000",
+  "observed_head": null,
+  "review_date": "2026-08-18",
+  "role": "Steam operational and automation domain platform on Campfire",
+  "authority": "Steam accounts, credential references/generations, sessions, runtime placement, egress, bot affinity, collection policies, Steam-specific operation catalog and effect adapters",
+  "maturity": "NEW PROPOSAL / NOT IMPLEMENTED / NOT DEPLOYED",
+  "built_on": "Campfire",
+  "dependencies": [
+    "Campfire",
+    "Steam Hypergraph",
+    "credential vault",
+    "regional execution platform"
+  ],
+  "consumers": [
+    "all product planes"
+  ],
+  "sample_only": true
+}

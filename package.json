@@ -1,0 +1,13 @@
+{
+  "name": "steamcloud-architecture-sample",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/*.js && python3 scripts/validate_repository.py"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

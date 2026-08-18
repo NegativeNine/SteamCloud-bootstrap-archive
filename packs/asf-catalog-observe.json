@@ -1,0 +1,42 @@
+{
+  "schema": "campfire.pack/v1",
+  "profile": "steamcloud",
+  "pack": "asf-catalog-observe",
+  "version": 1,
+  "inputs_schema": "steamcloud.pack-input.catalog/v1",
+  "steps": [
+    {
+      "id": "lease",
+      "kind": "asf.resource.acquire",
+      "needs": [],
+      "resource_keys": [
+        "egress:catalog-pics"
+      ],
+      "on_uncertain": "fail_closed"
+    },
+    {
+      "id": "fetch",
+      "kind": "asf.steam.catalog.fetch",
+      "needs": [
+        "lease"
+      ],
+      "on_uncertain": "reconcile"
+    },
+    {
+      "id": "artifact",
+      "kind": "asf.artifact.put",
+      "needs": [
+        "fetch"
+      ],
+      "on_uncertain": "reconcile"
+    },
+    {
+      "id": "publish",
+      "kind": "asf.hypergraph.publish",
+      "needs": [
+        "artifact"
+      ],
+      "on_uncertain": "reconcile"
+    }
+  ]
+}

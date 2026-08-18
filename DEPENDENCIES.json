@@ -1,0 +1,31 @@
+{
+  "schema": "repository-dependencies/v1",
+  "owner": "NegativeNine/steamcloud",
+  "generated_at": "2026-08-18T16:00:00Z",
+  "dependencies": [
+    {
+      "repository": "NegativeNine/Campfire",
+      "sha": "65ac3dd8992de34e9bce6cdc3696d064b3bcb7d9",
+      "required_status": "QUALIFIED or explicitly accepted lower state",
+      "observed_status": "UNKNOWN in this generated scaffold"
+    },
+    {
+      "repository": "NegativeNine/Steam Hypergraph",
+      "sha": "0000000000000000000000000000000000000000",
+      "required_status": "QUALIFIED or explicitly accepted lower state",
+      "observed_status": "UNKNOWN in this generated scaffold"
+    },
+    {
+      "repository": "NegativeNine/credential vault",
+      "sha": "0000000000000000000000000000000000000000",
+      "required_status": "QUALIFIED or explicitly accepted lower state",
+      "observed_status": "UNKNOWN in this generated scaffold"
+    },
+    {
+      "repository": "NegativeNine/regional execution platform",
+      "sha": "0000000000000000000000000000000000000000",
+      "required_status": "QUALIFIED or explicitly accepted lower state",
+      "observed_status": "UNKNOWN in this generated scaffold"
+    }
+  ]
+}

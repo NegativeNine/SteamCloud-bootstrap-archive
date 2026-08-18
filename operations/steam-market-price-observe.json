@@ -1,0 +1,17 @@
+{
+  "schema": "steamcloud.operation-definition/v1",
+  "operation": "steam.market.price.observe",
+  "version": 1,
+  "risk_class": "R0",
+  "policy_status": "ENABLED",
+  "account_classes": [
+    "PLATFORM_MARKET_COLLECTOR"
+  ],
+  "action_kind": "asf.steam.market.fetch",
+  "credential_kind": "community_session",
+  "egress_role": "market-price",
+  "retry_class": "SAFE",
+  "maximum_runtime_seconds": 30,
+  "result_schema": "steamcloud.source-artifact/v1",
+  "requires_human_approval": false
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "steamcloud.operation-definition/v1",
+  "operation": "steam.gc.self.snapshot",
+  "version": 1,
+  "risk_class": "R2",
+  "policy_status": "VALVE_APPROVAL_REQUIRED",
+  "account_classes": [
+    "PLATFORM_GC_CANARY"
+  ],
+  "action_kind": "asf.steam.gc.query",
+  "credential_kind": "client_refresh_token",
+  "egress_role": "gc-canary",
+  "retry_class": "RECONCILE_BEFORE_RETRY",
+  "maximum_runtime_seconds": 60,
+  "result_schema": "steamcloud.source-artifact/v1",
+  "requires_human_approval": false
+}

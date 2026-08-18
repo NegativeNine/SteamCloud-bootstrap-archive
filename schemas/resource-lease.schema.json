@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.steamcloud.dev/resource-lease/v1",
+  "title": "Campfire resource lease v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "resource_key",
+    "mode",
+    "generation",
+    "fencing_token",
+    "owner_run_id",
+    "owner_work_id",
+    "expires_at"
+  ],
+  "properties": {
+    "schema": {
+      "const": "campfire.resource-lease/v1"
+    },
+    "resource_key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.:-]{2,255}$"
+    },
+    "mode": {
+      "enum": [
+        "shared",
+        "exclusive"
+      ]
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fencing_token": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "owner_run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "owner_work_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "campfire.pack/v1",
+  "profile": "steamcloud",
+  "pack": "asf-account-connect",
+  "version": 1,
+  "inputs_schema": "steamcloud.pack-input.account-connect/v1",
+  "steps": [
+    {
+      "id": "account_lease",
+      "kind": "asf.resource.acquire",
+      "needs": [],
+      "resource_keys": [
+        "steam-account:${account_id}"
+      ],
+      "on_uncertain": "fail_closed"
+    },
+    {
+      "id": "runtime",
+      "kind": "asf.runtime.ensure",
+      "needs": [
+        "account_lease"
+      ],
+      "on_uncertain": "reconcile"
+    },
+    {
+      "id": "credential",
+      "kind": "asf.credential.lease",
+      "needs": [
+        "runtime"
+      ],
+      "resource_keys": [
+        "credential:${credential_ref}"
+      ],
+      "on_uncertain": "fail_closed"
+    },
+    {
+      "id": "connect",
+      "kind": "asf.steam.connect",
+      "needs": [
+        "credential"
+      ],
+      "on_uncertain": "reconcile"
+    },
+    {
+      "id": "challenge",
+      "kind": "asf.challenge.wait",
+      "needs": [
+        "connect"
+      ],
+      "on_uncertain": "wait"
+    }
+  ]
+}
