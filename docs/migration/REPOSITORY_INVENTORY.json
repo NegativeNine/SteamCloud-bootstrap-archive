@@ -1,0 +1,81 @@
+{
+  "schema": "steamcloud.placeholder.repository-inventory.v1",
+  "captured_at": "2026-08-18T22:38:13Z",
+  "repository": {
+    "full_name": "NegativeNine/SteamCloud",
+    "github_id": 1338764433,
+    "visibility": "public",
+    "archived": false,
+    "disabled": false,
+    "default_branch": "main",
+    "head": "069c2448ee3c5e7c352d096494d15e8f120cf433",
+    "created_at": "2026-08-18T19:21:58Z",
+    "description": null,
+    "homepage": null,
+    "topics": [],
+    "license": null
+  },
+  "refs": {
+    "branches": [
+      "main"
+    ],
+    "tags": [],
+    "pull_request_refs": [
+      {
+        "number": 1,
+        "state": "merged",
+        "head": "0b8550eb80995082714773a4390bc8165da26234",
+        "merge_commit": "069c2448ee3c5e7c352d096494d15e8f120cf433"
+      }
+    ]
+  },
+  "github_objects": {
+    "issues": 0,
+    "discussions": 0,
+    "releases": 0,
+    "pull_request_comments": 0,
+    "pull_request_reviews": 0,
+    "pull_request_review_comments": 0,
+    "repository_webhooks": 0,
+    "deploy_keys": 0,
+    "environments": 0,
+    "deployments": 0,
+    "actions_artifacts": 0,
+    "actions_caches": 0,
+    "repository_actions_secrets": 0,
+    "repository_actions_variables": 0,
+    "pages_enabled": false,
+    "wiki_enabled_setting": true,
+    "wiki_content_observed": false,
+    "projects_enabled_setting": true,
+    "projects_v2": "UNKNOWN: inventory token lacked read:project",
+    "public_user_package_count": 0,
+    "private_or_internal_packages": "UNKNOWN: inventory token lacked read:packages"
+  },
+  "workflow_at_reviewed_head": {
+    "id": 337311892,
+    "name": "architecture-sample-ci",
+    "path": ".github/workflows/ci.yml",
+    "state": "active",
+    "runs": 4,
+    "successful_runs": 3,
+    "failed_runs": 1,
+    "disposition": "replace sample commands in place with archive-only validation; preserve original workflow and runs in Git history"
+  },
+  "settings": {
+    "main_branch_protected": false,
+    "rulesets": 0,
+    "actions_enabled": true,
+    "allowed_actions": "all",
+    "workflow_token_default": "read",
+    "secret_scanning": true,
+    "secret_scanning_push_protection": true
+  },
+  "unknown_external_state": [
+    "GitHub App installations and webhook subscriptions outside the repository-hooks API",
+    "external DNS provider records",
+    "external consumers of repository-hosted Actions",
+    "private or internal package ownership and consumers",
+    "repository-linked Projects v2 items and consumers"
+  ]
+}

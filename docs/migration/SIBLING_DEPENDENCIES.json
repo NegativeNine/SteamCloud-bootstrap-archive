@@ -1,0 +1,33 @@
+{
+  "schema": "steamcloud.placeholder.sibling-dependencies.v1",
+  "owner": "NegativeNine/SteamCloud public placeholder",
+  "generated_at": "2026-08-18T22:52:54Z",
+  "runtime_dependencies": [],
+  "note": "This placeholder has no runtime dependency. Entries below are architecture and administrator dependencies only; no deployed state or commit pin is proven by this checkout.",
+  "dependencies": [
+    {
+      "repository": "NegativeNine/Ember",
+      "relationship": "target generic durable data substrate",
+      "reviewed_sha": null,
+      "observed_status": "UNKNOWN"
+    },
+    {
+      "repository": "NegativeNine/Campfire",
+      "relationship": "target generic durable execution system on Ember",
+      "reviewed_sha": null,
+      "observed_status": "UNKNOWN"
+    },
+    {
+      "repository": "NegativeNine/steam-platform",
+      "relationship": "private history-bearing predecessor intended for canonical SteamCloud rename",
+      "reviewed_sha": null,
+      "observed_status": "UNKNOWN"
+    },
+    {
+      "repository": "NegativeNine/steam-hypergraph",
+      "relationship": "history-bearing semantic predecessor intended for SteamGraph rename",
+      "reviewed_sha": null,
+      "observed_status": "UNKNOWN"
+    }
+  ]
+}
