@@ -1,5 +1,22 @@
 # Contributing
 
-The JavaScript sample’s public surface is `src/index.js`. Forbidden field names live in `schemas/forbidden-fields.json`. Contract, authority and roadmap changes require matching documentation, schema fixtures and tests. Do not add credentials, generic upstream proxy fields, user-selected trust roots or hidden fallbacks. A production claim requires evidence, not only source or unit tests.
+This is a public naming placeholder being prepared for archival. Contributions
+must remain documentation-only and must follow the authority map linked from
+the [README](README.md).
 
-Validate with `npm run check` and `npm test`.
+Do not add:
+
+- application code, operational workflows, deployment configuration, schemas,
+  or packages (the archive validator and its CI workflow are the only
+  executable exceptions);
+- private `steam-platform` history or implementation detail;
+- credentials, secret values, secret-looking fixtures, or production data;
+- a generic Steam proxy, arbitrary command surface, or user-selected upstream;
+- claims that a target, reference, shadow, or canary capability is live.
+
+All dependency state not proven from authoritative evidence stays `UNKNOWN`.
+Repository renames, visibility changes, and live authority changes require
+separate administrator authorization.
+
+Use the commands in
+[Acceptance and validation gates](docs/migration/ACCEPTANCE.md) before review.

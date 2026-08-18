@@ -1,86 +1,47 @@
-# SteamCloud
+# SteamCloud naming placeholder
 
-**Proposed rearchitected repository package — not a production deployment.**
+> **CURRENT LIVE:** This public repository is a naming placeholder and owns no
+> runtime, data, credential, execution, or semantic authority. It is not the
+> production SteamCloud implementation.
 
-Provide the operational Steam domain on Campfire, analogous to Steam Hypergraph on Ember.
+The history-bearing implementation remains in the private `steam-platform`
+repository until a separately authorized, history-preserving rename. Do not
+copy operational code, schemas, credentials, secrets, or private history into
+this public repository.
 
-## Platform role
+The administrator target for this repository is
+`SteamCloud-bootstrap-archive`, or another archive name explicitly approved at
+the time of the change. No remote rename, archive operation, visibility change,
+or runtime cutover is performed by this bootstrap.
 
-- Role: Steam operational and automation domain platform on Campfire
-- Authority: Steam accounts, credential references/generations, sessions, runtime placement, egress, bot affinity, collection policies, Steam-specific operation catalog and effect adapters
-- Built on: Campfire
-- Current assessment: NEW PROPOSAL / NOT IMPLEMENTED / NOT DEPLOYED
-- Frozen source SHA: `0000000000000000000000000000000000000000`
+## Status
 
-## Repository shape
+| Status | This repository |
+|---|---|
+| `CURRENT LIVE` | Public naming placeholder only; no runtime authority. |
+| `IMPLEMENTED BUT NOT LIVE` | Archive documentation and validation only; no runtime implementation. |
+| `SHADOW/CANARY` | None observed. |
+| `REFERENCE/PROTOTYPE` | The superseded v1 sample remains recoverable in Git history. |
+| `BLOCKED/NOT QUALIFIED` | Any use as a SteamCloud service, package, schema authority, or deployment. |
+| `TARGET` | Rename this placeholder to an archive name without changing its GitHub Archived setting, then separately rename the private history-bearing repository to `SteamCloud`. |
 
-```text
-CURRENT_STATE.md      frozen production-status assessment
-TARGET_ARCHITECTURE.md
-AUTHORITY_AND_BOUNDARIES.md
-ROADMAP.md
-docs/                 implementation, migration, acceptance, observability, ADRs
-review/               machine-readable adversarial review output
-schemas/              shared cross-repository contracts and fixtures
-operations/           named SteamCloud operation catalog
-packs/                data-only Campfire packs
-profile/              Campfire domain profile
-src/                  JavaScript sample implementation
-test/                 Node conformance tests
-crates/               Rust reference crate
-scripts/              package validator
-.github/workflows/    required CI gates
-MANIFEST.sha256       file integrity manifest
-```
+The deployed state of sibling systems is `UNKNOWN` from this public checkout.
+The architecture package is target guidance, not evidence of implementation or
+qualification.
 
-## Sample implementation
+## Documentation authority
 
-The executable sample is a small in-process Campfire domain. Dependencies point toward policy, not the filesystem.
+- [Authority and boundaries](docs/architecture/AUTHORITY_AND_BOUNDARIES.md)
+- [Observability and correlation vocabulary](docs/architecture/OBSERVABILITY.md)
+- [Placeholder disposition decision](docs/decisions/ADR-002-placeholder-archive-disposition.md)
+- [Migration roadmap](docs/roadmap/MIGRATION_ROADMAP.md)
+- [Administrator handoff](docs/migration/ADMINISTRATOR_HANDOFF.md)
+- [Canonical and legacy aliases](docs/migration/NAMING_ALIASES.json)
+- [Sibling dependency status](docs/migration/SIBLING_DEPENDENCIES.json)
+- [Acceptance and validation gates](docs/migration/ACCEPTANCE.md)
+- [Security and secret placement](docs/security/SECURITY_AND_SECRET_PLACEMENT.md)
+- [Bootstrap report](docs/migration/BOOTSTRAP_REPORT.md)
+- [Placeholder history and provenance](docs/archive/placeholder/README.md)
 
-```text
-src/index.js          public API and mock runtime construction
-src/operations.js     admit, pack compile, argument digest, regional-agent exclusions
-src/secrets.js        forbidden-field policy (reads schemas/forbidden-fields.json)
-src/catalog.js        load operations/ and packs/ from disk
-src/resource-leases.js
-src/mock-agent.js     settlement + idempotent replay
-src/projector.js      WorldView fold
-crates/steamcloud-agent   credential/runtime generation fence
-```
-
-```js
-import {
-  admitOperation,
-  createMockRuntime,
-  loadOperationCatalog,
-} from './src/index.js';
-
-const catalog = loadOperationCatalog();
-const admitted = admitOperation(
-  { operation: 'steam.profile.public.refresh', accountClass: 'PLATFORM_PUBLIC_BOT', arguments: { subject: 'steam:1' } },
-  catalog,
-);
-const { agent, leaseBook } = createMockRuntime();
-```
-
-Policy functions take an explicit catalog. They do not read `operations/` themselves.
-
-## Local validation
-
-```bash
-python3 -m pip install jsonschema PyYAML
-npm run check
-npm test
-```
-
-`npm run check` syntax-checks `src/*.js` and runs `python3 scripts/validate_repository.py` (schemas, review JSON, forbidden-field scan, `MANIFEST.sha256`). `npm test` runs `node --test`.
-
-CI also runs `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`. Those need a Rust toolchain with a C linker (`cc`); `rustc` alone is not enough.
-
-## Read first
-
-1. `CURRENT_STATE.md`
-2. `TARGET_ARCHITECTURE.md`
-3. `AUTHORITY_AND_BOUNDARIES.md`
-4. `ROADMAP.md`
-5. `review/report.json`
+Historical root documents and sample code are non-authoritative. Use the files
+linked above for all current decisions.

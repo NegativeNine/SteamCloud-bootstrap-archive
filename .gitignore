@@ -1,9 +1,9 @@
-node_modules/
-__pycache__/
-*.pyc
-target/
+# The reviewed architecture package is an input, never repository content.
+SteamCloud-SteamGraph-Refined-Architecture-*.zip
+
+# Local/editor residue. This repository intentionally contains no app scaffold.
 .env
 .env.*
-!*.example
-coverage/
-dist/
+__pycache__/
+*.pyc
+.DS_Store
