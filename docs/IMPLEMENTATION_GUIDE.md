@@ -20,6 +20,14 @@
 - Keep secrets in edge session memory or a KMS-backed vault lease only.
 - Every product response names its source, observation time and evidence state.
 
+## Sample module map
+
+- Domain policy lives in `src/operations.js` and `src/secrets.js`. It does not open files.
+- `src/catalog.js` is the only sample module that reads `operations/` and `packs/`.
+- `src/index.js` is the public JavaScript surface and the mock composition root (`createMockRuntime`).
+- The forbidden-field list is `schemas/forbidden-fields.json`; both Node and `scripts/validate_repository.py` load it.
+- `crates/steamcloud-agent` owns credential/runtime generation fencing only. The grant envelope is `schemas/action-grant.schema.json`.
+
 ## First vertical slice
 
 Run four mock-backed packs end-to-end on a qualified Campfire service, then add a public profile collection canary.

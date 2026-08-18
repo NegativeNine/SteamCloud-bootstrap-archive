@@ -6,11 +6,10 @@ Commands in `review/commands.md` were not executed for existing repositories. St
 
 ## Generated sample repository
 
-- Primary local command: `node --test`
-- JSON/schema validation: `python3 scripts/validate_repository.py`
+- Primary local command: `npm test` (`node --test`)
+- Syntax, schema, forbidden-field and manifest validation: `npm run check` (runs `python3 scripts/validate_repository.py`)
 - Manifest validation: included in the same script
-
-- The Rust reference crate is included but was not compiled locally because the environment has no Rust toolchain. CI installs stable Rust and runs `cargo test`.
+- Rust: CI runs `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`. A local `cargo test` needs a C linker (`cc`), not only `rustc`.
 
 ## Required production tests
 

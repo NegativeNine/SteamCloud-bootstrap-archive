@@ -3,6 +3,7 @@
 ## Static gates
 
 - JSON schemas parse and validate positive/negative fixtures.
+- Forbidden object-key names come from `schemas/forbidden-fields.json` and are shared by the Node sample and `scripts/validate_repository.py`.
 - Sample source has no forbidden secret fields or generic proxy command.
 - Dependency and authority documents agree with `REPO-METADATA.json`.
 - Every finding has owner, impact, remediation and runtime-verification flag.

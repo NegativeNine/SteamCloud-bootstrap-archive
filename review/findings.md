@@ -5,7 +5,7 @@
 - Severity: **P0**
 - Confidence: `INFERRED`
 - Category: `production-dependency`
-- Sources: `docs/CURRENT_STATE.md`, `docs/DEPENDENCIES.md`
+- Sources: `CURRENT_STATE.md`, `DEPENDENCIES.md`
 - Claim: SteamCloud is a new Campfire profile and therefore inherits Campfire C1-C5 and Ember trust/durability blockers.
 - Scenario: The new domain is deployed with real Steam credentials or persistent sessions against reference orchestration.
 - Impact: Lost, duplicated or cross-account operations.
@@ -17,7 +17,7 @@
 - Severity: **P1**
 - Confidence: `INFERRED`
 - Category: `credential-custody`
-- Sources: `docs/SECURITY.md`
+- Sources: `SECURITY.md`
 - Claim: The proposed architecture requires Campfire/Ember to hold only references and generations; no production vault integration exists.
 - Scenario: A shortcut stores refresh tokens, passwords, cookies or authenticator secrets in a run, queue or database projection.
 - Impact: Fleet-wide credential compromise.
@@ -29,7 +29,7 @@
 - Severity: **P1**
 - Confidence: `INFERRED`
 - Category: `agent-runtime`
-- Sources: `docs/CURRENT_STATE.md`, `docs/ROADMAP.md`
+- Sources: `CURRENT_STATE.md`, `ROADMAP.md`
 - Claim: The package contains contracts and samples only; no deployed regional agent gateway, scheduler or egress controller exists.
 - Scenario: Two agents own one account or stale action grants execute after reassignment.
 - Impact: Duplicate and cross-account Steam effects.

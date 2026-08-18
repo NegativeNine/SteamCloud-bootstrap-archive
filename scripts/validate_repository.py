@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import json
 import pathlib
-import sys
 from copy import deepcopy
 
 import jsonschema
@@ -59,32 +58,31 @@ def parse_structured_files() -> None:
         for path in ROOT.rglob(pattern):
             yaml.safe_load(path.read_text(encoding='utf-8'))
 
-FORBIDDEN_KEYS = {
-    'steam_password', 'password', 'refresh_token', 'shared_secret',
-    'identity_secret', 'cookie', 'cookies', 'api_key', 'webapi_key',
-    'player_token', 'auth_token', 'pairing_token', 'asf_command',
-    'raw_payload', 'private_key', 'secret_value', 'url', 'hostname',
-    'http_method', 'headers',
-}
+def load_forbidden_keys() -> set[str]:
+    document = load_json(ROOT / 'schemas' / 'forbidden-fields.json')
+    if document.get('schema') != 'steamcloud.forbidden-fields/v1':
+        raise AssertionError('unexpected forbidden-fields schema')
+    return {str(key).lower() for key in document['keys']}
 
-def scan_keys(value, source: pathlib.Path, trail='') -> None:
+def scan_keys(value, source: pathlib.Path, forbidden: set[str], trail='') -> None:
     if isinstance(value, dict):
         for key, child in value.items():
             norm = str(key).lower()
-            if norm in FORBIDDEN_KEYS:
+            if norm in forbidden:
                 raise AssertionError(f'{source}: forbidden high-risk key at {trail}/{key}')
-            scan_keys(child, source, f'{trail}/{key}')
+            scan_keys(child, source, forbidden, f'{trail}/{key}')
     elif isinstance(value, list):
         for idx, child in enumerate(value):
-            scan_keys(child, source, f'{trail}/{idx}')
+            scan_keys(child, source, forbidden, f'{trail}/{idx}')
 
 def scan_domain_json() -> None:
+    forbidden = load_forbidden_keys()
     for dirname in ('operations', 'packs', 'examples'):
         root = ROOT / dirname
         if not root.exists():
             continue
         for path in root.rglob('*.json'):
-            scan_keys(load_json(path), path)
+            scan_keys(load_json(path), path, forbidden)
 
 def is_manifest_subject(rel: str) -> bool:
     if rel == 'MANIFEST.sha256':

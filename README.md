@@ -15,28 +15,67 @@ Provide the operational Steam domain on Campfire, analogous to Steam Hypergraph 
 ## Repository shape
 
 ```text
-docs/                 current state, target architecture, boundaries and roadmap
+CURRENT_STATE.md      frozen production-status assessment
+TARGET_ARCHITECTURE.md
+AUTHORITY_AND_BOUNDARIES.md
+ROADMAP.md
+docs/                 implementation, migration, acceptance, observability, ADRs
 review/               machine-readable adversarial review output
 schemas/              shared cross-repository contracts and fixtures
-src/ or crates/       executable reference/sample implementation
-test/ or tests/       sample conformance tests
+operations/           named SteamCloud operation catalog
+packs/                data-only Campfire packs
+profile/              Campfire domain profile
+src/                  JavaScript sample implementation
+test/                 Node conformance tests
+crates/               Rust reference crate
 scripts/              package validator
 .github/workflows/    required CI gates
 MANIFEST.sha256       file integrity manifest
 ```
 
+## Sample implementation
+
+The executable sample is a small in-process Campfire domain. Dependencies point toward policy, not the filesystem.
+
+```text
+src/index.js          public API and mock runtime construction
+src/operations.js     admit, pack compile, argument digest, regional-agent exclusions
+src/secrets.js        forbidden-field policy (reads schemas/forbidden-fields.json)
+src/catalog.js        load operations/ and packs/ from disk
+src/resource-leases.js
+src/mock-agent.js     settlement + idempotent replay
+src/projector.js      WorldView fold
+crates/steamcloud-agent   credential/runtime generation fence
+```
+
+```js
+import {
+  admitOperation,
+  createMockRuntime,
+  loadOperationCatalog,
+} from './src/index.js';
+
+const catalog = loadOperationCatalog();
+const admitted = admitOperation(
+  { operation: 'steam.profile.public.refresh', accountClass: 'PLATFORM_PUBLIC_BOT', arguments: { subject: 'steam:1' } },
+  catalog,
+);
+const { agent, leaseBook } = createMockRuntime();
+```
+
+Policy functions take an explicit catalog. They do not read `operations/` themselves.
+
 ## Local validation
 
 ```bash
 python3 -m pip install jsonschema PyYAML
-python3 scripts/validate_repository.py
+npm run check
+npm test
 ```
 
-```bash
-node --test
-```
+`npm run check` syntax-checks `src/*.js` and runs `python3 scripts/validate_repository.py` (schemas, review JSON, forbidden-field scan, `MANIFEST.sha256`). `npm test` runs `node --test`.
 
-Rust reference crates, where included, are exercised by GitHub Actions. This generation environment did not contain a Rust toolchain.
+CI also runs `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`. Those need a Rust toolchain with a C linker (`cc`); `rustc` alone is not enough.
 
 ## Read first
 

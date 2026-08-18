@@ -10,13 +10,13 @@
     "claim": "SteamCloud is a new Campfire profile and therefore inherits Campfire C1-C5 and Ember trust/durability blockers.",
     "sources": [
       {
-        "path": "docs/CURRENT_STATE.md",
+        "path": "CURRENT_STATE.md",
         "start_line": null,
         "end_line": null,
         "note": "New repository assessment"
       },
       {
-        "path": "docs/DEPENDENCIES.md",
+        "path": "DEPENDENCIES.md",
         "start_line": null,
         "end_line": null,
         "note": "Blocking dependencies"
@@ -47,7 +47,7 @@
     "claim": "The proposed architecture requires Campfire/Ember to hold only references and generations; no production vault integration exists.",
     "sources": [
       {
-        "path": "docs/SECURITY.md",
+        "path": "SECURITY.md",
         "start_line": null,
         "end_line": null,
         "note": "Target credential boundary"
@@ -77,13 +77,13 @@
     "claim": "The package contains contracts and samples only; no deployed regional agent gateway, scheduler or egress controller exists.",
     "sources": [
       {
-        "path": "docs/CURRENT_STATE.md",
+        "path": "CURRENT_STATE.md",
         "start_line": null,
         "end_line": null,
         "note": "New repository assessment"
       },
       {
-        "path": "docs/ROADMAP.md",
+        "path": "ROADMAP.md",
         "start_line": null,
         "end_line": null,
         "note": "S1-S3"

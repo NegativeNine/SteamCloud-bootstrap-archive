@@ -12,5 +12,6 @@
 
 ## Generated package validation
 
-- See `review/tests.md` and the umbrella `VALIDATION_REPORT.md`.
+- See `review/tests.md`.
+- Current sample commands: `npm test`, `npm run check`.
 
