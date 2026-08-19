@@ -58,7 +58,10 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "docs/archive/placeholder/README.md",
     ARCHIVED_MANIFEST,
     ROOT / "docs/migration/BOOTSTRAP_REPORT.md",
+    ROOT / "docs/migration/CLOSEOUT.json",
+    ROOT / "docs/migration/COORDINATION.json",
     ROOT / "docs/migration/NAMING_ALIASES.json",
+    ROOT / "docs/migration/PROGRAM_LEDGER.json",
     ROOT / "docs/migration/REPOSITORY_INVENTORY.json",
     ROOT / "docs/migration/SIBLING_DEPENDENCIES.json",
     ROOT / "docs/roadmap/PHASE_LEDGER.json",
@@ -165,8 +168,11 @@ def validate_json() -> None:
     paths = sorted((ROOT / "docs").rglob("*.json"))
     parsed = {path.name: load_json(path) for path in paths}
     if set(parsed) != {
+        "CLOSEOUT.json",
+        "COORDINATION.json",
         "NAMING_ALIASES.json",
         "PHASE_LEDGER.json",
+        "PROGRAM_LEDGER.json",
         "REPOSITORY_INVENTORY.json",
         "SIBLING_DEPENDENCIES.json",
     }:
@@ -360,6 +366,9 @@ def validate_json() -> None:
         fail("this_bootstrap Projects v2 state must remain UNKNOWN")
 
     validate_phase_ledger(parsed["PHASE_LEDGER.json"])
+    validate_program_ledger(parsed["PROGRAM_LEDGER.json"])
+    validate_coordination(parsed["COORDINATION.json"])
+    validate_closeout_document(parsed["CLOSEOUT.json"])
 
 
 LEDGER_STATUSES = {
@@ -505,6 +514,190 @@ def validate_phase_ledger(ledger: dict[str, object]) -> None:
             fail(f"phase {phase_id} waves must be {expected_waves}; got {wave_ids}")
     if seen != REQUIRED_PHASE_IDS:
         fail(f"phase ledger must contain {REQUIRED_PHASE_IDS} in order; got {seen}")
+
+
+PROGRAM_LEDGER_FIELDS = [
+    "repository",
+    "canonical_name",
+    "historical_names",
+    "repository_role",
+    "session_or_agent_id",
+    "observed_at",
+    "remote_url",
+    "default_branch",
+    "current_branch",
+    "current_head",
+    "remote_main_head",
+    "working_tree_state",
+    "open_prs",
+    "local_branches",
+    "remote_branches",
+    "latest_release",
+    "deploy_targets",
+    "live_services_or_domains",
+    "repository_prompt",
+    "roadmaps",
+    "roadmap_completion",
+    "architecture_package_status",
+    "architecture_package_digest",
+    "dependency_pins",
+    "dependency_evidence_time",
+    "authorities_currently_claimed",
+    "authorities_currently_consumed",
+    "target_authority",
+    "shared_contract_versions",
+    "schema_versions",
+    "projection_generations",
+    "credential_or_key_ids",
+    "review_status",
+    "ci_status",
+    "test_status",
+    "deployment_status",
+    "production_validation_status",
+    "telemetry_status",
+    "rollback_status",
+    "documentation_status",
+    "branch_cleanup_status",
+    "blockers",
+    "external_dependencies",
+    "requested_peer_actions",
+    "next_local_action",
+    "final_sha",
+    "closeout_status",
+]
+ORCHESTRATION_STATES = {
+    "DISCOVERING",
+    "ACTIVE",
+    "BLOCKED_EXTERNAL",
+    "REVIEW",
+    "DEPLOYING",
+    "INTEGRATION_READY",
+    "LOCAL_COMPLETE",
+    "REOPENED",
+    "ROLLING_BACK",
+}
+COORDINATION_MESSAGE_FIELDS = [
+    "event",
+    "repository",
+    "session",
+    "observed_at",
+    "head",
+    "main_head",
+    "state",
+    "phase",
+    "locks",
+    "authority",
+    "contracts",
+    "dependencies",
+    "blockers",
+    "requested_peer_actions",
+    "evidence",
+    "next_local_action",
+]
+FORBIDDEN_CLOSEOUT_STATES = {
+    "PROGRAM_COMPLETE",
+    "LIVE",
+    "PRODUCTION_QUALIFIED",
+    "LOCAL_COMPLETE",
+    "COMPLETE",
+}
+
+
+def canonical_json_digest(value: dict[str, object], *, omit: str) -> str:
+    payload = {key: item for key, item in value.items() if key != omit}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def validate_program_ledger(ledger: dict[str, object]) -> None:
+    if ledger.get("schema") != "steamcloud.placeholder.program-ledger.v1":
+        fail("program ledger schema mismatch")
+    missing = [field for field in PROGRAM_LEDGER_FIELDS if field not in ledger]
+    if missing:
+        fail(f"program ledger missing fields: {missing}")
+    if ledger.get("repository") != "NegativeNine/SteamCloud":
+        fail("program ledger repository identity drift")
+    if "placeholder" not in str(ledger.get("repository_role", "")).lower():
+        fail("program ledger must identify this repository as a placeholder")
+    if ledger.get("architecture_package_status") != "UNKNOWN":
+        fail("unverified architecture package status must remain UNKNOWN this session")
+    if ledger.get("architecture_package_digest") != "UNKNOWN":
+        fail("unverified architecture package digest must remain UNKNOWN this session")
+    pins = ledger.get("dependency_pins")
+    if not isinstance(pins, dict) or any(value != "UNKNOWN" for value in pins.values()):
+        fail("program ledger sibling pins must remain UNKNOWN")
+    if ledger.get("closeout_status") != "BLOCKED_EXTERNAL":
+        fail("program ledger closeout_status must be BLOCKED_EXTERNAL")
+    if ledger.get("orchestration_state") != "BLOCKED_EXTERNAL":
+        fail("program ledger orchestration_state must be BLOCKED_EXTERNAL")
+    if ledger.get("program_complete") is not False:
+        fail("program ledger must not claim program_complete")
+    if ledger.get("deployment_status") != "none":
+        fail("program ledger must not invent a deployment")
+    if ledger.get("global_communication") != "blocked":
+        fail("program ledger must record blocked global communication")
+
+
+def validate_coordination(record: dict[str, object]) -> None:
+    if record.get("schema") != "steamcloud.placeholder.coordination.v1":
+        fail("coordination record schema mismatch")
+    if record.get("global_communication") != "blocked":
+        fail("coordination record must mark global communication blocked")
+    locks = record.get("locks")
+    if not isinstance(locks, dict) or locks.get("held") != []:
+        fail("placeholder must not hold coordination locks")
+    messages = record.get("messages")
+    if not isinstance(messages, list) or not messages:
+        fail("coordination record must contain outbound messages")
+    events = []
+    for message in messages:
+        if not isinstance(message, dict):
+            fail("coordination message must be an object")
+        missing = [field for field in COORDINATION_MESSAGE_FIELDS if field not in message]
+        if missing:
+            fail(f"coordination message missing fields: {missing}")
+        state = message["state"]
+        if state == "PROGRAM_COMPLETE":
+            fail("coordination must not emit PROGRAM_COMPLETE")
+        if state not in ORCHESTRATION_STATES:
+            fail(f"coordination message has invalid state: {state}")
+        events.append(message["event"])
+        if message.get("repository") != "NegativeNine/SteamCloud":
+            fail("coordination message repository drift")
+    if "REGISTER" not in events or "STATUS" not in events:
+        fail("coordination record must include REGISTER and STATUS")
+    latest = messages[-1]
+    if latest.get("state") != "BLOCKED_EXTERNAL":
+        fail("latest coordination STATUS must be BLOCKED_EXTERNAL")
+
+
+def validate_closeout_document(closeout: dict[str, object]) -> None:
+    if closeout.get("schema") != "steamcloud.placeholder.closeout.v1":
+        fail("closeout schema mismatch")
+    if closeout.get("terminal_state") != "BLOCKED_EXTERNAL":
+        fail("closeout terminal_state must be BLOCKED_EXTERNAL")
+    if closeout.get("closeout_status") != "BLOCKED_EXTERNAL":
+        fail("closeout_status must be BLOCKED_EXTERNAL")
+    if closeout.get("program_complete") is not False:
+        fail("closeout must not claim program_complete")
+    if closeout.get("local_complete") is not False:
+        fail("closeout must not claim local_complete production completion")
+    if closeout.get("integration_ready") is not False:
+        fail("closeout must not claim integration_ready")
+    for field in ("terminal_state", "closeout_status", "orchestration_state"):
+        if closeout.get(field) in FORBIDDEN_CLOSEOUT_STATES:
+            fail(f"closeout {field} must not be a premature completion claim")
+    if closeout.get("architecture_zip_tracked") is not False:
+        fail("closeout must record that the architecture ZIP is not tracked")
+    digest = closeout.get("checksum_sha256")
+    expected = canonical_json_digest(closeout, omit="checksum_sha256")
+    if digest != expected:
+        fail("closeout checksum_sha256 mismatch")
+    markdown = (ROOT / "docs/migration/CLOSEOUT.md").read_text(encoding="utf-8")
+    if "BLOCKED_EXTERNAL" not in markdown:
+        fail("markdown closeout must name BLOCKED_EXTERNAL")
+    if re.search(r"(?m)^program_complete:\s*true$", markdown, re.I):
+        fail("markdown closeout must not emit PROGRAM_COMPLETE")
 
 
 def validate_yaml() -> None:

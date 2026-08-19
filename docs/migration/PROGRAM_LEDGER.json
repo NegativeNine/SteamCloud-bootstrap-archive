@@ -1,0 +1,96 @@
+{
+  "schema": "steamcloud.placeholder.program-ledger.v1",
+  "repository": "NegativeNine/SteamCloud",
+  "canonical_name": "NegativeNine/SteamCloud",
+  "historical_names": [
+    "NegativeNine/SteamCloud public v1 architecture sample"
+  ],
+  "repository_role": "public naming/disposition placeholder; not the history-bearing SteamCloud implementation",
+  "session_or_agent_id": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
+  "observed_at": "2026-08-19T01:52:30Z",
+  "remote_url": "https://github.com/NegativeNine/SteamCloud",
+  "default_branch": "main",
+  "current_branch": "main",
+  "current_head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+  "remote_main_head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+  "working_tree_state": "clean",
+  "open_prs": [],
+  "local_branches": [
+    "main"
+  ],
+  "remote_branches": [
+    "origin/main"
+  ],
+  "latest_release": "UNKNOWN",
+  "deploy_targets": [],
+  "live_services_or_domains": [],
+  "repository_prompt": "Live Repository Finalization Orchestrator Prompt; repository-local orchestrator only",
+  "roadmaps": [
+    "docs/roadmap/MIGRATION_ROADMAP.md",
+    "docs/roadmap/PHASE_LEDGER.json"
+  ],
+  "roadmap_completion": {
+    "phase-0": "COMPLETE",
+    "phase-1": "BLOCKED",
+    "phase-2": "BLOCKED",
+    "phase-3": "BLOCKED",
+    "phase-4": "BLOCKED"
+  },
+  "architecture_package_status": "UNKNOWN",
+  "architecture_package_digest": "UNKNOWN",
+  "architecture_package_digest_expected": "b3103485838efa9bc1e129a6ea24a0ea362ba704fc365fd783b82b3c5c41a1a9",
+  "architecture_package_note": "No copy of SteamCloud-SteamGraph-Refined-Architecture-v2.0.zip was present in this session. Prior bootstrap report recorded a PASS for the expected digest; that prior check is not re-verified here.",
+  "dependency_pins": {
+    "NegativeNine/Ember": "UNKNOWN",
+    "NegativeNine/Campfire": "UNKNOWN",
+    "NegativeNine/steam-platform": "UNKNOWN",
+    "NegativeNine/steam-hypergraph": "UNKNOWN"
+  },
+  "dependency_evidence_time": "2026-08-19T01:52:30Z",
+  "authorities_currently_claimed": [
+    "public naming-placeholder documentation and archive-validation only"
+  ],
+  "authorities_currently_consumed": [],
+  "target_authority": "disposition archive named SteamCloud-bootstrap-archive or another approved archive name; no runtime authority",
+  "shared_contract_versions": "UNKNOWN",
+  "schema_versions": "UNKNOWN",
+  "projection_generations": "UNKNOWN",
+  "credential_or_key_ids": [],
+  "review_status": "archive-validation workflow placeholder-archive-validation",
+  "ci_status": "placeholder-archive-validation success on cb41164 at 2026-08-19T01:10:15Z",
+  "test_status": "python3 scripts/validate_placeholder.py and scripts/test_validate_placeholder.py",
+  "deployment_status": "none",
+  "production_validation_status": "none; this repository is not a production SteamCloud implementation",
+  "telemetry_status": "none",
+  "rollback_status": "revert documentation commits; historical sample at 069c244 remains",
+  "documentation_status": "README-led archive authority; not production-qualified",
+  "branch_cleanup_status": "only main locally and on origin",
+  "blockers": [
+    "BLOCKED_EXTERNAL: administrator export, backup, public-content review, and GitHub rename",
+    "BLOCKED_EXTERNAL: private steam-platform rename and runtime migration",
+    "UNKNOWN: Ember, Campfire, steam-platform, and steam-hypergraph deployed qualification"
+  ],
+  "external_dependencies": [
+    "administrator GitHub authorization",
+    "NegativeNine/steam-platform (UNKNOWN)",
+    "NegativeNine/Ember (UNKNOWN)",
+    "NegativeNine/Campfire (UNKNOWN)",
+    "NegativeNine/steam-hypergraph (UNKNOWN)"
+  ],
+  "requested_peer_actions": [
+    {
+      "peer": "NegativeNine/steam-platform",
+      "request": "Remain the history-bearing implementation. Do not copy private history into this public placeholder. Treat this repository as a disposition name only."
+    },
+    {
+      "peer": "administrator",
+      "request": "Complete backup/export and separately authorize renaming this placeholder off SteamCloud, then renaming steam-platform to SteamCloud while keeping it private."
+    }
+  ],
+  "next_local_action": "maintain archive validator; do not execute rename or build runtime",
+  "final_sha": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+  "closeout_status": "BLOCKED_EXTERNAL",
+  "orchestration_state": "BLOCKED_EXTERNAL",
+  "global_communication": "blocked",
+  "program_complete": false
+}

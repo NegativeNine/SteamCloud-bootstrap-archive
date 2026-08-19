@@ -43,6 +43,9 @@ qualification.
 - [Security and secret placement](docs/security/SECURITY_AND_SECRET_PLACEMENT.md)
 - [Bootstrap report](docs/migration/BOOTSTRAP_REPORT.md)
 - [Roadmap closeout](docs/migration/CLOSEOUT.md)
+- [Machine-readable closeout](docs/migration/CLOSEOUT.json)
+- [Program ledger](docs/migration/PROGRAM_LEDGER.json)
+- [Outbound coordination record](docs/migration/COORDINATION.json)
 - [Placeholder history and provenance](docs/archive/placeholder/README.md)
 
 Historical root documents and sample code are non-authoritative. Use the files

@@ -1,0 +1,32 @@
+{
+  "schema": "steamcloud.placeholder.closeout.v1",
+  "repository": "NegativeNine/SteamCloud",
+  "identity": "public disposition/naming placeholder; not the history-bearing SteamCloud implementation",
+  "terminal_state": "BLOCKED_EXTERNAL",
+  "closeout_status": "BLOCKED_EXTERNAL",
+  "local_complete": false,
+  "integration_ready": false,
+  "program_complete": false,
+  "orchestration_state": "BLOCKED_EXTERNAL",
+  "in_repo_phase_0": "COMPLETE",
+  "admin_disposition_phases": "BLOCKED_EXTERNAL",
+  "sibling_runtime_phase": "BLOCKED_EXTERNAL",
+  "production_authority": "none",
+  "deployment_target": "none",
+  "production_release": null,
+  "architecture_zip_tracked": false,
+  "branch_disposition": "only main locally and on origin",
+  "final_sha": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+  "requested_peer_actions": [
+    "request: steam-platform remain private history-bearing implementation",
+    "request: administrator complete export and authorized rename sequence"
+  ],
+  "not_claimed": [
+    "PROGRAM_COMPLETE",
+    "Campfire cutover",
+    "SteamCloud web/API deploy",
+    "end-to-end production journey",
+    "GitHub rename executed"
+  ],
+  "checksum_sha256": "f17356dbdede90b5af5a545fc2ee77cc19e1da48b40728f225150f536b813f87"
+}

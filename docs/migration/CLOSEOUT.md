@@ -32,10 +32,13 @@ Machine-verifiable status is in
 | phase-3 | Authorize the history-bearing rename | `BLOCKED` | none |
 | phase-4 | Architecture migration in the canonical repository | `BLOCKED` | none |
 
-No Campfire cutover, SteamCloud web/API deploy, Vault broker, Agent Gateway,
+Orchestration terminal state is `BLOCKED_EXTERNAL`. This closeout does not
+claim `LOCAL_COMPLETE`, `INTEGRATION_READY`, or `PROGRAM_COMPLETE`. No
+Campfire cutover, SteamCloud web/API deploy, Vault broker, Agent Gateway,
 or production qualification exists or is claimed here. Phases 1–3 require
 administrator GitHub mutation. Phase 4 belongs in the private history-bearing
-repository.
+repository. The checksummed machine-readable closeout is
+[CLOSEOUT.json](CLOSEOUT.json).
 
 ## Branch and PR disposition
 

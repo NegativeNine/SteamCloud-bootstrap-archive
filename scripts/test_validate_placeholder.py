@@ -16,7 +16,10 @@ from validate_placeholder import (
     load_json,
     main,
     unique_object,
+    validate_closeout_document,
+    validate_coordination,
     validate_phase_ledger,
+    validate_program_ledger,
     validate_structure,
 )
 
@@ -137,6 +140,46 @@ class PlaceholderValidatorTests(unittest.TestCase):
         with self.assertRaises(AssertionError) as ctx:
             validate_phase_ledger(ledger)
         self.assertIn("deployment_target", str(ctx.exception))
+
+    def test_program_ledger_from_tree_is_accepted(self) -> None:
+        validate_program_ledger(load_json(ROOT / "docs/migration/PROGRAM_LEDGER.json"))
+        validate_coordination(load_json(ROOT / "docs/migration/COORDINATION.json"))
+        validate_closeout_document(load_json(ROOT / "docs/migration/CLOSEOUT.json"))
+
+    def test_program_ledger_sibling_pin_is_refused(self) -> None:
+        ledger = load_json(ROOT / "docs/migration/PROGRAM_LEDGER.json")
+        pins = ledger["dependency_pins"]
+        assert isinstance(pins, dict)
+        pins["NegativeNine/Ember"] = "deadbeef"
+        with self.assertRaises(AssertionError) as ctx:
+            validate_program_ledger(ledger)
+        self.assertIn("UNKNOWN", str(ctx.exception))
+
+    def test_closeout_program_complete_is_refused(self) -> None:
+        closeout = load_json(ROOT / "docs/migration/CLOSEOUT.json")
+        closeout["program_complete"] = True
+        with self.assertRaises(AssertionError) as ctx:
+            validate_closeout_document(closeout)
+        self.assertIn("program_complete", str(ctx.exception))
+
+    def test_closeout_local_complete_is_refused(self) -> None:
+        closeout = load_json(ROOT / "docs/migration/CLOSEOUT.json")
+        closeout["terminal_state"] = "LOCAL_COMPLETE"
+        closeout["closeout_status"] = "LOCAL_COMPLETE"
+        with self.assertRaises(AssertionError) as ctx:
+            validate_closeout_document(closeout)
+        self.assertIn("BLOCKED_EXTERNAL", str(ctx.exception))
+
+    def test_coordination_program_complete_is_refused(self) -> None:
+        record = load_json(ROOT / "docs/migration/COORDINATION.json")
+        messages = record["messages"]
+        assert isinstance(messages, list)
+        latest = messages[-1]
+        assert isinstance(latest, dict)
+        latest["state"] = "PROGRAM_COMPLETE"
+        with self.assertRaises(AssertionError) as ctx:
+            validate_coordination(record)
+        self.assertIn("PROGRAM_COMPLETE", str(ctx.exception))
 
 
 if __name__ == "__main__":

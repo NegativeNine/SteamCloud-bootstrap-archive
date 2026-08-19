@@ -34,6 +34,9 @@ or Ember.
     `PRODUCTION_QUALIFIED` / `RETIRED` without a completing commit, and
     keeps administrator rename/export and sibling architecture-migration
     phases from being marked complete, live, or production-qualified.
+11. The program ledger, outbound coordination record, and checksummed
+    closeout exist; global communication is marked blocked; terminal state
+    is `BLOCKED_EXTERNAL`; `PROGRAM_COMPLETE` is not emitted.
 
 ## Local validation commands
 

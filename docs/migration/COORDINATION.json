@@ -1,0 +1,107 @@
+{
+  "schema": "steamcloud.placeholder.coordination.v1",
+  "global_communication": "blocked",
+  "global_communication_reason": "No shared program coordination channel is available. The connected tasks MCP server is a user-automation API, not a peer-orchestrator bus. Outbound messages are recorded here only. Silence from peers is not approval.",
+  "locks": {
+    "held": [],
+    "requested": []
+  },
+  "messages": [
+    {
+      "event": "REGISTER",
+      "repository": "NegativeNine/SteamCloud",
+      "session": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
+      "observed_at": "2026-08-19T01:52:30Z",
+      "head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+      "main_head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+      "state": "DISCOVERING",
+      "phase": "phase-0-complete; phases-1-4-blocked",
+      "locks": {
+        "held": [],
+        "requested": []
+      },
+      "authority": {
+        "current": [
+          "public naming-placeholder documentation"
+        ],
+        "target": [
+          "disposition archive; no runtime"
+        ]
+      },
+      "contracts": {
+        "produced": [],
+        "consumed": []
+      },
+      "dependencies": {
+        "satisfied": [],
+        "stale": [],
+        "unknown": [
+          "NegativeNine/Ember",
+          "NegativeNine/Campfire",
+          "NegativeNine/steam-platform",
+          "NegativeNine/steam-hypergraph"
+        ]
+      },
+      "blockers": [
+        "no global coordination channel"
+      ],
+      "requested_peer_actions": [],
+      "evidence": [
+        "origin https://github.com/NegativeNine/SteamCloud",
+        "README states it is not the production SteamCloud implementation"
+      ],
+      "next_local_action": "publish STATUS after identity confirmation"
+    },
+    {
+      "event": "STATUS",
+      "repository": "NegativeNine/SteamCloud",
+      "session": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
+      "observed_at": "2026-08-19T01:52:30Z",
+      "head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+      "main_head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+      "state": "BLOCKED_EXTERNAL",
+      "phase": "disposition-placeholder; admin-rename and sibling-runtime blocked",
+      "locks": {
+        "held": [],
+        "requested": []
+      },
+      "authority": {
+        "current": [
+          "none for runtime, credentials, execution, or semantics"
+        ],
+        "target": [
+          "SteamCloud-bootstrap-archive or other approved archive name"
+        ]
+      },
+      "contracts": {
+        "produced": [],
+        "consumed": []
+      },
+      "dependencies": {
+        "satisfied": [],
+        "stale": [],
+        "unknown": [
+          "NegativeNine/Ember",
+          "NegativeNine/Campfire",
+          "NegativeNine/steam-platform",
+          "NegativeNine/steam-hypergraph"
+        ]
+      },
+      "blockers": [
+        "BLOCKED_EXTERNAL administrator export/rename",
+        "BLOCKED_EXTERNAL sibling runtime qualification UNKNOWN"
+      ],
+      "requested_peer_actions": [
+        {
+          "peer": "NegativeNine/steam-platform",
+          "kind": "request",
+          "action": "Keep private history-bearing implementation; do not import into this public placeholder."
+        }
+      ],
+      "evidence": [
+        "git remotes, README, PHASE_LEDGER.json, SIBLING_DEPENDENCIES.json"
+      ],
+      "next_local_action": "land orchestration ledger; do not execute GitHub rename or emit PROGRAM_COMPLETE"
+    }
+  ]
+}
