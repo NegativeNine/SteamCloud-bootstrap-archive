@@ -1,7 +1,9 @@
 # Migration Roadmap
 
 **Document status:** Current dependency- and evidence-driven plan. Dates do not
-advance phases; only the stated gates do.
+advance phases; only the stated gates do. Machine-verifiable phase and wave
+status lives in [PHASE_LEDGER.json](PHASE_LEDGER.json). That ledger is the
+status authority; this document is the narrative plan.
 
 ## Status vocabulary
 
@@ -12,8 +14,10 @@ defined in the
 
 ## Phase 0 — Placeholder bootstrap
 
-**Status:** `IMPLEMENTED BUT NOT LIVE` until this documentation change is
-reviewed and merged. It changes no runtime authority.
+**Status:** documentation `IMPLEMENTED BUT NOT LIVE`; ledger
+`VALIDATED_NOT_LIVE` until the 2026-08-19 refresh and phase ledger land on
+`origin/main`. The PR #2 archive handoff (`541ff22`) is already on `main`.
+This phase still changes no runtime authority.
 
 Work:
 

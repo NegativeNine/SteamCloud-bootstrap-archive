@@ -29,19 +29,23 @@ or Ember.
 8. Alias, dependency, security, observability, rollback, and administrator
    gates are present.
 9. `git diff --check` and repository integrity checks pass.
+10. The phase ledger covers Phases 0–4, refuses `COMPLETE` without a
+    completing commit, and keeps administrator rename/export and sibling
+    architecture-migration phases from being marked complete.
 
 ## Local validation commands
 
 Run from the repository root. The validator checks the exact file allowlist,
 JSON syntax and semantics, YAML triggers/permissions, Markdown paths and
-anchors, status vocabulary, v1 ancestry/content parity, absence of the ZIP and
-sample scaffold, and high-confidence secret patterns across every allowed
-file.
+anchors, status vocabulary, phase-ledger field and status rules, v1
+ancestry/content parity, absence of the ZIP and sample scaffold, and
+high-confidence secret patterns across every allowed file.
 
 ```bash
 set -euo pipefail
 python3 -c 'import yaml; assert yaml.__version__ == "6.0.3"'
 python3 scripts/validate_placeholder.py
+python3 scripts/test_validate_placeholder.py
 git diff --check
 git diff --cached --check
 git fsck --full
@@ -49,8 +53,9 @@ git fsck --full
 
 Install the pinned validation-only prerequisite with
 `python3 -m pip install PyYAML==6.0.3` if it is unavailable. CI installs that
-exact version, runs the validator, checks the committed diff, and runs Git
-integrity validation with a full-history checkout.
+exact version, runs the validator, runs the validator's failure-path tests,
+checks the committed diff, and runs Git integrity validation with a
+full-history checkout.
 
 The final tree contains no application source package, generated contract, or
 schema, so application lint, type-check, schema parity, and runtime tests are

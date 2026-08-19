@@ -54,6 +54,12 @@ ProductRequestId
   -> ProjectionGeneration
 ```
 
+Target OpenTelemetry service names include `ember-campfire`,
+`ember-steamgraph`, `campfire-api`, `campfire-scheduler`,
+`steamcloud-control`, `steamcloud-edge-bff`, `steamcloud-agent-gateway`,
+`steamcloud-agent-host`, `steamcloud-auth-runner`, `steamcloud-scraper`,
+`steamgraph-api`, `steamgraph-cdc`, and `steamgraph-projector`.
+
 Target OpenTelemetry attributes include `campfire.run.id`,
 `campfire.work.id`, `campfire.action_intent.id`, `campfire.attempt.id`,
 `steamcloud.operation.name`, opaque SteamCloud resource IDs and generations,

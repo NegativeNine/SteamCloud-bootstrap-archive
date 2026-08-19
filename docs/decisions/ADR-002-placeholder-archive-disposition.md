@@ -1,6 +1,7 @@
 # ADR-002: Preserve the Populated Placeholder as Archive History
 
-**Decision status:** Accepted for this bootstrap on 2026-08-18.
+**Decision status:** Accepted for this bootstrap on 2026-08-18; still accepted
+after the 2026-08-19 discovery refresh on merged PR #2.
 
 **Runtime status:** `CURRENT LIVE` naming placeholder;
 `REFERENCE/PROTOTYPE` historical sample; `TARGET` administrator rename.

@@ -35,6 +35,7 @@ qualification.
 - [Observability and correlation vocabulary](docs/architecture/OBSERVABILITY.md)
 - [Placeholder disposition decision](docs/decisions/ADR-002-placeholder-archive-disposition.md)
 - [Migration roadmap](docs/roadmap/MIGRATION_ROADMAP.md)
+- [Phase ledger](docs/roadmap/PHASE_LEDGER.json)
 - [Administrator handoff](docs/migration/ADMINISTRATOR_HANDOFF.md)
 - [Canonical and legacy aliases](docs/migration/NAMING_ALIASES.json)
 - [Sibling dependency status](docs/migration/SIBLING_DEPENDENCIES.json)
@@ -45,3 +46,9 @@ qualification.
 
 Historical root documents and sample code are non-authoritative. Use the files
 linked above for all current decisions.
+
+## Validation
+
+The only executable in this tree is the archive validator and its tests. They
+do not deploy, qualify, or operate SteamCloud. Commands are listed in
+[Acceptance and validation gates](docs/migration/ACCEPTANCE.md).

@@ -26,10 +26,20 @@ or change visibility.
 ## Reviewed public-placeholder state
 
 The detailed machine-readable snapshot is in
-[REPOSITORY_INVENTORY.json](REPOSITORY_INVENTORY.json). At the reviewed base
-HEAD, the repository had one branch, no tags/releases/issues, merged PR #1, one
-active sample CI workflow with four historical runs, no repository webhooks,
-no Pages site, no environments/deployments, and no public user package. Private
+[REPOSITORY_INVENTORY.json](REPOSITORY_INVENTORY.json). That file keeps two
+distinct observations:
+
+- `repository.head` remains the v1 sample tip `069c244` (PR #1), because that
+  is the unique content that must survive as provenance.
+- `archive_handoff.head` is the merged PR #2 archive-handoff tip `541ff22`,
+  which is the current published tree before later uncommitted bootstrap
+  refreshes.
+
+At the v1 snapshot the repository had one branch, no tags/releases/issues,
+merged PR #1, and the sample CI workflow. At the 2026-08-19 refresh the
+published HEAD was `541ff22`, PR #2 was merged, the active workflow name was
+`placeholder-archive-validation`, and there were still no tags, releases,
+issues, repository webhooks, Pages site, environments, or deployments. Private
 or internal package state and external integration state remain `UNKNOWN`.
 
 Re-run every inventory immediately before the administrator action; this is a

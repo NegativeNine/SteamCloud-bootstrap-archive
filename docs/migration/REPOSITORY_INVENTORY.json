@@ -1,6 +1,7 @@
 {
   "schema": "steamcloud.placeholder.repository-inventory.v1",
   "captured_at": "2026-08-18T22:38:13Z",
+  "snapshot_scope": "v1 sample tip immediately before the archive handoff; not the current branch tip",
   "repository": {
     "full_name": "NegativeNine/SteamCloud",
     "github_id": 1338764433,
@@ -77,5 +78,41 @@
     "external consumers of repository-hosted Actions",
     "private or internal package ownership and consumers",
     "repository-linked Projects v2 items and consumers"
-  ]
+  ],
+  "archive_handoff": {
+    "captured_at": "2026-08-19T00:25:11Z",
+    "head": "541ff226a963ffa9acc1fcc6062b6878c2832592",
+    "tree": "967d1cac973e3b2bfc537a0ff4939141b6cc272b",
+    "pull_request": 2,
+    "pr_head": "7eba30fc96c939a669d92e24694b699d749f0bd0",
+    "merge_commit": "541ff226a963ffa9acc1fcc6062b6878c2832592",
+    "workflow_id": 337311892,
+    "workflow_name": "placeholder-archive-validation",
+    "note": "Merged archive-handoff state. Distinct from repository.head, which remains the v1 sample snapshot."
+  },
+  "this_bootstrap": {
+    "captured_at": "2026-08-19T00:25:11Z",
+    "pre_edit_head": "541ff226a963ffa9acc1fcc6062b6878c2832592",
+    "pre_edit_status": "clean working tree, up to date with origin/main",
+    "branch": "main",
+    "tags": [],
+    "remote": "https://github.com/NegativeNine/SteamCloud",
+    "issues": 0,
+    "discussions": 0,
+    "releases": 0,
+    "repository_webhooks": 0,
+    "deploy_keys": 0,
+    "environments": 0,
+    "deployments": 0,
+    "actions_artifacts": 0,
+    "actions_caches": 0,
+    "repository_actions_secrets": 0,
+    "repository_actions_variables": 0,
+    "pages_enabled": false,
+    "wiki_enabled_setting": true,
+    "projects_enabled_setting": true,
+    "public_workflow_runs_observed": 7,
+    "projects_v2": "UNKNOWN: inventory token lacked read:project",
+    "private_or_internal_packages": "UNKNOWN: inventory token lacked read:packages"
+  }
 }

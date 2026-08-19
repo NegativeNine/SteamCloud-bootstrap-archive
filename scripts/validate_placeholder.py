@@ -17,11 +17,18 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "069c2448ee3c5e7c352d096494d15e8f120cf433"
+ARCHIVE_HANDOFF = "541ff226a963ffa9acc1fcc6062b6878c2832592"
 BASE_MANIFEST_SHA256 = (
     "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e6aedc3e2b4"
 )
+PACKAGE_DIGEST = "b3103485838efa9bc1e129a6ea24a0ea362ba704fc365fd783b82b3c5c41a1a9"
+PACKAGE_VERSION = "2.0.0-draft"
 ARCHIVED_MANIFEST = ROOT / "docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256"
 ARCHITECTURE_ZIP = ROOT / "SteamCloud-SteamGraph-Refined-Architecture-v2.0.zip"
+README_NOT_PRODUCTION = "It is not the production SteamCloud implementation."
+NO_LIVE_AUTHORITY_SENTENCE = (
+    "No live authority, remote repository, visibility, or production secret was changed."
+)
 
 STATUS_VOCABULARY = {
     "CURRENT LIVE",
@@ -53,13 +60,19 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "docs/migration/NAMING_ALIASES.json",
     ROOT / "docs/migration/REPOSITORY_INVENTORY.json",
     ROOT / "docs/migration/SIBLING_DEPENDENCIES.json",
+    ROOT / "docs/roadmap/PHASE_LEDGER.json",
+    ROOT / "scripts/test_validate_placeholder.py",
     ROOT / "scripts/validate_placeholder.py",
 ]
 
 FORBIDDEN_PATHS = [
     ".github/workflows/architecture-sample-ci.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
     "Cargo.toml",
     "MANIFEST.sha256",
+    "NEW_ROADMAP.md",
+    "TARGET_ARCHITECTURE_2.md",
     "package.json",
     "crates",
     "operations",
@@ -87,27 +100,41 @@ def fail(message: str) -> None:
     raise AssertionError(message)
 
 
+def squashed(text: str) -> str:
+    cleaned = [re.sub(r"^>\s?", "", line) for line in text.splitlines()]
+    return re.sub(r"\s+", " ", "\n".join(cleaned))
+
+
+def git_paths(args: list[str]) -> set[Path]:
+    output = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+    ).stdout
+    return {Path(name.decode()) for name in output.split(b"\0") if name}
+
+
 def validate_structure() -> None:
     missing = [str(path.relative_to(ROOT)) for path in REQUIRED_FILES if not path.is_file()]
     if missing:
         fail(f"missing required files: {missing}")
     if ARCHITECTURE_ZIP.exists():
         fail(f"architecture ZIP must be removed: {ARCHITECTURE_ZIP.name}")
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    if "SteamCloud-SteamGraph-Refined-Architecture-*.zip" not in gitignore:
+        fail(".gitignore must ignore the architecture ZIP glob")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    if README_NOT_PRODUCTION not in squashed(readme):
+        fail("README must state this is not the production SteamCloud implementation")
     for relative in FORBIDDEN_PATHS:
         if (ROOT / relative).exists():
             fail(f"superseded application/sample path remains: {relative}")
 
     expected = {path.relative_to(ROOT) for path in REQUIRED_FILES}
-    actual: set[Path] = set()
-    for top_level in ROOT.iterdir():
-        if top_level.name == ".git":
-            continue
-        if top_level.is_file():
-            actual.add(top_level.relative_to(ROOT))
-        elif top_level.is_dir():
-            actual.update(
-                path.relative_to(ROOT) for path in top_level.rglob("*") if path.is_file()
-            )
+    actual = git_paths(["ls-files", "-z"]) | git_paths(
+        ["ls-files", "-z", "-o", "--exclude-standard"]
+    )
     if actual != expected:
         fail(
             "current-tree file drift: "
@@ -138,6 +165,7 @@ def validate_json() -> None:
     parsed = {path.name: load_json(path) for path in paths}
     if set(parsed) != {
         "NAMING_ALIASES.json",
+        "PHASE_LEDGER.json",
         "REPOSITORY_INVENTORY.json",
         "SIBLING_DEPENDENCIES.json",
     }:
@@ -308,6 +336,143 @@ def validate_json() -> None:
     if not str(github_objects.get("projects_v2", "")).startswith("UNKNOWN:"):
         fail("unverified Projects v2 state must remain UNKNOWN")
 
+    handoff = inventory.get("archive_handoff")
+    if not isinstance(handoff, dict):
+        fail("archive_handoff observation missing")
+    if handoff.get("head") != ARCHIVE_HANDOFF or handoff.get("pull_request") != 2:
+        fail("archive handoff identity drift")
+    if handoff.get("workflow_name") != "placeholder-archive-validation":
+        fail("archive handoff workflow is not archive-validation only")
+
+    bootstrap = inventory.get("this_bootstrap")
+    if not isinstance(bootstrap, dict):
+        fail("this_bootstrap observation missing")
+    if bootstrap.get("pre_edit_head") != ARCHIVE_HANDOFF:
+        fail("this_bootstrap pre-edit HEAD drift")
+    if bootstrap.get("pages_enabled") is not False:
+        fail("this_bootstrap must record that GitHub Pages is not enabled")
+    if bootstrap.get("repository_webhooks") != 0:
+        fail("this_bootstrap webhook inventory drift")
+    if not str(bootstrap.get("private_or_internal_packages", "")).startswith("UNKNOWN:"):
+        fail("this_bootstrap private package state must remain UNKNOWN")
+    if not str(bootstrap.get("projects_v2", "")).startswith("UNKNOWN:"):
+        fail("this_bootstrap Projects v2 state must remain UNKNOWN")
+
+    validate_phase_ledger(parsed["PHASE_LEDGER.json"])
+
+
+LEDGER_STATUSES = {
+    "NOT_STARTED",
+    "IN_PROGRESS",
+    "IMPLEMENTED_NOT_VALIDATED",
+    "VALIDATED_NOT_LIVE",
+    "SHADOW",
+    "CANARY",
+    "BLOCKED",
+    "COMPLETE",
+    "PRODUCTION_QUALIFIED",
+    "RETIRED",
+}
+TERMINAL_DONE = {"COMPLETE", "PRODUCTION_QUALIFIED", "RETIRED"}
+ADMIN_OR_SIBLING_PHASES = {"phase-1", "phase-2", "phase-3", "phase-4"}
+REQUIRED_PHASE_IDS = ["phase-0", "phase-1", "phase-2", "phase-3", "phase-4"]
+REQUIRED_LEDGER_FIELDS = {
+    "id",
+    "title",
+    "dependencies",
+    "status",
+    "implemented_scope",
+    "missing_scope",
+    "acceptance_criteria",
+    "tests_and_evidence_required",
+    "production_or_migration_risk",
+    "rollback_path",
+    "completing_commit",
+    "date_completed",
+    "remaining_blockers",
+}
+
+
+def validate_ledger_entry(entry: object, kind: str) -> dict[str, object]:
+    if not isinstance(entry, dict):
+        fail(f"{kind} entry must be an object")
+    missing = REQUIRED_LEDGER_FIELDS.difference(entry)
+    if missing:
+        fail(f"{kind} {entry.get('id')} missing fields: {sorted(missing)}")
+    status = entry["status"]
+    if status not in LEDGER_STATUSES:
+        fail(f"{kind} {entry['id']} has invalid status: {status}")
+    if not isinstance(entry["dependencies"], list):
+        fail(f"{kind} {entry['id']} dependencies must be a list")
+    if not isinstance(entry["acceptance_criteria"], list):
+        fail(f"{kind} {entry['id']} acceptance_criteria must be a list")
+    if not isinstance(entry["tests_and_evidence_required"], list):
+        fail(f"{kind} {entry['id']} tests_and_evidence_required must be a list")
+    if not isinstance(entry["remaining_blockers"], list):
+        fail(f"{kind} {entry['id']} remaining_blockers must be a list")
+    if not entry["tests_and_evidence_required"]:
+        fail(f"{kind} {entry['id']} missing evidence field")
+
+    commit = entry["completing_commit"]
+    completed = entry["date_completed"]
+    if status in TERMINAL_DONE:
+        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+            fail(f"{kind} {entry['id']} terminal status requires completing_commit")
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
+            cwd=ROOT,
+            check=True,
+        )
+        if not isinstance(completed, str) or not completed:
+            fail(f"{kind} {entry['id']} terminal status requires date_completed")
+    elif commit is not None:
+        fail(f"{kind} {entry['id']} non-terminal status must not claim completing_commit")
+    return entry
+
+
+def validate_phase_ledger(ledger: dict[str, object]) -> None:
+    if ledger.get("schema") != "steamcloud.placeholder.phase-ledger.v1":
+        fail("phase ledger schema mismatch")
+    vocabulary = ledger.get("status_vocabulary")
+    if not isinstance(vocabulary, list) or set(vocabulary) != LEDGER_STATUSES:
+        fail("phase ledger status vocabulary drift")
+
+    phases = ledger.get("phases")
+    if not isinstance(phases, list):
+        fail("phase ledger phases must be a list")
+    seen: list[str] = []
+    for phase in phases:
+        record = validate_ledger_entry(phase, "phase")
+        phase_id = record["id"]
+        if not isinstance(phase_id, str):
+            fail("phase id must be a string")
+        if phase_id in seen:
+            fail(f"duplicate phase id: {phase_id}")
+        seen.append(phase_id)
+        if phase_id in ADMIN_OR_SIBLING_PHASES and record["status"] in TERMINAL_DONE:
+            fail(f"{phase_id} must not be marked complete in this placeholder")
+        if phase_id in ADMIN_OR_SIBLING_PHASES and record["status"] != "BLOCKED":
+            fail(f"{phase_id} must remain BLOCKED until its external unblocking condition")
+        waves = record.get("waves", [])
+        if not isinstance(waves, list):
+            fail(f"phase {phase_id} waves must be a list")
+        wave_ids: set[str] = set()
+        for wave in waves:
+            wave_record = validate_ledger_entry(wave, "wave")
+            wave_id = wave_record["id"]
+            if not isinstance(wave_id, str):
+                fail("wave id must be a string")
+            if wave_id in wave_ids:
+                fail(f"duplicate wave id: {wave_id}")
+            wave_ids.add(wave_id)
+            if (
+                phase_id in ADMIN_OR_SIBLING_PHASES
+                and wave_record["status"] in TERMINAL_DONE
+            ):
+                fail(f"{wave_id} must not be marked complete in this placeholder")
+    if seen != REQUIRED_PHASE_IDS:
+        fail(f"phase ledger must contain {REQUIRED_PHASE_IDS} in order; got {seen}")
+
 
 def validate_yaml() -> None:
     workflow = ROOT / ".github/workflows/ci.yml"
@@ -319,6 +484,15 @@ def validate_yaml() -> None:
         fail("archive validation workflow trigger drift")
     if parsed.get("permissions") != {"contents": "read"}:
         fail("archive validation workflow permissions must be read-only")
+    jobs = parsed.get("jobs", {})
+    if set(jobs) != {"validate"}:
+        fail("archive validation workflow must contain only the validate job")
+    forbidden_jobs = {"deploy", "release", "publish", "production"}
+    if forbidden_jobs.intersection(jobs):
+        fail("archive validation workflow must not contain production jobs")
+    workflow_text = workflow.read_text(encoding="utf-8")
+    if "production SteamCloud implementation" in workflow_text:
+        fail("archive validation workflow claims production SteamCloud identity")
     steps = parsed.get("jobs", {}).get("validate", {}).get("steps", [])
     checkout = next(
         (step for step in steps if str(step.get("uses", "")).startswith("actions/checkout@")),
@@ -367,12 +541,38 @@ def validate_markdown_links_and_statuses() -> None:
             fail(f"{path.relative_to(ROOT)} omits status vocabulary: {missing}")
 
 
+def validate_bootstrap_report() -> None:
+    text = (ROOT / "docs/migration/BOOTSTRAP_REPORT.md").read_text(encoding="utf-8")
+    required = [
+        PACKAGE_DIGEST,
+        PACKAGE_VERSION,
+        ARCHIVE_HANDOFF,
+        BASE,
+        "NegativeNine/SteamCloud",
+        "SteamCloud-bootstrap-archive",
+        "CURRENT LIVE",
+        "IMPLEMENTED BUT NOT LIVE",
+        "SHADOW/CANARY",
+        "REFERENCE/PROTOTYPE",
+        "BLOCKED/NOT QUALIFIED",
+        "TARGET",
+        NO_LIVE_AUTHORITY_SENTENCE,
+        "Ember",
+        "Campfire",
+        "SteamGraph",
+    ]
+    missing = [item for item in required if item not in text]
+    if missing:
+        fail(f"bootstrap report missing required evidence: {missing}")
+
+
 def validate_archive_provenance() -> None:
-    subprocess.run(
-        ["git", "merge-base", "--is-ancestor", BASE, "HEAD"],
-        cwd=ROOT,
-        check=True,
-    )
+    for commit in (BASE, ARCHIVE_HANDOFF):
+        subprocess.run(
+            ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
+            cwd=ROOT,
+            check=True,
+        )
     manifest_bytes = ARCHIVED_MANIFEST.read_bytes()
     archive_bytes = subprocess.run(
         ["git", "archive", "--format=tar", BASE],
@@ -430,6 +630,7 @@ def main() -> int:
     validate_json()
     validate_yaml()
     validate_markdown_links_and_statuses()
+    validate_bootstrap_report()
     validate_archive_provenance()
     validate_secret_patterns()
     print("placeholder archive validation passed")

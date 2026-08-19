@@ -20,3 +20,6 @@ separate administrator authorization.
 
 Use the commands in
 [Acceptance and validation gates](docs/migration/ACCEPTANCE.md) before review.
+That currently means `python3 scripts/validate_placeholder.py` and
+`python3 scripts/test_validate_placeholder.py` after the pinned PyYAML
+validation dependency is available.

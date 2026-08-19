@@ -1,0 +1,319 @@
+{
+  "schema": "steamcloud.placeholder.phase-ledger.v1",
+  "document_status": "machine-verifiable companion to docs/roadmap/MIGRATION_ROADMAP.md",
+  "owner": "NegativeNine/SteamCloud public placeholder",
+  "generated_at": "2026-08-19T01:10:00Z",
+  "authority_note": "This ledger records in-repo placeholder-roadmap status only. It does not qualify Ember, Campfire, SteamCloud, or SteamGraph runtime. Sibling state remains UNKNOWN.",
+  "status_vocabulary": [
+    "NOT_STARTED",
+    "IN_PROGRESS",
+    "IMPLEMENTED_NOT_VALIDATED",
+    "VALIDATED_NOT_LIVE",
+    "SHADOW",
+    "CANARY",
+    "BLOCKED",
+    "COMPLETE",
+    "PRODUCTION_QUALIFIED",
+    "RETIRED"
+  ],
+  "phases": [
+    {
+      "id": "phase-0",
+      "title": "Placeholder bootstrap",
+      "dependencies": [],
+      "status": "VALIDATED_NOT_LIVE",
+      "implemented_scope": "README-led documentation authority; v1 sample preserved in Git history and docs/archive/placeholder; sample/application material removed from the branch tip; aliases, sibling UNKNOWN pins, inventory, security, observability, acceptance, and administrator handoff; architecture ZIP absent; archive validator and failure-path tests; 2026-08-19 bootstrap refresh prepared.",
+      "missing_scope": "Landing the 2026-08-19 refresh and this ledger on origin/main. No runtime work remains in this repository.",
+      "acceptance_criteria": [
+        "README links to one documentation authority and states this is not the production SteamCloud implementation",
+        "relative Markdown links resolve",
+        "JSON authorities parse with explicit statuses",
+        "v1 sample at 069c244 matches the archived SHA-256 manifest",
+        "no application scaffold, operational workflow, or architecture ZIP in the current tree",
+        "no high-confidence secret pattern in allowed files",
+        "phase ledger present and internally consistent",
+        "no remote setting or live authority changed"
+      ],
+      "tests_and_evidence_required": [
+        "python3 scripts/validate_placeholder.py",
+        "python3 scripts/test_validate_placeholder.py",
+        "git diff --check",
+        "git fsck --full",
+        "docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256 reconstructs 069c244"
+      ],
+      "production_or_migration_risk": "None for runtime. Documentation-only change to a public naming placeholder.",
+      "rollback_path": "Revert the bootstrap refresh commit. Historical sample commits remain intact.",
+      "completing_commit": null,
+      "date_completed": null,
+      "remaining_blockers": [
+        "origin/main does not yet contain the 2026-08-19 refresh and ledger commit"
+      ],
+      "waves": [
+        {
+          "id": "phase-0-wave-archive-handoff",
+          "title": "PR #2 archive handoff",
+          "dependencies": [],
+          "status": "COMPLETE",
+          "implemented_scope": "Minimal public archive tip; v1 provenance; archive-only CI; aliases; sibling UNKNOWN pins; administrator handoff; original bootstrap report.",
+          "missing_scope": "None for this wave.",
+          "acceptance_criteria": [
+            "archive-only workflow named placeholder-archive-validation",
+            "v1 tree recoverable from 069c244",
+            "no production SteamCloud claim"
+          ],
+          "tests_and_evidence_required": [
+            "merged PR #2 CI placeholder-archive-validation success on 541ff226a963ffa9acc1fcc6062b6878c2832592"
+          ],
+          "production_or_migration_risk": "None. Documentation and archive-validation workflow only.",
+          "rollback_path": "Revert to 069c244. Sample history remains.",
+          "completing_commit": "541ff226a963ffa9acc1fcc6062b6878c2832592",
+          "date_completed": "2026-08-18",
+          "remaining_blockers": []
+        },
+        {
+          "id": "phase-0-wave-ledger-refresh",
+          "title": "Phase ledger and 2026-08-19 bootstrap refresh",
+          "dependencies": [
+            "phase-0-wave-archive-handoff"
+          ],
+          "status": "VALIDATED_NOT_LIVE",
+          "implemented_scope": "Strengthened archive validator; failure-path tests; refreshed inventory and bootstrap report; machine-verifiable phase ledger.",
+          "missing_scope": "Landing on origin/main and recording the completing commit.",
+          "acceptance_criteria": [
+            "ledger covers phases 0-4 with required fields",
+            "COMPLETE without completing_commit is refused",
+            "phases 1-4 are not marked complete",
+            "validator and tests pass twice"
+          ],
+          "tests_and_evidence_required": [
+            "python3 scripts/validate_placeholder.py",
+            "python3 scripts/test_validate_placeholder.py"
+          ],
+          "production_or_migration_risk": "None for runtime.",
+          "rollback_path": "Revert this wave's commit.",
+          "completing_commit": null,
+          "date_completed": null,
+          "remaining_blockers": [
+            "wave not yet landed on origin/main"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-1",
+      "title": "Administrator export and public-content review",
+      "dependencies": [
+        "phase-0"
+      ],
+      "status": "BLOCKED",
+      "implemented_scope": "In-repo export/dependency checklist in docs/migration/ADMINISTRATOR_HANDOFF.md; dated inventory snapshot and 2026-08-19 refresh observations.",
+      "missing_scope": "Verified mirror backup, settings export, tested restore, public-content and secret-history review, and closure or explicit acceptance of every UNKNOWN inventory item.",
+      "acceptance_criteria": [
+        "backup restoration is tested",
+        "settings export is reviewable in an access-controlled location",
+        "no package, Action, Page, domain, webhook, App, deploy key, or external consumer would be destroyed by moving the placeholder"
+      ],
+      "tests_and_evidence_required": [
+        "administrator backup restore evidence outside this public repository",
+        "redacted approval/evidence reference only; never the export itself"
+      ],
+      "production_or_migration_risk": "Moving the placeholder without a restore-tested backup can lose settings or integration history. No runtime authority is at risk in this repository.",
+      "rollback_path": "No rename is attempted. Repeat the export after fixing gaps.",
+      "completing_commit": null,
+      "date_completed": null,
+      "remaining_blockers": [
+        "requires administrator GitHub settings export and a restore-tested mirror backup",
+        "UNKNOWN: private/internal packages (inventory token lacked read:packages)",
+        "UNKNOWN: Projects v2 (inventory token lacked read:project)",
+        "UNKNOWN: GitHub App installations and external repository-name consumers"
+      ],
+      "waves": [
+        {
+          "id": "phase-1-wave-admin-export",
+          "title": "Administrator backup, settings export, and public-content review",
+          "dependencies": [
+            "phase-0"
+          ],
+          "status": "BLOCKED",
+          "implemented_scope": "Checklist and inventory only.",
+          "missing_scope": "The administrator actions themselves.",
+          "acceptance_criteria": [
+            "tested restore",
+            "reviewable settings export",
+            "public-content review complete"
+          ],
+          "tests_and_evidence_required": [
+            "access-controlled backup digest and settings export id"
+          ],
+          "production_or_migration_risk": "Settings or integration loss if a rename proceeds without export.",
+          "rollback_path": "Do not rename. Repeat export.",
+          "completing_commit": null,
+          "date_completed": null,
+          "remaining_blockers": [
+            "administrator authorization and credentials for GitHub settings export"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-2",
+      "title": "Move the public placeholder",
+      "dependencies": [
+        "phase-1"
+      ],
+      "status": "BLOCKED",
+      "implemented_scope": "Unexecuted rename sequence and rollback text in the administrator handoff. Target archive name SteamCloud-bootstrap-archive is recorded.",
+      "missing_scope": "The GitHub repository rename itself, post-rename verification, and confirmation that NegativeNine/SteamCloud is free.",
+      "acceptance_criteria": [
+        "archive repository resolves under the approved name",
+        "settings, refs, PR history, and required integrations survived",
+        "NegativeNine/SteamCloud is verified available",
+        "rollback instructions remain valid"
+      ],
+      "tests_and_evidence_required": [
+        "administrator rename evidence and post-rename inventory outside this tree"
+      ],
+      "production_or_migration_risk": "Repository-name consumers, hosted Action references, and redirects can break. Runtime authority is unchanged by a rename, but hosted Action paths are not redirected.",
+      "rollback_path": "Before any private-repository rename, rename the archive back to SteamCloud if dependency or settings loss is detected.",
+      "completing_commit": null,
+      "date_completed": null,
+      "remaining_blockers": [
+        "explicit administrator authorization to rename this GitHub repository",
+        "phase-1 exit gates are not satisfied"
+      ],
+      "waves": [
+        {
+          "id": "phase-2-wave-rename-placeholder",
+          "title": "Rename this repository off the SteamCloud name",
+          "dependencies": [
+            "phase-1-wave-admin-export"
+          ],
+          "status": "BLOCKED",
+          "implemented_scope": "Prepared, unexecuted handoff only.",
+          "missing_scope": "The GitHub rename API/UI action.",
+          "acceptance_criteria": [
+            "repository name is the approved archive name",
+            "visibility and archived=false unchanged"
+          ],
+          "tests_and_evidence_required": [
+            "post-rename GitHub inventory"
+          ],
+          "production_or_migration_risk": "Redirect and hosted-Action breakage.",
+          "rollback_path": "Rename back to SteamCloud before any private rename.",
+          "completing_commit": null,
+          "date_completed": null,
+          "remaining_blockers": [
+            "administrator must execute the GitHub rename; this bootstrap must not"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-3",
+      "title": "Authorize the history-bearing rename",
+      "dependencies": [
+        "phase-2"
+      ],
+      "status": "BLOCKED",
+      "implemented_scope": "Recorded sequence only. No private steam-platform history or settings are present here.",
+      "missing_scope": "Authorization and in-place rename of private steam-platform to SteamCloud, kept private.",
+      "acceptance_criteria": [
+        "history, settings, tags, releases, deployment references, packages, webhooks, and Actions preserved under the canonical name",
+        "repository remains private",
+        "no runtime authority change"
+      ],
+      "tests_and_evidence_required": [
+        "private-repository administrator evidence, not copied into this public archive"
+      ],
+      "production_or_migration_risk": "Exposing private history, breaking private remotes, or invalidating redirects if steam-platform is later recreated.",
+      "rollback_path": "Use the separately approved private-repository rollback plan. Never recreate steam-platform casually.",
+      "completing_commit": null,
+      "date_completed": null,
+      "remaining_blockers": [
+        "separate administrator authorization for the private repository rename",
+        "private steam-platform history and secret review must occur in that repository",
+        "phase-2 has not made the SteamCloud name available"
+      ],
+      "waves": [
+        {
+          "id": "phase-3-wave-rename-steam-platform",
+          "title": "Rename private steam-platform to SteamCloud",
+          "dependencies": [
+            "phase-2-wave-rename-placeholder"
+          ],
+          "status": "BLOCKED",
+          "implemented_scope": "Public-safe handoff text only.",
+          "missing_scope": "The private rename.",
+          "acceptance_criteria": [
+            "private repository is named SteamCloud",
+            "visibility remains private"
+          ],
+          "tests_and_evidence_required": [
+            "private administrator evidence"
+          ],
+          "production_or_migration_risk": "Private history exposure if visibility is changed.",
+          "rollback_path": "Private rollback plan; do not recreate steam-platform.",
+          "completing_commit": null,
+          "date_completed": null,
+          "remaining_blockers": [
+            "out of scope for this public placeholder; requires private-repo administrator action"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phase-4",
+      "title": "Architecture migration in the canonical repository",
+      "dependencies": [
+        "phase-3"
+      ],
+      "status": "BLOCKED",
+      "implemented_scope": "Target-layer statement and alias registry only. No Ember, Campfire, SteamCloud, or SteamGraph runtime exists in this repository.",
+      "missing_scope": "The entire capability-by-capability migration, qualification, shadow, canary, and cutover work. That work belongs in the history-bearing implementation, not this public placeholder.",
+      "acceptance_criteria": [
+        "independent qualification evidence in the canonical repository",
+        "one execution authority per capability and cohort",
+        "exercised rollback for every approved slice"
+      ],
+      "tests_and_evidence_required": [
+        "canonical-repository CI, canary, and rollback evidence; never inferred from this archive"
+      ],
+      "production_or_migration_risk": "Building a second operational implementation here would collide with private steam-platform and invent qualification.",
+      "rollback_path": "Not applicable in this repository. Previous live authority remains in the history-bearing implementation.",
+      "completing_commit": null,
+      "date_completed": null,
+      "remaining_blockers": [
+        "out of scope for this public placeholder",
+        "UNKNOWN: Ember qualification",
+        "UNKNOWN: Campfire qualification",
+        "UNKNOWN: steam-platform deployed authority",
+        "UNKNOWN: steam-hypergraph deployed authority"
+      ],
+      "waves": [
+        {
+          "id": "phase-4-wave-canonical-migration",
+          "title": "Capability migration in the history-bearing SteamCloud repository",
+          "dependencies": [
+            "phase-3-wave-rename-steam-platform"
+          ],
+          "status": "BLOCKED",
+          "implemented_scope": "None in this repository.",
+          "missing_scope": "All runtime migration.",
+          "acceptance_criteria": [
+            "performed in the history-bearing repository after the authorized rename"
+          ],
+          "tests_and_evidence_required": [
+            "canonical-repository evidence"
+          ],
+          "production_or_migration_risk": "Greenfield runtime here would be a second SteamCloud.",
+          "rollback_path": "Do not implement runtime here.",
+          "completing_commit": null,
+          "date_completed": null,
+          "remaining_blockers": [
+            "this repository must remain a naming placeholder"
+          ]
+        }
+      ]
+    }
+  ]
+}

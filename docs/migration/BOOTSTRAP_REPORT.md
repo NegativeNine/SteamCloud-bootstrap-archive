@@ -1,15 +1,271 @@
 # Bootstrap Report
 
-**Report date:** 2026-08-18
+**Report date:** 2026-08-19
 
-**Repository:** `NegativeNine/SteamCloud` public placeholder
+**Repository:** `NegativeNine/SteamCloud` public naming placeholder
 
-**Bootstrap base:** `069c2448ee3c5e7c352d096494d15e8f120cf433`
+**Reviewed pre-edit HEAD:** `541ff226a963ffa9acc1fcc6062b6878c2832592`
+
+**v1 sample provenance tip:** `069c2448ee3c5e7c352d096494d15e8f120cf433`
 
 **Package:** `SteamCloud-SteamGraph-Refined-Architecture-v2.0`, version
 `2.0.0-draft`
 
-## Outcome
+It is not the production SteamCloud implementation.
+
+No live authority, remote repository, visibility, or production secret was changed.
+
+## 1. Repository and HEAD reviewed
+
+| Field | Evidence |
+|---|---|
+| Root | `/home/scdb/SteamCloud` |
+| Branch | `main`, tracking `origin/main` |
+| Pre-edit HEAD | `541ff226a963ffa9acc1fcc6062b6878c2832592` |
+| Pre-edit tree | `967d1cac973e3b2bfc537a0ff4939141b6cc272b` |
+| Remote | `origin https://github.com/NegativeNine/SteamCloud` (fetch and push) |
+| Tags | None |
+| Notes / stash | None |
+| Pre-edit `git status` | Clean tracked tree; up to date with `origin/main`; no uncommitted work |
+| Identity gate | PASS: public placeholder with generated v1 sample plus PR #1 and the PR #2 archive handoff. This is not private `steam-platform` and no private history was imported. |
+
+Visible commits:
+
+- `f18a068` — Initialize SteamCloud from the v1.0 rearchitecture sample
+- `069c244` — Separate sample policy from catalog I/O (#1)
+- `7eba30f` — Prepare SteamCloud placeholder archive
+- `541ff22` — Merge pull request #2 from `NegativeNine/agent/bootstrap-placeholder-archive`
+
+The 2026-08-18 bootstrap already resolved the source/history collision (populated v1 sample instead of an empty placeholder) by preserving that sample in Git history and leaving a documentation-only archive tip. This 2026-08-19 run is a discovery refresh and validator strengthening on that merged tip. It is not a greenfield replacement.
+
+Pre-existing modifications: none. Unrelated uncommitted work: none. Nothing was committed or pushed.
+
+## 2. Architecture package digest and validation result
+
+The architecture ZIP is absent from this checkout (removed after the PR #2
+integration). It was re-verified from a non-committed copy of the same bytes.
+The ZIP was not added to this tree.
+
+| Check | Result |
+|---|---|
+| Required outer SHA-256 | `b3103485838efa9bc1e129a6ea24a0ea362ba704fc365fd783b82b3c5c41a1a9` — PASS |
+| Extraction | temporary extract under the private implementer scratch directory — PASS |
+| Package `MANIFEST.sha256` | every listed artifact — PASS |
+| `python3 validate.py` | `validation passed` — PASS |
+| Package version | `2.0.0-draft` |
+
+The package was read in the prescribed order, including the repository-relevant
+SteamCloud architecture document, ADRs, manifests, contracts, examples,
+reference adapters, and diagrams. It is `TARGET` / `REFERENCE/PROTOTYPE`
+guidance only. It is not proof that any target capability is implemented or
+production-qualified. Package contracts, examples, adapters, and diagrams were
+not copied into this public tree.
+
+The extract directory is deleted after integration. `.gitignore` ignores
+`SteamCloud-SteamGraph-Refined-Architecture-*.zip` and the extracted
+`SteamCloud-SteamGraph-Refined-Architecture-v2.0/` directory.
+
+## 3. Files created, updated, moved, archived, deleted, and retained
+
+### Created in this refresh
+
+- `scripts/test_validate_placeholder.py` — drives the shipped validator entry
+  point and its failure paths (ZIP present, application scaffold present,
+  duplicate JSON keys, ledger COMPLETE-without-commit, and admin-phase
+  COMPLETE refusal).
+- `docs/roadmap/PHASE_LEDGER.json` — machine-verifiable phase and wave
+  ledger for Phases 0–4.
+
+### Updated in this refresh
+
+- `README.md` — validation section; still states this is not the production
+  SteamCloud implementation.
+- `CONTRIBUTING.md` — names the validator and test commands.
+- `.gitignore` — also ignores an extracted package directory.
+- `.github/workflows/ci.yml` — still `placeholder-archive-validation`; now
+  also runs the failure-path tests.
+- `docs/architecture/OBSERVABILITY.md` — records TARGET OpenTelemetry service
+  names from the package without claiming they are live.
+- `docs/decisions/ADR-002-placeholder-archive-disposition.md` — notes the
+  2026-08-19 refresh still accepts the archive disposition.
+- `docs/roadmap/MIGRATION_ROADMAP.md` — Phase 0 is the merged PR #2 handoff;
+  this refresh is documentation-only.
+- `docs/migration/ACCEPTANCE.md` — includes the test command.
+- `docs/migration/ADMINISTRATOR_HANDOFF.md` — distinguishes the v1 snapshot
+  HEAD from the merged archive-handoff HEAD.
+- `docs/migration/REPOSITORY_INVENTORY.json` — retains the 069c244 snapshot
+  and adds `archive_handoff` / `this_bootstrap` observations for `541ff22`.
+- `docs/migration/BOOTSTRAP_REPORT.md` — this file.
+- `scripts/validate_placeholder.py` — asserts ZIP/scaffold absence, six
+  status labels, archive-only workflow, UNKNOWN siblings, alias coverage,
+  bootstrap-report evidence, and high-confidence secret patterns.
+
+### Moved
+
+None.
+
+### Archived
+
+No additional archive. Unique v1 sample content remains under
+`docs/archive/placeholder/` with provenance, plus immutable Git history at
+`f18a068` / `069c244`.
+
+### Deleted
+
+None from the tracked tree. The architecture ZIP was already absent. The
+temporary 2026-08-19 extract is removed from the implementer scratch
+directory and is not a repository path.
+
+### Intentionally retained
+
+- All PR #2 archive-handoff documents and the allowlisted tree.
+- `docs/archive/placeholder/README.md` and `V1_SAMPLE_MANIFEST.sha256`.
+- Canonical/legacy aliases, sibling `UNKNOWN` pins, security rules, and the
+  unexecuted administrator handoff.
+- Historical sample knowledge (state machines, fences, retry/uncertainty,
+  schemas, tests) only as Git history, not as current contracts.
+
+### Not created (deliberate)
+
+- No application scaffold, schemas, queues, packages, or runtime.
+- No generic Steam proxy.
+- No `TARGET_ARCHITECTURE_2.md`, `NEW_ROADMAP.md`, `AGENTS.md`, or `CLAUDE.md`.
+- No copy of the refined architecture package or private `steam-platform`
+  history.
+
+## 4. Current authority and target authority
+
+| Concern | Status | Authority |
+|---|---|---|
+| This public repository | `CURRENT LIVE` | Naming placeholder only; no runtime, data, credential, execution, or semantic authority. |
+| Archive documentation and validator | `IMPLEMENTED BUT NOT LIVE` | Present on the branch tip; not a SteamCloud service. |
+| Live canary / shadow runtime | `SHADOW/CANARY` | None observed. |
+| v1 sample at `069c244` | `REFERENCE/PROTOTYPE` | Recoverable in Git history; never observed live. |
+| Refined architecture v2.0 | `REFERENCE/PROTOTYPE` / `TARGET` | Verified draft package; not copied here. |
+| Any use as SteamCloud service, package, schema, or deployment | `BLOCKED/NOT QUALIFIED` | Explicitly forbidden in this repository. |
+| Ember | `UNKNOWN` here / `TARGET` generic durable data substrate | Not evidenced from this checkout. |
+| Campfire | `UNKNOWN` here / `TARGET` generic durable execution on Ember | Not evidenced from this checkout. |
+| SteamCloud implementation | `UNKNOWN` here / `TARGET` Steam operational domain on Campfire | History-bearing code remains private `steam-platform` until a separately authorized rename. |
+| SteamGraph | `UNKNOWN` here / `TARGET` Steam semantic/evidence domain on a separate Ember authority | History-bearing predecessor remains `steam-hypergraph` until a separately authorized rename. |
+| Product / evidence planes | `UNKNOWN` here / `TARGET` bounded owners | Invoke SteamCloud only through named Steam actions; use SteamGraph only through closed semantic contracts. |
+
+A repository rename does not change runtime authority.
+
+## 5. Migration scaffolding implemented
+
+Non-authoritative scaffolding only:
+
+- README-led documentation authority under `docs/architecture`,
+  `docs/decisions`, `docs/migration`, `docs/roadmap`, `docs/security`, and
+  `docs/archive/placeholder`.
+- Naming alias registry for recorded legacy operation, profile, pack, and
+  repository names.
+- Sibling dependency pins remain `reviewed_sha: null` and
+  `observed_status: UNKNOWN`, with empty `runtime_dependencies`.
+- Security and secret-placement rules for this public tree plus TARGET
+  vault/edge/runtime placement.
+- Observability/correlation vocabulary, including TARGET service names.
+- Phased roadmap with gates and rollback.
+- Administrator export/dependency checklist and unexecuted rename sequence.
+- Archive validator and failure-path tests. They qualify only this
+  placeholder archive, not Ember, Campfire, SteamCloud, or SteamGraph.
+
+No timer, cohort, credential, datastore, or live read/write path was added.
+
+## Validation evidence
+
+## 6. Tests and checks run with exact outcomes
+
+Recorded under the private implementer scratch directory. Commands were run
+from `/home/scdb/SteamCloud` after the documentation/validator refresh.
+
+| Check | Outcome |
+|---|---|
+| Architecture package SHA-256 / MANIFEST / `validate.py` | PASS (`validation passed`) |
+| `python3 -c 'import yaml; assert yaml.__version__ == "6.0.3"'` | PASS |
+| `python3 scripts/validate_placeholder.py` run 1 | PASS: `placeholder archive validation passed` |
+| `python3 scripts/validate_placeholder.py` run 2 | PASS: `placeholder archive validation passed` |
+| `python3 scripts/test_validate_placeholder.py` | PASS: 7 tests, `placeholder archive tests passed` |
+| `git diff --check` | PASS (no output) |
+| `git diff --cached --check` | PASS (no output) |
+| `git fsck --full` | PASS (exit 0). One dangling blob warning (`9829df3...`) was reported; it is not a reachability failure and does not block bootstrap. |
+| High-confidence secret-pattern scan in the shipped validator | PASS (part of both validator runs) |
+| Independent secret scan over 19 git-visible files | PASS: `no high-confidence secret patterns found` |
+| Application lint / type-check / schema-parity / runtime tests | NOT APPLICABLE: no application package remains. Does not block bootstrap. |
+| `gitleaks` binary | NOT RUN: no `gitleaks` executable on PATH. Does not block bootstrap because the shipped validator and the independent regex scan cover the same high-confidence classes. |
+
+## 7. Unresolved tensions or blockers
+
+These do not block this documentation bootstrap. They block administrator
+rename and any runtime cutover:
+
+- Deployed authority and qualification of Ember, Campfire, `steam-platform`,
+  and `steam-hypergraph` remain `UNKNOWN` from this public checkout.
+- Private/internal package state and consumers (`UNKNOWN`: token lacked
+  `read:packages`).
+- Repository-linked Projects v2 (`UNKNOWN`: token lacked `read:project`).
+- Organization/GitHub App hooks and external repository-name consumers.
+- External DNS, custom-domain, registry, and hosted Action references.
+- Private `steam-platform` history/content safety and exact settings. Those
+  must be reviewed in the private repository, not copied here.
+- Administrator choice of final archive name if not
+  `SteamCloud-bootstrap-archive`.
+- This working tree is intentionally uncommitted (operator did not request a
+  commit or push).
+
+## 8. Next safe PR wave
+
+Administrator evidence only. No rename. No live authority change.
+
+- Mirror backups and settings exports for this placeholder and, separately,
+  for private `steam-platform`.
+- Package / Action / Page / domain / webhook / App / deploy-key dependency
+  review.
+- Public-content and secret-history review of this archive.
+- Dry-run and rollback review of the rename sequence.
+
+## 9. Administrator-only actions still required
+
+Prepare, do not execute from this bootstrap:
+
+1. Rename this placeholder away from `SteamCloud` to
+   `SteamCloud-bootstrap-archive` or another explicitly approved archive name
+   without toggling the GitHub Archived setting or changing visibility.
+2. Verify the canonical `NegativeNine/SteamCloud` name is free and that
+   reclaiming it will not destroy a required redirect or hosted Action
+   reference.
+3. Separately authorize the private history-bearing `steam-platform`
+   repository to be renamed to `SteamCloud` and kept private.
+4. Complete public-content review of this archive before the placeholder
+   move.
+5. Independently review private `steam-platform` history before any
+   visibility decision. Do not copy that history into this public repository.
+
+The exact unexecuted checklist is
+[ADMINISTRATOR_HANDOFF.md](ADMINISTRATOR_HANDOFF.md).
+
+## 10. Confirmation
+
+No live authority, remote repository, visibility, or production secret was changed.
+
+Specifically: no production source of truth was switched; no timer or live
+cohort was armed; no credentials were moved; no private service was exposed;
+no remote GitHub repository was renamed, archived, published, or had its
+visibility changed; no Pages, package, webhook, or production secret was
+modified. Publication of this refresh, if an operator later commits it,
+changes only public archive documentation and archive-validation workflow
+content.
+
+---
+
+## Prior 2026-08-18 discovery (preserved)
+
+The remainder of this report retains the unique evidence collected when the
+populated placeholder was first converted into an archive handoff. The HEAD
+and workflow names in that section describe the pre-archive v1 sample tip,
+not the current published tip.
+
+### Outcome at 2026-08-18
 
 The checkout was not empty: it contained two commits of generated v1
 architecture/sample material and merged PR #1. That was classified as a
@@ -24,7 +280,7 @@ package-registry publication/setting, webhook, or production secret was
 changed. Publication changes Git branch and archive-validation workflow content
 only, as explicitly requested; external workflow consumers remain `UNKNOWN`.
 
-## Package verification
+### Package verification at 2026-08-18
 
 | Check | Result |
 |---|---|
@@ -39,9 +295,7 @@ treated as draft target architecture, never as proof of current
 implementation, deployment, or qualification. The package content was not
 copied into the repository.
 
-## Repository discovery
-
-### Local checkout before editing
+### Local checkout before the 2026-08-18 edit
 
 | Field | Evidence |
 |---|---|
@@ -58,9 +312,7 @@ The untracked ZIP was operator-provided task input. It was not staged or
 overwritten, was ignored by the new `.gitignore` during integration, and was
 removed only after its digest, manifest, and validator passed.
 
-### Visible GitHub inventory
-
-Read-only inventory at `2026-08-18T22:38:13Z` established:
+### Visible GitHub inventory at 2026-08-18T22:38:13Z
 
 - public repository ID `1338764433`, created `2026-08-18T19:21:58Z`;
 - default and only branch `main`; no tags, releases, or issues;
@@ -108,7 +360,7 @@ repository-local archive validator and CI workflow replace the sample
 application commands; this is intentional and does not assert runtime
 qualification.
 
-## Current implementation and operational inventory
+### Current implementation and operational inventory at the v1 tip
 
 The reviewed tree contained seven JavaScript sample modules, three Node test
 files, one Rust reference crate, ten JSON schemas plus fixtures, nine operation
@@ -140,7 +392,7 @@ operation policy JSON, profile/packs, tests, and CI. They were preserved through
 the exact commit, tree identity, original manifest, and PR record before leaving
 the current branch tip. No deployed or operator-owned data asset was found.
 
-## Package conflicts reconciled
+### Package conflicts reconciled
 
 1. V1 modeled a greenfield SteamCloud; v2 requires private `steam-platform` to
    become SteamCloud through a history-preserving rename.
@@ -158,23 +410,9 @@ the current branch tip. No deployed or operator-owned data asset was found.
 7. The package snapshot assumed `commit: null` for this repository; the actual
    two-commit history and PR are preserved rather than overwritten.
 
-## Current and target authority
+### Files and artifact disposition at PR #2
 
-| Concern | Current evidence | Target |
-|---|---|---|
-| This repository | `CURRENT LIVE`: naming placeholder only | Public bootstrap archive |
-| Steam operational execution | `UNKNOWN` from this checkout | SteamCloud on Campfire |
-| Generic durable execution | `UNKNOWN` | Campfire on Ember |
-| Steam semantic/evidence authority | `UNKNOWN` | SteamGraph on a separate Ember authority |
-| Product/evidence planes | `UNKNOWN` | Bounded owners using named actions and closed semantic contracts |
-| V1 sample | `REFERENCE/PROTOTYPE` | Historical provenance only |
-| Live migration/canary | None observed | `BLOCKED/NOT QUALIFIED` pending independent gates |
-
-No repository rename alone changes any authority.
-
-## Files and artifact disposition
-
-### Updated
+#### Updated
 
 - `.gitignore`: excludes the reviewed architecture ZIP.
 - `README.md`: minimal public-placeholder notice and documentation authority.
@@ -182,7 +420,7 @@ No repository rename alone changes any authority.
 - `.github/workflows/ci.yml`: replaces sample application CI with archive-only
   validation and no production identity or secret access.
 
-### Created
+#### Created
 
 - `docs/architecture/AUTHORITY_AND_BOUNDARIES.md`
 - `docs/architecture/OBSERVABILITY.md`
@@ -199,7 +437,7 @@ No repository rename alone changes any authority.
 - `docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256`
 - `scripts/validate_placeholder.py`
 
-### Archived and intentionally retained
+#### Archived and intentionally retained
 
 - commits `f18a068` and `069c244`, tree `dcc70bd`, and PR #1 history;
 - every old content digest and path in
@@ -208,7 +446,7 @@ No repository rename alone changes any authority.
 - unique sample state, fencing, idempotency, uncertainty, schema, fixture, test,
   policy, review, and CI knowledge through immutable Git history.
 
-### Removed from the current tip
+#### Removed from the current tip
 
 The 79 old tracked paths other than the four updated files were removed.
 Every old path is enumerated by the archived manifest, except the old
@@ -222,7 +460,7 @@ were replaced with archive-only checks.
 The removal prevents public sample material from being mistaken for the
 history-bearing implementation while retaining exact recovery evidence.
 
-### Cleanup
+#### Cleanup at PR #2
 
 - Architecture ZIP: removed after successful integration; its digest and
   package version remain recorded in this report and `.gitignore` prevents
@@ -231,8 +469,6 @@ history-bearing implementation while retaining exact recovery evidence.
 - Temporary package-verification and audit-tool directories: removed after the
   final secret scan; no downloaded audit binary or package remains.
 - Generated Rust `target/` and empty superseded sample directories: removed.
-
-## Validation evidence
 
 ### Original sample baseline
 
@@ -249,7 +485,7 @@ history-bearing implementation while retaining exact recovery evidence.
 The Rust prerequisite failure does not block archival bootstrap because the
 Rust package is a preserved historical prototype, not current scaffolding.
 
-### Final archive checks
+### Final archive checks at PR #2
 
 | Check | Outcome |
 |---|---|
@@ -267,34 +503,3 @@ Rust package is a preserved historical prototype, not current scaffolding.
 
 The validator used `PyYAML==6.0.3` as a validation-only dependency. It is not a
 runtime package or publication dependency.
-
-## Remaining `UNKNOWN` state and blockers
-
-- Deployed authority and qualification of all sibling systems.
-- Private/internal package state and consumers.
-- Repository-linked Projects v2 state (`UNKNOWN`: inventory token lacked
-  `read:project`).
-- Organization/GitHub App hooks and external repository-name consumers.
-- External DNS, custom-domain, registry, and hosted Action references.
-- Private `steam-platform` history/content safety and exact settings.
-- Administrator choice of final archive name if not
-  `SteamCloud-bootstrap-archive`.
-- All runtime migration and authority gates.
-
-These do not block the documentation bootstrap. They explicitly block the
-administrator rename or any runtime cutover until resolved.
-
-## Next safe PR wave
-
-After this bootstrap lands, the next safe wave is administrator evidence only:
-mirror backups, settings exports, package/Action/Page/domain/webhook dependency
-review, public-content review, and a dry-run/rollback review. No rename or live
-authority change belongs in that PR wave.
-
-## Administrator-only actions
-
-The exact unexecuted sequence is in
-[ADMINISTRATOR_HANDOFF.md](ADMINISTRATOR_HANDOFF.md): move this placeholder,
-verify the canonical name is free, then separately authorize the private
-history-bearing rename. Visibility changes, production-secret movement, and
-runtime cutovers remain separate decisions.

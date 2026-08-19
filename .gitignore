@@ -1,5 +1,6 @@
 # The reviewed architecture package is an input, never repository content.
 SteamCloud-SteamGraph-Refined-Architecture-*.zip
+SteamCloud-SteamGraph-Refined-Architecture-v2.0/
 
 # Local/editor residue. This repository intentionally contains no app scaffold.
 .env
