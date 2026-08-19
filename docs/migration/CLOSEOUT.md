@@ -26,7 +26,7 @@ Machine-verifiable status is in
 | phase-0 | Placeholder bootstrap | `COMPLETE` | `5c66871812521e3d9a705d46a7297b69532894ba` |
 | phase-0-wave-archive-handoff | PR #2 archive handoff | `COMPLETE` | `541ff226a963ffa9acc1fcc6062b6878c2832592` |
 | phase-0-wave-ledger-refresh | Phase ledger and 2026-08-19 refresh | `COMPLETE` | `5c66871812521e3d9a705d46a7297b69532894ba` |
-| phase-0-wave-completion-contract | Completion-ledger contract fields | `VALIDATED_NOT_LIVE` until landed | pending this wave |
+| phase-0-wave-completion-contract | Completion-ledger contract fields | `COMPLETE` | `89235a2a8431e7a76de5c62608b528a8be8fe62f` |
 | phase-1 | Administrator export and public-content review | `BLOCKED` | none |
 | phase-2 | Move the public placeholder | `BLOCKED` | none |
 | phase-3 | Authorize the history-bearing rename | `BLOCKED` | none |
@@ -45,9 +45,10 @@ open pull requests. No non-`main` branch remains to delete.
 ## Final `main` SHA
 
 Phase 0 implementation landed on `origin/main` as
-`5c66871812521e3d9a705d46a7297b69532894ba`. The closeout stamp is
-`5c6397993fdc90ab07a8f776230606f8bd3437df`. This completion-contract
-refresh is a later documentation/validator wave on that tip.
+`5c66871812521e3d9a705d46a7297b69532894ba`. The previous closeout stamp is
+`5c6397993fdc90ab07a8f776230606f8bd3437df`. The completion-contract wave
+landed as `89235a2a8431e7a76de5c62608b528a8be8fe62f`. This document stamp
+follows that commit on `origin/main`.
 
 ## Tests and validation run
 

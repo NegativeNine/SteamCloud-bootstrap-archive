@@ -27,7 +27,7 @@
       "dependencies": [],
       "current_status": "COMPLETE",
       "implemented_scope": "README-led documentation authority; v1 sample preserved in Git history and docs/archive/placeholder; sample/application material removed from the branch tip; aliases, sibling UNKNOWN pins, inventory, security, observability, acceptance, and administrator handoff; architecture ZIP absent; archive validator and failure-path tests; 2026-08-19 bootstrap refresh and phase ledger landed on origin/main. Completion-ledger contract fields and status vocabulary including LIVE, RESEARCH_ONLY, and PROHIBITED are prepared.",
-      "missing_scope": "Landing the completion-ledger contract wave on origin/main. No runtime work remains in this repository.",
+      "missing_scope": "None in this repository.",
       "acceptance_criteria": [
         "README links to one documentation authority and states this is not the production SteamCloud implementation",
         "relative Markdown links resolve",
@@ -130,9 +130,9 @@
           "dependencies": [
             "phase-0-wave-ledger-refresh"
           ],
-          "current_status": "VALIDATED_NOT_LIVE",
-          "implemented_scope": "Required completion-ledger row fields; LIVE/RESEARCH_ONLY/PROHIBITED vocabulary; validator refusal of LIVE/COMPLETE/PRODUCTION_QUALIFIED without a completing commit; admin/sibling phases remain BLOCKED.",
-          "missing_scope": "Landing this wave on origin/main.",
+          "current_status": "COMPLETE",
+          "implemented_scope": "Required completion-ledger row fields; LIVE/RESEARCH_ONLY/PROHIBITED vocabulary; validator refusal of LIVE/COMPLETE/PRODUCTION_QUALIFIED without a completing commit; admin/sibling phases remain BLOCKED; landed on origin/main.",
+          "missing_scope": "None in this repository.",
           "acceptance_criteria": [
             "every phase and wave has the required completion-ledger fields",
             "COMPLETE/LIVE/PRODUCTION_QUALIFIED/RETIRED without completion_commit is refused",
@@ -150,14 +150,12 @@
           "current_authority": "archive documentation and validator; no runtime authority",
           "target_authority": "completion ledger with required contract fields; still no runtime authority",
           "rollback_path": "Revert this wave's commit.",
-          "blocking_dependency": "wave not yet landed on origin/main",
-          "completion_commit": null,
+          "blocking_dependency": null,
+          "completion_commit": "89235a2a8431e7a76de5c62608b528a8be8fe62f",
           "production_release": null,
-          "completed_at": null,
+          "completed_at": "2026-08-19",
           "production_or_migration_risk": "None for runtime.",
-          "remaining_blockers": [
-            "wave not yet landed on origin/main"
-          ]
+          "remaining_blockers": []
         }
       ]
     },
