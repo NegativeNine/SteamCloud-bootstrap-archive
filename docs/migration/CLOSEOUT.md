@@ -51,8 +51,11 @@ Phase 0 implementation landed on `origin/main` as
 `5c66871812521e3d9a705d46a7297b69532894ba`. The previous closeout stamp is
 `5c6397993fdc90ab07a8f776230606f8bd3437df`. The completion-contract wave
 landed as `89235a2a8431e7a76de5c62608b528a8be8fe62f`. The orchestration
-ledger wave landed as `6f000fd944a87af30ccf3e5a9794c9faad330b45`. This
-document stamp follows that commit on `origin/main`.
+ledger wave landed as `6f000fd944a87af30ccf3e5a9794c9faad330b45`. The
+follow-on stamp is `ff885f755df2b16d2d158ca8533540de2e8b1956`. Review of
+that `origin/main` tip found no additional unblocked in-repo wave:
+administrator rename/export and sibling runtime work remain
+`BLOCKED_EXTERNAL`.
 
 ## Tests and validation run
 

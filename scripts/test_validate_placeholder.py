@@ -155,6 +155,13 @@ class PlaceholderValidatorTests(unittest.TestCase):
             validate_program_ledger(ledger)
         self.assertIn("UNKNOWN", str(ctx.exception))
 
+    def test_closeout_missing_cutover_denial_is_refused(self) -> None:
+        closeout = load_json(ROOT / "docs/migration/CLOSEOUT.json")
+        closeout["not_claimed"] = ["PROGRAM_COMPLETE"]
+        with self.assertRaises(AssertionError) as ctx:
+            validate_closeout_document(closeout)
+        self.assertIn("Campfire cutover", str(ctx.exception))
+
     def test_closeout_program_complete_is_refused(self) -> None:
         closeout = load_json(ROOT / "docs/migration/CLOSEOUT.json")
         closeout["program_complete"] = True

@@ -689,6 +689,15 @@ def validate_closeout_document(closeout: dict[str, object]) -> None:
             fail(f"closeout {field} must not be a premature completion claim")
     if closeout.get("architecture_zip_tracked") is not False:
         fail("closeout must record that the architecture ZIP is not tracked")
+    required_denials = {
+        "Campfire cutover",
+        "SteamCloud web/API deploy",
+        "GitHub rename executed",
+        "end-to-end production journey",
+    }
+    claimed = closeout.get("not_claimed")
+    if not isinstance(claimed, list) or not required_denials.issubset(set(claimed)):
+        fail("closeout must deny rename, Campfire cutover, web/API deploy, and production journey claims")
     digest = closeout.get("checksum_sha256")
     expected = canonical_json_digest(closeout, omit="checksum_sha256")
     if digest != expected:
@@ -696,6 +705,13 @@ def validate_closeout_document(closeout: dict[str, object]) -> None:
     markdown = (ROOT / "docs/migration/CLOSEOUT.md").read_text(encoding="utf-8")
     if "BLOCKED_EXTERNAL" not in markdown:
         fail("markdown closeout must name BLOCKED_EXTERNAL")
+    for phrase in (
+        "Campfire cutover",
+        "SteamCloud web/API deploy",
+        "production qualification",
+    ):
+        if phrase not in markdown:
+            fail(f"markdown closeout must deny {phrase}")
     if re.search(r"(?m)^program_complete:\s*true$", markdown, re.I):
         fail("markdown closeout must not emit PROGRAM_COMPLETE")
 
