@@ -16,7 +16,7 @@
   "production_release": null,
   "architecture_zip_tracked": false,
   "branch_disposition": "only main locally and on origin",
-  "final_sha": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
+  "final_sha": "6f000fd944a87af30ccf3e5a9794c9faad330b45",
   "requested_peer_actions": [
     "request: steam-platform remain private history-bearing implementation",
     "request: administrator complete export and authorized rename sequence"
@@ -28,5 +28,5 @@
     "end-to-end production journey",
     "GitHub rename executed"
   ],
-  "checksum_sha256": "f17356dbdede90b5af5a545fc2ee77cc19e1da48b40728f225150f536b813f87"
+  "checksum_sha256": "7842c99633164a556b771b088a55e5bb6e51461b1833a2a8364c84741082f0ce"
 }
