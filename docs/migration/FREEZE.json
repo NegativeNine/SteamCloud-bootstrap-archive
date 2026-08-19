@@ -5,7 +5,10 @@
   "pre_freeze_tree": "9f678d01de79bbbc43ffc695d31d57c0cb245b82",
   "pre_freeze_archive_sha256": "6393abc5792ae9e158facf03d5965502763405964b72f057340182ff6c3d6e7d",
   "intended_archival_tag": "placeholder-disposition-freeze-2026-08-19",
-  "archival_tag_pushed": false,
+  "archival_tag_pushed": true,
+  "customized_guidance_package": "SteamCloud-SteamGraph-Customized-Repository-Guidance-v1.0.zip",
+  "customized_guidance_sha256": "02115bcef8500bb7719ccf4a4f9e4a90d61832b1a3960947f6fe0195ece3f86d",
+  "customized_guidance_tracked": false,
   "github_rename_executed": false,
   "github_visibility_changed": false,
   "github_archived_setting_toggled": false,
@@ -40,5 +43,5 @@
       "unblocking_artifact": "administrator branch-protection settings change"
     }
   },
-  "checksum_sha256": "fe354a102ae95449fbc07f5c00253ba95f35ce31d7224525cc058e1ecf5c8043"
+  "checksum_sha256": "0772a0c177fe3925889d41660ab4dda52ba633c8e30ce5ce17b4192938b9ae6a"
 }

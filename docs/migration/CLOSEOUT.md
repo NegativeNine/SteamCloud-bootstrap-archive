@@ -123,6 +123,35 @@ None. `deployment_target` is `none` and `production_release` is null for
 every ledger row. This repository has no site, API, worker, package, or
 control plane to deploy.
 
+## Independent six-pass review (2026-08-19)
+
+Performed against `origin/main` `4ebc5dabada6fa5ef95e54545d5fb8882bb213a9`
+and customized guidance package SHA-256
+`02115bcef8500bb7719ccf4a4f9e4a90d61832b1a3960947f6fe0195ece3f86d`.
+The package is input-only and is not tracked.
+
+1. **Architecture and authority.** Scope: README, freeze, phase ledger,
+   authority map. Finding: this repository claims no runtime, execution, or
+   semantic authority. Remediation: none required in-repo. Residual: GitHub
+   rename remains `BLOCKED_EXTERNAL`. Disposition: accept.
+2. **Security and privacy.** Scope: tracked tree, secret-pattern scan, no
+   steam-platform import. Finding: no high-confidence secrets; operational
+   history is not mirrored here. Residual: administrator secret-history
+   review of GitHub settings is `BLOCKED_EXTERNAL`. Disposition: accept.
+3. **Reliability and data integrity.** Scope: freeze git-archive digest
+   versus commit `927f11c`. Finding: digest is recomputed by the shipped
+   validator. Residual: restorable mirror backup is `BLOCKED_EXTERNAL`.
+   Disposition: accept.
+4. **Code and contract.** Scope: archive validator and tests. Finding:
+   freeze and closeout refuse rename-executed and production claims.
+   Residual: none in-repo. Disposition: accept.
+5. **UX, accessibility, and content.** Scope: public README. Finding: short
+   historical pointer; not a live service. Residual: wiki/issues feature
+   flags are administrator settings. Disposition: accept.
+6. **Deployment and operations.** Scope: workflows, deploy targets.
+   Finding: archive-validation only; `deployment_target` is `none`. Residual:
+   no production surface. Disposition: accept.
+
 ## Follow-on work outside this repository roadmap
 
 All Ember, Campfire, SteamCloud, and SteamGraph runtime work, secret

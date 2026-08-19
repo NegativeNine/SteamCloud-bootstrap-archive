@@ -159,6 +159,13 @@ class PlaceholderValidatorTests(unittest.TestCase):
     def test_freeze_from_tree_is_accepted(self) -> None:
         validate_freeze(load_json(ROOT / "docs/migration/FREEZE.json"))
 
+    def test_freeze_tag_not_pushed_is_refused(self) -> None:
+        freeze = load_json(ROOT / "docs/migration/FREEZE.json")
+        freeze["archival_tag_pushed"] = False
+        with self.assertRaises(AssertionError) as ctx:
+            validate_freeze(freeze)
+        self.assertIn("archival tag was pushed", str(ctx.exception))
+
     def test_freeze_rename_executed_is_refused(self) -> None:
         freeze = load_json(ROOT / "docs/migration/FREEZE.json")
         freeze["github_rename_executed"] = True

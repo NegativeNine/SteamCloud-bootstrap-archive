@@ -129,6 +129,8 @@ def validate_structure() -> None:
     gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
     if "SteamCloud-SteamGraph-Refined-Architecture-*.zip" not in gitignore:
         fail(".gitignore must ignore the architecture ZIP glob")
+    if "SteamCloud-SteamGraph-Customized-Repository-Guidance-*.zip" not in gitignore:
+        fail(".gitignore must ignore the customized guidance ZIP glob")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     if README_NOT_PRODUCTION not in squashed(readme):
         fail("README must state this is not the production SteamCloud implementation")
@@ -751,6 +753,13 @@ def validate_freeze(freeze: dict[str, object]) -> None:
         fail("freeze must not claim visibility change")
     if freeze.get("architecture_zip_tracked") is not False:
         fail("freeze must record architecture ZIP untracked")
+    if freeze.get("customized_guidance_tracked") is not False:
+        fail("freeze must record customized guidance ZIP untracked")
+    digest_hex = freeze.get("customized_guidance_sha256")
+    if not isinstance(digest_hex, str) or not re.fullmatch(r"[0-9a-f]{64}", digest_hex):
+        fail("freeze customized_guidance_sha256 missing")
+    if freeze.get("archival_tag_pushed") is not True:
+        fail("freeze must record that the archival tag was pushed")
     if freeze.get("current_authority") != "none":
         fail("freeze current_authority must be none")
     actions = freeze.get("administrator_actions")
