@@ -60,6 +60,7 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "docs/migration/BOOTSTRAP_REPORT.md",
     ROOT / "docs/migration/CLOSEOUT.json",
     ROOT / "docs/migration/COORDINATION.json",
+    ROOT / "docs/migration/FREEZE.json",
     ROOT / "docs/migration/NAMING_ALIASES.json",
     ROOT / "docs/migration/PROGRAM_LEDGER.json",
     ROOT / "docs/migration/REPOSITORY_INVENTORY.json",
@@ -170,6 +171,7 @@ def validate_json() -> None:
     if set(parsed) != {
         "CLOSEOUT.json",
         "COORDINATION.json",
+        "FREEZE.json",
         "NAMING_ALIASES.json",
         "PHASE_LEDGER.json",
         "PROGRAM_LEDGER.json",
@@ -369,6 +371,7 @@ def validate_json() -> None:
     validate_program_ledger(parsed["PROGRAM_LEDGER.json"])
     validate_coordination(parsed["COORDINATION.json"])
     validate_closeout_document(parsed["CLOSEOUT.json"])
+    validate_freeze(parsed["FREEZE.json"])
 
 
 LEDGER_STATUSES = {
@@ -714,6 +717,87 @@ def validate_closeout_document(closeout: dict[str, object]) -> None:
             fail(f"markdown closeout must deny {phrase}")
     if re.search(r"(?m)^program_complete:\s*true$", markdown, re.I):
         fail("markdown closeout must not emit PROGRAM_COMPLETE")
+
+
+ADMIN_ACTION_KEYS = {
+    "mirror_backup_and_restorable_clone",
+    "settings_issues_releases_tags_export",
+    "secret_history_review",
+    "remote_rename",
+    "canonical_name_availability",
+    "protected_main",
+}
+PRE_FREEZE_COMMIT = "927f11ce6d144f72280fdb3c55abb030c44095e8"
+
+
+def validate_freeze(freeze: dict[str, object]) -> None:
+    if freeze.get("schema") != "steamcloud.placeholder.freeze.v1":
+        fail("freeze schema mismatch")
+    required = {
+        "pre_freeze_commit",
+        "pre_freeze_tree",
+        "pre_freeze_archive_sha256",
+        "intended_archival_tag",
+        "github_rename_executed",
+        "administrator_actions",
+        "checksum_sha256",
+    }
+    missing = required.difference(freeze)
+    if missing:
+        fail(f"freeze missing fields: {sorted(missing)}")
+    if freeze.get("github_rename_executed") is not False:
+        fail("freeze must not claim GitHub rename executed")
+    if freeze.get("github_visibility_changed") is not False:
+        fail("freeze must not claim visibility change")
+    if freeze.get("architecture_zip_tracked") is not False:
+        fail("freeze must record architecture ZIP untracked")
+    if freeze.get("current_authority") != "none":
+        fail("freeze current_authority must be none")
+    actions = freeze.get("administrator_actions")
+    if not isinstance(actions, dict) or set(actions) != ADMIN_ACTION_KEYS:
+        fail("freeze administrator_actions inventory drift")
+    for name, action in actions.items():
+        if not isinstance(action, dict):
+            fail(f"freeze action {name} must be an object")
+        if action.get("status") in {"COMPLETE", "LIVE", "PRODUCTION_QUALIFIED"}:
+            fail(f"freeze action {name} must not be marked complete")
+        if action.get("status") != "BLOCKED_EXTERNAL":
+            fail(f"freeze action {name} must remain BLOCKED_EXTERNAL")
+        if not action.get("unblocking_artifact"):
+            fail(f"freeze action {name} missing unblocking_artifact")
+    digest = freeze.get("checksum_sha256")
+    expected = canonical_json_digest(freeze, omit="checksum_sha256")
+    if digest != expected:
+        fail("freeze checksum_sha256 mismatch")
+    commit = freeze.get("pre_freeze_commit")
+    if commit != PRE_FREEZE_COMMIT:
+        fail("freeze pre_freeze_commit drift")
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", str(commit), "HEAD"],
+        cwd=ROOT,
+        check=True,
+    )
+    tree = subprocess.run(
+        ["git", "rev-parse", f"{commit}^{{tree}}"],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    ).stdout.strip()
+    if tree != freeze.get("pre_freeze_tree"):
+        fail("freeze pre_freeze_tree does not match git")
+    archive = subprocess.run(
+        ["git", "archive", "--format=tar", str(commit)],
+        cwd=ROOT,
+        check=True,
+        stdout=subprocess.PIPE,
+    ).stdout
+    archive_digest = hashlib.sha256(archive).hexdigest()
+    if archive_digest != freeze.get("pre_freeze_archive_sha256"):
+        fail("freeze pre_freeze_archive_sha256 does not match git archive")
+    readme = squashed((ROOT / "README.md").read_text(encoding="utf-8"))
+    if "live public service" not in readme.lower() or "not a live public service" not in readme.lower():
+        fail("README must state this is not a live public service")
 
 
 def validate_yaml() -> None:

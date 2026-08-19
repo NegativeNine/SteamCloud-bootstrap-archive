@@ -18,6 +18,7 @@ from validate_placeholder import (
     unique_object,
     validate_closeout_document,
     validate_coordination,
+    validate_freeze,
     validate_phase_ledger,
     validate_program_ledger,
     validate_structure,
@@ -154,6 +155,27 @@ class PlaceholderValidatorTests(unittest.TestCase):
         with self.assertRaises(AssertionError) as ctx:
             validate_program_ledger(ledger)
         self.assertIn("UNKNOWN", str(ctx.exception))
+
+    def test_freeze_from_tree_is_accepted(self) -> None:
+        validate_freeze(load_json(ROOT / "docs/migration/FREEZE.json"))
+
+    def test_freeze_rename_executed_is_refused(self) -> None:
+        freeze = load_json(ROOT / "docs/migration/FREEZE.json")
+        freeze["github_rename_executed"] = True
+        with self.assertRaises(AssertionError) as ctx:
+            validate_freeze(freeze)
+        self.assertIn("GitHub rename executed", str(ctx.exception))
+
+    def test_freeze_admin_complete_is_refused(self) -> None:
+        freeze = load_json(ROOT / "docs/migration/FREEZE.json")
+        actions = freeze["administrator_actions"]
+        assert isinstance(actions, dict)
+        rename = actions["remote_rename"]
+        assert isinstance(rename, dict)
+        rename["status"] = "COMPLETE"
+        with self.assertRaises(AssertionError) as ctx:
+            validate_freeze(freeze)
+        self.assertIn("must not be marked complete", str(ctx.exception))
 
     def test_closeout_missing_cutover_denial_is_refused(self) -> None:
         closeout = load_json(ROOT / "docs/migration/CLOSEOUT.json")

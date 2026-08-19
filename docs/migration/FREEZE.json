@@ -1,0 +1,44 @@
+{
+  "schema": "steamcloud.placeholder.freeze.v1",
+  "frozen_at": "2026-08-19T14:43:17Z",
+  "pre_freeze_commit": "927f11ce6d144f72280fdb3c55abb030c44095e8",
+  "pre_freeze_tree": "9f678d01de79bbbc43ffc695d31d57c0cb245b82",
+  "pre_freeze_archive_sha256": "6393abc5792ae9e158facf03d5965502763405964b72f057340182ff6c3d6e7d",
+  "intended_archival_tag": "placeholder-disposition-freeze-2026-08-19",
+  "archival_tag_pushed": false,
+  "github_rename_executed": false,
+  "github_visibility_changed": false,
+  "github_archived_setting_toggled": false,
+  "canonical_name_target": "SteamCloud-bootstrap-archive",
+  "architecture_zip_tracked": false,
+  "operational_credentials_present": false,
+  "current_authority": "none",
+  "target_authority": "release the canonical NegativeNine/SteamCloud name for private steam-platform; this repo becomes a historical archive",
+  "administrator_actions": {
+    "mirror_backup_and_restorable_clone": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "access-controlled mirror backup checksum plus a successful restore-clone test"
+    },
+    "settings_issues_releases_tags_export": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "settings export id stored outside this public tree"
+    },
+    "secret_history_review": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "administrator secret-history review id"
+    },
+    "remote_rename": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "explicit GitHub rename authorization to SteamCloud-bootstrap-archive or another approved archive name"
+    },
+    "canonical_name_availability": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "post-rename proof that NegativeNine/SteamCloud is free"
+    },
+    "protected_main": {
+      "status": "BLOCKED_EXTERNAL",
+      "unblocking_artifact": "administrator branch-protection settings change"
+    }
+  },
+  "checksum_sha256": "fe354a102ae95449fbc07f5c00253ba95f35ce31d7224525cc058e1ecf5c8043"
+}

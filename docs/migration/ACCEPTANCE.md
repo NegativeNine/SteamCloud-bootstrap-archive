@@ -37,6 +37,9 @@ or Ember.
 11. The program ledger, outbound coordination record, and checksummed
     closeout exist; global communication is marked blocked; terminal state
     is `BLOCKED_EXTERNAL`; `PROGRAM_COMPLETE` is not emitted.
+12. The disposition freeze records a verifiable pre-freeze git-archive
+    digest and keeps administrator export/rename/protected-`main` rows
+    `BLOCKED_EXTERNAL`. It does not claim the GitHub rename was executed.
 
 ## Local validation commands
 

@@ -35,7 +35,11 @@ Machine-verifiable status is in
 Orchestration terminal state is `BLOCKED_EXTERNAL`. This closeout does not
 claim `LOCAL_COMPLETE`, `INTEGRATION_READY`, or `PROGRAM_COMPLETE`. No
 Campfire cutover, SteamCloud web/API deploy, Vault broker, Agent Gateway,
-or production qualification exists or is claimed here. Phases 1–3 require
+GitHub rename, or production qualification exists or is claimed here.
+Remaining administrator blockers (named in
+[FREEZE.json](FREEZE.json)) are: restorable mirror backup checksum, settings
+export, secret-history review, remote rename, canonical-name availability,
+and protected `main`. Phases 1–3 require
 administrator GitHub mutation. Phase 4 belongs in the private history-bearing
 repository. The checksummed machine-readable closeout is
 [CLOSEOUT.json](CLOSEOUT.json).
