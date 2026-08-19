@@ -29,9 +29,11 @@ or Ember.
 8. Alias, dependency, security, observability, rollback, and administrator
    gates are present.
 9. `git diff --check` and repository integrity checks pass.
-10. The phase ledger covers Phases 0–4, refuses `COMPLETE` without a
-    completing commit, and keeps administrator rename/export and sibling
-    architecture-migration phases from being marked complete.
+10. The phase ledger covers Phases 0–4 and every required wave, includes
+    the completion-contract fields, refuses `COMPLETE` / `LIVE` /
+    `PRODUCTION_QUALIFIED` / `RETIRED` without a completing commit, and
+    keeps administrator rename/export and sibling architecture-migration
+    phases from being marked complete, live, or production-qualified.
 
 ## Local validation commands
 

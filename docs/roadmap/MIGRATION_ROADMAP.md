@@ -2,8 +2,10 @@
 
 **Document status:** Current dependency- and evidence-driven plan. Dates do not
 advance phases; only the stated gates do. Machine-verifiable phase and wave
-status lives in [PHASE_LEDGER.json](PHASE_LEDGER.json). That ledger is the
-status authority; this document is the narrative plan.
+status lives in [PHASE_LEDGER.json](PHASE_LEDGER.json) (schema v2, completion
+contract fields). That ledger is the status authority; this document is the
+narrative plan. Ledger statuses include `LIVE`, `RESEARCH_ONLY`, and
+`PROHIBITED`; none of those apply to a runtime in this placeholder.
 
 ## Status vocabulary
 

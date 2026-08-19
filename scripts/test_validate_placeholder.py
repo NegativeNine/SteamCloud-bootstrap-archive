@@ -79,24 +79,64 @@ class PlaceholderValidatorTests(unittest.TestCase):
         assert isinstance(phases, list)
         phase0 = phases[0]
         assert isinstance(phase0, dict)
-        phase0["status"] = "COMPLETE"
-        phase0["completing_commit"] = None
+        phase0["current_status"] = "COMPLETE"
+        phase0["completion_commit"] = None
         with self.assertRaises(AssertionError) as ctx:
             validate_phase_ledger(ledger)
-        self.assertIn("completing_commit", str(ctx.exception))
+        self.assertIn("completion_commit", str(ctx.exception))
+
+    def test_live_without_commit_is_refused(self) -> None:
+        ledger = load_json(ROOT / "docs/roadmap/PHASE_LEDGER.json")
+        phases = ledger["phases"]
+        assert isinstance(phases, list)
+        phase0 = phases[0]
+        assert isinstance(phase0, dict)
+        phase0["current_status"] = "LIVE"
+        phase0["completion_commit"] = None
+        with self.assertRaises(AssertionError) as ctx:
+            validate_phase_ledger(ledger)
+        self.assertIn("completion_commit", str(ctx.exception))
 
     def test_admin_phase_complete_is_refused(self) -> None:
         ledger = load_json(ROOT / "docs/roadmap/PHASE_LEDGER.json")
         phases = ledger["phases"]
         assert isinstance(phases, list)
-        phase1 = next(phase for phase in phases if phase["id"] == "phase-1")
+        phase1 = next(
+            phase for phase in phases if phase["phase_or_wave_id"] == "phase-1"
+        )
         assert isinstance(phase1, dict)
-        phase1["status"] = "COMPLETE"
-        phase1["completing_commit"] = "541ff226a963ffa9acc1fcc6062b6878c2832592"
-        phase1["date_completed"] = "2026-08-19"
+        phase1["current_status"] = "COMPLETE"
+        phase1["completion_commit"] = "541ff226a963ffa9acc1fcc6062b6878c2832592"
+        phase1["completed_at"] = "2026-08-19"
         with self.assertRaises(AssertionError) as ctx:
             validate_phase_ledger(ledger)
         self.assertIn("must not be marked complete", str(ctx.exception))
+
+    def test_sibling_phase_production_qualified_is_refused(self) -> None:
+        ledger = load_json(ROOT / "docs/roadmap/PHASE_LEDGER.json")
+        phases = ledger["phases"]
+        assert isinstance(phases, list)
+        phase4 = next(
+            phase for phase in phases if phase["phase_or_wave_id"] == "phase-4"
+        )
+        assert isinstance(phase4, dict)
+        phase4["current_status"] = "PRODUCTION_QUALIFIED"
+        phase4["completion_commit"] = "541ff226a963ffa9acc1fcc6062b6878c2832592"
+        phase4["completed_at"] = "2026-08-19"
+        with self.assertRaises(AssertionError) as ctx:
+            validate_phase_ledger(ledger)
+        self.assertIn("must not be marked complete", str(ctx.exception))
+
+    def test_missing_deployment_target_is_refused(self) -> None:
+        ledger = load_json(ROOT / "docs/roadmap/PHASE_LEDGER.json")
+        phases = ledger["phases"]
+        assert isinstance(phases, list)
+        phase0 = phases[0]
+        assert isinstance(phase0, dict)
+        del phase0["deployment_target"]
+        with self.assertRaises(AssertionError) as ctx:
+            validate_phase_ledger(ledger)
+        self.assertIn("deployment_target", str(ctx.exception))
 
 
 if __name__ == "__main__":

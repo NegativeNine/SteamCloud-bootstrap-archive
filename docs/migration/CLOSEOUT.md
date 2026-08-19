@@ -26,19 +26,28 @@ Machine-verifiable status is in
 | phase-0 | Placeholder bootstrap | `COMPLETE` | `5c66871812521e3d9a705d46a7297b69532894ba` |
 | phase-0-wave-archive-handoff | PR #2 archive handoff | `COMPLETE` | `541ff226a963ffa9acc1fcc6062b6878c2832592` |
 | phase-0-wave-ledger-refresh | Phase ledger and 2026-08-19 refresh | `COMPLETE` | `5c66871812521e3d9a705d46a7297b69532894ba` |
+| phase-0-wave-completion-contract | Completion-ledger contract fields | `VALIDATED_NOT_LIVE` until landed | pending this wave |
 | phase-1 | Administrator export and public-content review | `BLOCKED` | none |
 | phase-2 | Move the public placeholder | `BLOCKED` | none |
 | phase-3 | Authorize the history-bearing rename | `BLOCKED` | none |
 | phase-4 | Architecture migration in the canonical repository | `BLOCKED` | none |
 
-No later in-repo wave is dependency-ready. Phases 1–3 require administrator
-GitHub mutation. Phase 4 belongs in the private history-bearing repository.
+No Campfire cutover, SteamCloud web/API deploy, Vault broker, Agent Gateway,
+or production qualification exists or is claimed here. Phases 1–3 require
+administrator GitHub mutation. Phase 4 belongs in the private history-bearing
+repository.
+
+## Branch and PR disposition
+
+Only `main` exists locally and on `origin`. There are no tags, releases, or
+open pull requests. No non-`main` branch remains to delete.
 
 ## Final `main` SHA
 
 Phase 0 implementation landed on `origin/main` as
-`5c66871812521e3d9a705d46a7297b69532894ba`. This closeout and ledger stamp
-are a subsequent documentation commit on that tip.
+`5c66871812521e3d9a705d46a7297b69532894ba`. The closeout stamp is
+`5c6397993fdc90ab07a8f776230606f8bd3437df`. This completion-contract
+refresh is a later documentation/validator wave on that tip.
 
 ## Tests and validation run
 
@@ -96,9 +105,16 @@ report, observability, security, and this closeout distinguish live,
 implemented-but-not-live, shadow/canary, reference, blocked, and target
 states. The architecture ZIP is not in the tracked tree.
 
+## Production release / live URLs
+
+None. `deployment_target` is `none` and `production_release` is null for
+every ledger row. This repository has no site, API, worker, package, or
+control plane to deploy.
+
 ## Follow-on work outside this repository roadmap
 
 All Ember, Campfire, SteamCloud, and SteamGraph runtime work, secret
-placement, and authority cutover belong in the history-bearing
-implementation after a separately authorized rename. This public placeholder
-must not grow an application scaffold or import private history.
+placement, Agent Gateway, Vault, OIDC cutover, web/control-plane polish,
+and authority cutover belong in the history-bearing implementation after a
+separately authorized rename. This public placeholder must not grow an
+application scaffold or import private history.

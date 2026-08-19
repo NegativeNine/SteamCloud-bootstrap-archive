@@ -369,28 +369,46 @@ LEDGER_STATUSES = {
     "VALIDATED_NOT_LIVE",
     "SHADOW",
     "CANARY",
+    "LIVE",
     "BLOCKED",
+    "RESEARCH_ONLY",
+    "PROHIBITED",
     "COMPLETE",
     "PRODUCTION_QUALIFIED",
     "RETIRED",
 }
-TERMINAL_DONE = {"COMPLETE", "PRODUCTION_QUALIFIED", "RETIRED"}
+TERMINAL_DONE = {"COMPLETE", "LIVE", "PRODUCTION_QUALIFIED", "RETIRED"}
 ADMIN_OR_SIBLING_PHASES = {"phase-1", "phase-2", "phase-3", "phase-4"}
 REQUIRED_PHASE_IDS = ["phase-0", "phase-1", "phase-2", "phase-3", "phase-4"]
+REQUIRED_WAVES = {
+    "phase-0": [
+        "phase-0-wave-archive-handoff",
+        "phase-0-wave-ledger-refresh",
+        "phase-0-wave-completion-contract",
+    ],
+    "phase-1": ["phase-1-wave-admin-export"],
+    "phase-2": ["phase-2-wave-rename-placeholder"],
+    "phase-3": ["phase-3-wave-rename-steam-platform"],
+    "phase-4": ["phase-4-wave-canonical-migration"],
+}
 REQUIRED_LEDGER_FIELDS = {
-    "id",
+    "phase_or_wave_id",
     "title",
     "dependencies",
-    "status",
+    "current_status",
     "implemented_scope",
     "missing_scope",
     "acceptance_criteria",
-    "tests_and_evidence_required",
-    "production_or_migration_risk",
+    "required_tests",
+    "required_review_workflows",
+    "deployment_target",
+    "current_authority",
+    "target_authority",
     "rollback_path",
-    "completing_commit",
-    "date_completed",
-    "remaining_blockers",
+    "blocking_dependency",
+    "completion_commit",
+    "production_release",
+    "completed_at",
 }
 
 
@@ -399,40 +417,53 @@ def validate_ledger_entry(entry: object, kind: str) -> dict[str, object]:
         fail(f"{kind} entry must be an object")
     missing = REQUIRED_LEDGER_FIELDS.difference(entry)
     if missing:
-        fail(f"{kind} {entry.get('id')} missing fields: {sorted(missing)}")
-    status = entry["status"]
+        fail(f"{kind} {entry.get('phase_or_wave_id', entry.get('id'))} missing fields: {sorted(missing)}")
+    entry_id = entry.get("phase_or_wave_id")
+    if not isinstance(entry_id, str) or not entry_id:
+        fail(f"{kind} phase_or_wave_id must be a non-empty string")
+    if entry.get("id") not in {None, entry_id}:
+        fail(f"{kind} {entry_id} id must match phase_or_wave_id")
+    status = entry["current_status"]
     if status not in LEDGER_STATUSES:
-        fail(f"{kind} {entry['id']} has invalid status: {status}")
+        fail(f"{kind} {entry_id} has invalid status: {status}")
     if not isinstance(entry["dependencies"], list):
-        fail(f"{kind} {entry['id']} dependencies must be a list")
+        fail(f"{kind} {entry_id} dependencies must be a list")
     if not isinstance(entry["acceptance_criteria"], list):
-        fail(f"{kind} {entry['id']} acceptance_criteria must be a list")
-    if not isinstance(entry["tests_and_evidence_required"], list):
-        fail(f"{kind} {entry['id']} tests_and_evidence_required must be a list")
-    if not isinstance(entry["remaining_blockers"], list):
-        fail(f"{kind} {entry['id']} remaining_blockers must be a list")
-    if not entry["tests_and_evidence_required"]:
-        fail(f"{kind} {entry['id']} missing evidence field")
+        fail(f"{kind} {entry_id} acceptance_criteria must be a list")
+    if not isinstance(entry["required_tests"], list) or not entry["required_tests"]:
+        fail(f"{kind} {entry_id} missing required_tests evidence field")
+    if not isinstance(entry["required_review_workflows"], list):
+        fail(f"{kind} {entry_id} required_review_workflows must be a list")
+    if "placeholder-archive-validation" not in entry["required_review_workflows"]:
+        fail(f"{kind} {entry_id} must require the archive-validation workflow")
+    if entry.get("deployment_target") != "none":
+        fail(f"{kind} {entry_id} deployment_target must be none in this placeholder")
+    if entry.get("production_release") is not None:
+        fail(f"{kind} {entry_id} must not claim a production_release")
+    if not isinstance(entry.get("current_authority"), str) or not entry["current_authority"]:
+        fail(f"{kind} {entry_id} current_authority missing")
+    if not isinstance(entry.get("target_authority"), str) or not entry["target_authority"]:
+        fail(f"{kind} {entry_id} target_authority missing")
 
-    commit = entry["completing_commit"]
-    completed = entry["date_completed"]
+    commit = entry["completion_commit"]
+    completed = entry["completed_at"]
     if status in TERMINAL_DONE:
         if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
-            fail(f"{kind} {entry['id']} terminal status requires completing_commit")
+            fail(f"{kind} {entry_id} terminal status requires completion_commit")
         subprocess.run(
             ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
             cwd=ROOT,
             check=True,
         )
         if not isinstance(completed, str) or not completed:
-            fail(f"{kind} {entry['id']} terminal status requires date_completed")
+            fail(f"{kind} {entry_id} terminal status requires completed_at")
     elif commit is not None:
-        fail(f"{kind} {entry['id']} non-terminal status must not claim completing_commit")
+        fail(f"{kind} {entry_id} non-terminal status must not claim completion_commit")
     return entry
 
 
 def validate_phase_ledger(ledger: dict[str, object]) -> None:
-    if ledger.get("schema") != "steamcloud.placeholder.phase-ledger.v1":
+    if ledger.get("schema") != "steamcloud.placeholder.phase-ledger.v2":
         fail("phase ledger schema mismatch")
     vocabulary = ledger.get("status_vocabulary")
     if not isinstance(vocabulary, list) or set(vocabulary) != LEDGER_STATUSES:
@@ -444,33 +475,34 @@ def validate_phase_ledger(ledger: dict[str, object]) -> None:
     seen: list[str] = []
     for phase in phases:
         record = validate_ledger_entry(phase, "phase")
-        phase_id = record["id"]
-        if not isinstance(phase_id, str):
-            fail("phase id must be a string")
+        phase_id = record["phase_or_wave_id"]
         if phase_id in seen:
             fail(f"duplicate phase id: {phase_id}")
         seen.append(phase_id)
-        if phase_id in ADMIN_OR_SIBLING_PHASES and record["status"] in TERMINAL_DONE:
+        if phase_id in ADMIN_OR_SIBLING_PHASES and record["current_status"] in TERMINAL_DONE:
             fail(f"{phase_id} must not be marked complete in this placeholder")
-        if phase_id in ADMIN_OR_SIBLING_PHASES and record["status"] != "BLOCKED":
+        if phase_id in ADMIN_OR_SIBLING_PHASES and record["current_status"] != "BLOCKED":
             fail(f"{phase_id} must remain BLOCKED until its external unblocking condition")
+        if phase_id in ADMIN_OR_SIBLING_PHASES and not record.get("blocking_dependency"):
+            fail(f"{phase_id} must record a blocking_dependency")
         waves = record.get("waves", [])
         if not isinstance(waves, list):
             fail(f"phase {phase_id} waves must be a list")
-        wave_ids: set[str] = set()
+        wave_ids: list[str] = []
         for wave in waves:
             wave_record = validate_ledger_entry(wave, "wave")
-            wave_id = wave_record["id"]
-            if not isinstance(wave_id, str):
-                fail("wave id must be a string")
+            wave_id = wave_record["phase_or_wave_id"]
             if wave_id in wave_ids:
                 fail(f"duplicate wave id: {wave_id}")
-            wave_ids.add(wave_id)
+            wave_ids.append(wave_id)
             if (
                 phase_id in ADMIN_OR_SIBLING_PHASES
-                and wave_record["status"] in TERMINAL_DONE
+                and wave_record["current_status"] in TERMINAL_DONE
             ):
                 fail(f"{wave_id} must not be marked complete in this placeholder")
+        expected_waves = REQUIRED_WAVES.get(phase_id, [])
+        if wave_ids != expected_waves:
+            fail(f"phase {phase_id} waves must be {expected_waves}; got {wave_ids}")
     if seen != REQUIRED_PHASE_IDS:
         fail(f"phase ledger must contain {REQUIRED_PHASE_IDS} in order; got {seen}")
 
