@@ -9,7 +9,7 @@
   "messages": [
     {
       "event": "REGISTER",
-      "repository": "NegativeNine/SteamCloud",
+      "repository": "NegativeNine/SteamCloud-bootstrap-archive",
       "session": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
       "observed_at": "2026-08-19T01:52:30Z",
       "head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",
@@ -54,7 +54,7 @@
     },
     {
       "event": "STATUS",
-      "repository": "NegativeNine/SteamCloud",
+      "repository": "NegativeNine/SteamCloud-bootstrap-archive",
       "session": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
       "observed_at": "2026-08-19T01:52:30Z",
       "head": "cb41164b89a5a8eb3aad966257a40c8e242c45ab",

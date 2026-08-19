@@ -240,9 +240,9 @@
       "dependencies": [
         "phase-1"
       ],
-      "current_status": "BLOCKED",
-      "implemented_scope": "Unexecuted rename sequence and rollback text in the administrator handoff. Target archive name SteamCloud-bootstrap-archive is recorded.",
-      "missing_scope": "The GitHub repository rename itself, post-rename verification, and confirmation that NegativeNine/SteamCloud is free.",
+      "current_status": "COMPLETE",
+      "implemented_scope": "Administrator renamed GitHub repository id 1338764433 from NegativeNine/SteamCloud to NegativeNine/SteamCloud-bootstrap-archive. Visibility remains public; archived=false. Canonical NegativeNine/SteamCloud is now private repository id 1165039771. This checkout did not perform the rename.",
+      "missing_scope": "Restore-tested backup evidence and protected main remain administrator work (phase-1 / protected_main).",
       "acceptance_criteria": [
         "archive repository resolves under the approved name",
         "settings, refs, PR history, and required integrations survived",
@@ -250,24 +250,22 @@
         "rollback instructions remain valid"
       ],
       "required_tests": [
-        "administrator rename evidence and post-rename inventory outside this tree"
+        "GitHub API: repos/NegativeNine/SteamCloud-bootstrap-archive id 1338764433",
+        "python3 scripts/validate_placeholder.py"
       ],
       "required_review_workflows": [
         "placeholder-archive-validation"
       ],
       "deployment_target": "none",
-      "current_authority": "repository still named NegativeNine/SteamCloud; rename not executed",
-      "target_authority": "repository named SteamCloud-bootstrap-archive or another approved archive name",
+      "current_authority": "public historical archive named SteamCloud-bootstrap-archive; no runtime authority",
+      "target_authority": "same historical archive role",
       "rollback_path": "Before any private-repository rename, rename the archive back to SteamCloud if dependency or settings loss is detected.",
-      "blocking_dependency": "explicit administrator authorization to rename this GitHub repository",
-      "completion_commit": null,
+      "blocking_dependency": null,
+      "completion_commit": "6ddfe4a0168dfc34592f681f29eab050fcf8f5f2",
       "production_release": null,
-      "completed_at": null,
+      "completed_at": "2026-08-19",
       "production_or_migration_risk": "Repository-name consumers, hosted Action references, and redirects can break. Runtime authority is unchanged by a rename, but hosted Action paths are not redirected.",
-      "remaining_blockers": [
-        "explicit administrator authorization to rename this GitHub repository",
-        "phase-1 exit gates are not satisfied"
-      ],
+      "remaining_blockers": [],
       "waves": [
         {
           "id": "phase-2-wave-rename-placeholder",
@@ -276,9 +274,9 @@
           "dependencies": [
             "phase-1-wave-admin-export"
           ],
-          "current_status": "BLOCKED",
-          "implemented_scope": "Prepared, unexecuted handoff only.",
-          "missing_scope": "The GitHub rename API/UI action.",
+          "current_status": "COMPLETE",
+          "implemented_scope": "Observed GitHub rename of this repository to SteamCloud-bootstrap-archive.",
+          "missing_scope": "None for the rename itself.",
           "acceptance_criteria": [
             "repository name is the approved archive name",
             "visibility and archived=false unchanged"
@@ -290,17 +288,15 @@
             "placeholder-archive-validation"
           ],
           "deployment_target": "none",
-          "current_authority": "rename unexecuted",
-          "target_authority": "placeholder moved off the SteamCloud name",
+          "current_authority": "archive name in use",
+          "target_authority": "archive name in use",
           "rollback_path": "Rename back to SteamCloud before any private rename.",
-          "blocking_dependency": "administrator must execute the GitHub rename; this bootstrap must not",
-          "completion_commit": null,
+          "blocking_dependency": null,
+          "completion_commit": "6ddfe4a0168dfc34592f681f29eab050fcf8f5f2",
           "production_release": null,
-          "completed_at": null,
+          "completed_at": "2026-08-19",
           "production_or_migration_risk": "Redirect and hosted-Action breakage.",
-          "remaining_blockers": [
-            "administrator must execute the GitHub rename; this bootstrap must not"
-          ]
+          "remaining_blockers": []
         }
       ]
     },
@@ -312,8 +308,8 @@
         "phase-2"
       ],
       "current_status": "BLOCKED",
-      "implemented_scope": "Recorded sequence only. No private steam-platform history or settings are present here.",
-      "missing_scope": "Authorization and in-place rename of private steam-platform to SteamCloud, kept private.",
+      "implemented_scope": "GitHub maps NegativeNine/steam-platform to private NegativeNine/SteamCloud id 1165039771. Internal history/settings/secret review of that private repository is not evidenced from this public archive.",
+      "missing_scope": "Independent private-repository confirmation that history, tags, releases, packages, webhooks, and Actions survived; visibility remains private.",
       "acceptance_criteria": [
         "history, settings, tags, releases, deployment references, packages, webhooks, and Actions preserved under the canonical name",
         "repository remains private",
@@ -329,15 +325,14 @@
       "current_authority": "private steam-platform remains the history-bearing implementation; UNKNOWN from this checkout",
       "target_authority": "private history-bearing repository renamed to SteamCloud and kept private",
       "rollback_path": "Use the separately approved private-repository rollback plan. Never recreate steam-platform casually.",
-      "blocking_dependency": "separate administrator authorization for the private repository rename",
+      "blocking_dependency": "private steam-platform/SteamCloud history and settings review not evidenced from this archive",
       "completion_commit": null,
       "production_release": null,
       "completed_at": null,
       "production_or_migration_risk": "Exposing private history, breaking private remotes, or invalidating redirects if steam-platform is later recreated.",
       "remaining_blockers": [
-        "separate administrator authorization for the private repository rename",
-        "private steam-platform history and secret review must occur in that repository",
-        "phase-2 has not made the SteamCloud name available"
+        "UNKNOWN: private repository internals, tags, packages, and webhooks",
+        "visibility publication remains a separate decision"
       ],
       "waves": [
         {

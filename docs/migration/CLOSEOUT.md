@@ -28,14 +28,16 @@ Machine-verifiable status is in
 | phase-0-wave-ledger-refresh | Phase ledger and 2026-08-19 refresh | `COMPLETE` | `5c66871812521e3d9a705d46a7297b69532894ba` |
 | phase-0-wave-completion-contract | Completion-ledger contract fields | `COMPLETE` | `89235a2a8431e7a76de5c62608b528a8be8fe62f` |
 | phase-1 | Administrator export and public-content review | `BLOCKED` | none |
-| phase-2 | Move the public placeholder | `BLOCKED` | none |
+| phase-2 | Move the public placeholder | `COMPLETE` | `6ddfe4a0168dfc34592f681f29eab050fcf8f5f2` |
 | phase-3 | Authorize the history-bearing rename | `BLOCKED` | none |
 | phase-4 | Architecture migration in the canonical repository | `BLOCKED` | none |
 
 Orchestration terminal state is `BLOCKED_EXTERNAL`. This closeout does not
 claim `LOCAL_COMPLETE`, `INTEGRATION_READY`, or `PROGRAM_COMPLETE`. No
 Campfire cutover, SteamCloud web/API deploy, Vault broker, Agent Gateway,
-GitHub rename, or production qualification exists or is claimed here.
+or production qualification exists or is claimed here. This bootstrap
+executed GitHub rename is false: the administrator rename to
+`SteamCloud-bootstrap-archive` was observed after the fact.
 Remaining administrator blockers (named in
 [FREEZE.json](FREEZE.json)) are: restorable mirror backup checksum, settings
 export, secret-history review, remote rename, canonical-name availability,

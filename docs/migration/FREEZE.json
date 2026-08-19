@@ -9,14 +9,14 @@
   "customized_guidance_package": "SteamCloud-SteamGraph-Customized-Repository-Guidance-v1.0.zip",
   "customized_guidance_sha256": "02115bcef8500bb7719ccf4a4f9e4a90d61832b1a3960947f6fe0195ece3f86d",
   "customized_guidance_tracked": false,
-  "github_rename_executed": false,
+  "github_rename_executed": true,
   "github_visibility_changed": false,
   "github_archived_setting_toggled": false,
   "canonical_name_target": "SteamCloud-bootstrap-archive",
   "architecture_zip_tracked": false,
   "operational_credentials_present": false,
   "current_authority": "none",
-  "target_authority": "release the canonical NegativeNine/SteamCloud name for private steam-platform; this repo becomes a historical archive",
+  "target_authority": "this repository remains a historical public archive; operational SteamCloud is the private history-bearing repository",
   "administrator_actions": {
     "mirror_backup_and_restorable_clone": {
       "status": "BLOCKED_EXTERNAL",
@@ -31,17 +31,25 @@
       "unblocking_artifact": "administrator secret-history review id"
     },
     "remote_rename": {
-      "status": "BLOCKED_EXTERNAL",
-      "unblocking_artifact": "explicit GitHub rename authorization to SteamCloud-bootstrap-archive or another approved archive name"
+      "status": "COMPLETE",
+      "unblocking_artifact": "GitHub repository id 1338764433 now named NegativeNine/SteamCloud-bootstrap-archive; visibility public; archived=false"
     },
     "canonical_name_availability": {
-      "status": "BLOCKED_EXTERNAL",
-      "unblocking_artifact": "post-rename proof that NegativeNine/SteamCloud is free"
+      "status": "COMPLETE",
+      "unblocking_artifact": "NegativeNine/SteamCloud is occupied by private repository id 1165039771 (GitHub maps steam-platform to that name)"
     },
     "protected_main": {
       "status": "BLOCKED_EXTERNAL",
       "unblocking_artifact": "administrator branch-protection settings change"
     }
   },
-  "checksum_sha256": "0772a0c177fe3925889d41660ab4dda52ba633c8e30ce5ce17b4192938b9ae6a"
+  "github_rename_executed_by_this_bootstrap": false,
+  "observed_repository_id": 1338764433,
+  "observed_full_name": "NegativeNine/SteamCloud-bootstrap-archive",
+  "observed_visibility": "public",
+  "observed_archived": false,
+  "canonical_steamcloud_id": 1165039771,
+  "canonical_steamcloud_full_name": "NegativeNine/SteamCloud",
+  "canonical_steamcloud_visibility": "private",
+  "checksum_sha256": "78198929d536c15eb6c3def656311b4c574875d60930256cd6435e2106840e8f"
 }

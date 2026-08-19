@@ -392,7 +392,7 @@ LEDGER_STATUSES = {
     "RETIRED",
 }
 TERMINAL_DONE = {"COMPLETE", "LIVE", "PRODUCTION_QUALIFIED", "RETIRED"}
-ADMIN_OR_SIBLING_PHASES = {"phase-1", "phase-2", "phase-3", "phase-4"}
+ADMIN_OR_SIBLING_PHASES = {"phase-1", "phase-3", "phase-4"}
 REQUIRED_PHASE_IDS = ["phase-0", "phase-1", "phase-2", "phase-3", "phase-4"]
 REQUIRED_WAVES = {
     "phase-0": [
@@ -620,7 +620,7 @@ def validate_program_ledger(ledger: dict[str, object]) -> None:
     missing = [field for field in PROGRAM_LEDGER_FIELDS if field not in ledger]
     if missing:
         fail(f"program ledger missing fields: {missing}")
-    if ledger.get("repository") != "NegativeNine/SteamCloud":
+    if ledger.get("repository") != "NegativeNine/SteamCloud-bootstrap-archive":
         fail("program ledger repository identity drift")
     if "placeholder" not in str(ledger.get("repository_role", "")).lower():
         fail("program ledger must identify this repository as a placeholder")
@@ -667,7 +667,7 @@ def validate_coordination(record: dict[str, object]) -> None:
         if state not in ORCHESTRATION_STATES:
             fail(f"coordination message has invalid state: {state}")
         events.append(message["event"])
-        if message.get("repository") != "NegativeNine/SteamCloud":
+        if message.get("repository") != "NegativeNine/SteamCloud-bootstrap-archive":
             fail("coordination message repository drift")
     if "REGISTER" not in events or "STATUS" not in events:
         fail("coordination record must include REGISTER and STATUS")
@@ -697,9 +697,11 @@ def validate_closeout_document(closeout: dict[str, object]) -> None:
     required_denials = {
         "Campfire cutover",
         "SteamCloud web/API deploy",
-        "GitHub rename executed",
         "end-to-end production journey",
+        "this bootstrap executed GitHub rename",
     }
+    if closeout.get("github_rename_executed_by_this_bootstrap") is not False:
+        fail("closeout must not claim this bootstrap executed the GitHub rename")
     claimed = closeout.get("not_claimed")
     if not isinstance(claimed, list) or not required_denials.issubset(set(claimed)):
         fail("closeout must deny rename, Campfire cutover, web/API deploy, and production journey claims")
@@ -747,8 +749,19 @@ def validate_freeze(freeze: dict[str, object]) -> None:
     missing = required.difference(freeze)
     if missing:
         fail(f"freeze missing fields: {sorted(missing)}")
-    if freeze.get("github_rename_executed") is not False:
-        fail("freeze must not claim GitHub rename executed")
+    if freeze.get("github_rename_executed_by_this_bootstrap") is not False:
+        fail("freeze must not claim this bootstrap executed the GitHub rename")
+    if freeze.get("github_rename_executed") is True:
+        if freeze.get("observed_repository_id") != 1338764433:
+            fail("observed GitHub rename must keep repository id 1338764433")
+        if freeze.get("observed_full_name") != "NegativeNine/SteamCloud-bootstrap-archive":
+            fail("observed GitHub rename must name SteamCloud-bootstrap-archive")
+        if freeze.get("canonical_steamcloud_id") != 1165039771:
+            fail("canonical SteamCloud observation missing")
+        if freeze.get("canonical_steamcloud_visibility") != "private":
+            fail("canonical SteamCloud must remain private in freeze evidence")
+    elif freeze.get("github_rename_executed") is not False:
+        fail("github_rename_executed must be boolean")
     if freeze.get("github_visibility_changed") is not False:
         fail("freeze must not claim visibility change")
     if freeze.get("architecture_zip_tracked") is not False:
@@ -768,10 +781,20 @@ def validate_freeze(freeze: dict[str, object]) -> None:
     for name, action in actions.items():
         if not isinstance(action, dict):
             fail(f"freeze action {name} must be an object")
-        if action.get("status") in {"COMPLETE", "LIVE", "PRODUCTION_QUALIFIED"}:
-            fail(f"freeze action {name} must not be marked complete")
-        if action.get("status") != "BLOCKED_EXTERNAL":
-            fail(f"freeze action {name} must remain BLOCKED_EXTERNAL")
+        if action.get("status") in {"LIVE", "PRODUCTION_QUALIFIED"}:
+            fail(f"freeze action {name} must not be marked live or production-qualified")
+        allowed_complete = freeze.get("github_rename_executed") is True and name in {
+            "remote_rename",
+            "canonical_name_availability",
+        }
+        if allowed_complete:
+            if action.get("status") != "COMPLETE":
+                fail(f"freeze action {name} must be COMPLETE after observed rename")
+        else:
+            if action.get("status") in {"COMPLETE", "LIVE", "PRODUCTION_QUALIFIED"}:
+                fail(f"freeze action {name} must not be marked complete")
+            if action.get("status") != "BLOCKED_EXTERNAL":
+                fail(f"freeze action {name} must remain BLOCKED_EXTERNAL")
         if not action.get("unblocking_artifact"):
             fail(f"freeze action {name} missing unblocking_artifact")
     digest = freeze.get("checksum_sha256")

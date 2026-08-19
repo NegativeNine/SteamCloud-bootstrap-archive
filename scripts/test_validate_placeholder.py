@@ -169,17 +169,18 @@ class PlaceholderValidatorTests(unittest.TestCase):
     def test_freeze_rename_executed_is_refused(self) -> None:
         freeze = load_json(ROOT / "docs/migration/FREEZE.json")
         freeze["github_rename_executed"] = True
+        freeze["observed_full_name"] = "NegativeNine/SteamCloud"
         with self.assertRaises(AssertionError) as ctx:
             validate_freeze(freeze)
-        self.assertIn("GitHub rename executed", str(ctx.exception))
+        self.assertIn("SteamCloud-bootstrap-archive", str(ctx.exception))
 
     def test_freeze_admin_complete_is_refused(self) -> None:
         freeze = load_json(ROOT / "docs/migration/FREEZE.json")
         actions = freeze["administrator_actions"]
         assert isinstance(actions, dict)
-        rename = actions["remote_rename"]
-        assert isinstance(rename, dict)
-        rename["status"] = "COMPLETE"
+        backup = actions["mirror_backup_and_restorable_clone"]
+        assert isinstance(backup, dict)
+        backup["status"] = "COMPLETE"
         with self.assertRaises(AssertionError) as ctx:
             validate_freeze(freeze)
         self.assertIn("must not be marked complete", str(ctx.exception))

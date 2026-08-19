@@ -23,12 +23,15 @@
     "request: steam-platform remain private history-bearing implementation",
     "request: administrator complete export and authorized rename sequence"
   ],
+  "github_rename_observed": true,
+  "github_rename_executed_by_this_bootstrap": false,
+  "observed_full_name": "NegativeNine/SteamCloud-bootstrap-archive",
   "not_claimed": [
     "PROGRAM_COMPLETE",
     "Campfire cutover",
     "SteamCloud web/API deploy",
     "end-to-end production journey",
-    "GitHub rename executed"
+    "this bootstrap executed GitHub rename"
   ],
-  "checksum_sha256": "cd745cec957b1652f4e88036e313d38a61f7cfa16654e893bbb1ee720f52501b"
+  "checksum_sha256": "4ae345427cd4f80292ab1665a204cc37da2ca5a914c13839b3a473796675a67f"
 }

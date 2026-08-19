@@ -28,12 +28,12 @@
       "kind": "repository",
       "current_status": "CURRENT LIVE",
       "target_status": "TARGET",
-      "action_status": "BLOCKED/NOT QUALIFIED",
+      "action_status": "IMPLEMENTED BUT NOT LIVE",
       "first_supported_version": null,
       "last_supported_version": null,
-      "version_evidence": "repository identity, not a versioned contract",
-      "action": "administrator rename after settings export, backup, dependency review, and public-content review",
-      "removal_gate": "history and settings preserved; canonical SteamCloud name verified available"
+      "version_evidence": "GitHub repository id 1338764433 is named SteamCloud-bootstrap-archive",
+      "action": "administrator rename observed; remaining work is backup evidence and protected main",
+      "removal_gate": "historical documents remain interpretable"
     },
     {
       "legacy": "NegativeNine/steam-platform",
@@ -41,11 +41,11 @@
       "kind": "repository",
       "current_status": "UNKNOWN",
       "target_status": "TARGET",
-      "action_status": "BLOCKED/NOT QUALIFIED",
+      "action_status": "IMPLEMENTED BUT NOT LIVE",
       "first_supported_version": null,
       "last_supported_version": null,
-      "version_evidence": "not visible from this public checkout",
-      "action": "history-preserving administrator rename; keep private",
+      "version_evidence": "GitHub maps steam-platform to private NegativeNine/SteamCloud id 1165039771; internals UNKNOWN from this archive",
+      "action": "naming observed; private history/settings review remains outside this archive",
       "removal_gate": "all consumers updated and compatibility redirect retained"
     },
     {

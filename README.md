@@ -1,18 +1,20 @@
-# SteamCloud naming placeholder (historical)
+# SteamCloud-bootstrap-archive
 
-> **CURRENT LIVE:** This public repository is a naming placeholder and owns no
-> runtime, data, credential, execution, or semantic authority. It is not the
-> production SteamCloud implementation. It is not a live public service.
+> **CURRENT LIVE:** This public repository is a historical naming archive and
+> owns no runtime, data, credential, execution, or semantic authority. It is
+> not the production SteamCloud implementation. It is not a live public
+> service.
 
-This tree is a public disposition archive occupying the canonical GitHub name
-until an administrator moves it to `SteamCloud-bootstrap-archive` (or another
-approved archive name). The history-bearing implementation remains the private
-`steam-platform` repository. Do not copy operational code, schemas,
-credentials, secrets, or private history here, and do not pin this repository
-as SteamCloud runtime evidence.
+GitHub repository id `1338764433` was renamed from `NegativeNine/SteamCloud`
+to `NegativeNine/SteamCloud-bootstrap-archive`. The canonical
+`NegativeNine/SteamCloud` name is now the private history-bearing
+implementation (former `steam-platform`, id `1165039771`). Do not copy
+operational code, schemas, credentials, secrets, or private history here, and
+do not pin this archive as SteamCloud runtime evidence.
 
-No remote rename, visibility change, or runtime cutover is performed by this
-freeze.
+This bootstrap did not execute the GitHub rename. Remaining administrator
+work (restore-tested backup evidence, secret-history review, protected
+`main`) is still `BLOCKED_EXTERNAL`.
 
 ## Status
 
@@ -23,7 +25,7 @@ freeze.
 | `SHADOW/CANARY` | None. |
 | `REFERENCE/PROTOTYPE` | Historical v1 sample recoverable in Git history. |
 | `BLOCKED/NOT QUALIFIED` | Any use as a SteamCloud service, package, schema, or deployment. |
-| `TARGET` | Release the `NegativeNine/SteamCloud` name for private `steam-platform`. |
+| `TARGET` | Remain a historical public archive; operational SteamCloud stays private. |
 
 Sibling deployed state is `UNKNOWN`. Architecture package v2.0 is target
 guidance only.

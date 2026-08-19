@@ -1,14 +1,14 @@
 {
   "schema": "steamcloud.placeholder.program-ledger.v1",
-  "repository": "NegativeNine/SteamCloud",
-  "canonical_name": "NegativeNine/SteamCloud",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "canonical_name": "NegativeNine/SteamCloud-bootstrap-archive",
   "historical_names": [
     "NegativeNine/SteamCloud public v1 architecture sample"
   ],
   "repository_role": "public naming/disposition placeholder; not the history-bearing SteamCloud implementation",
   "session_or_agent_id": "01a01761-9c21-7e83-96a5-8c5ee1f31324",
   "observed_at": "2026-08-19T01:52:30Z",
-  "remote_url": "https://github.com/NegativeNine/SteamCloud",
+  "remote_url": "https://github.com/NegativeNine/SteamCloud-bootstrap-archive",
   "default_branch": "main",
   "current_branch": "main",
   "current_head": "6f000fd944a87af30ccf3e5a9794c9faad330b45",
@@ -32,7 +32,7 @@
   "roadmap_completion": {
     "phase-0": "COMPLETE",
     "phase-1": "BLOCKED",
-    "phase-2": "BLOCKED",
+    "phase-2": "COMPLETE",
     "phase-3": "BLOCKED",
     "phase-4": "BLOCKED"
   },
@@ -66,7 +66,7 @@
   "documentation_status": "README-led archive authority; not production-qualified",
   "branch_cleanup_status": "only main locally and on origin",
   "blockers": [
-    "BLOCKED_EXTERNAL: administrator export, backup, public-content review, and GitHub rename",
+    "BLOCKED_EXTERNAL: administrator restore-tested backup, settings export, secret-history review, and protected main",
     "BLOCKED_EXTERNAL: private steam-platform rename and runtime migration",
     "UNKNOWN: Ember, Campfire, steam-platform, and steam-hypergraph deployed qualification"
   ],
