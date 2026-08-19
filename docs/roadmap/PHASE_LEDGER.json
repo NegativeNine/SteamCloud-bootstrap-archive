@@ -21,9 +21,9 @@
       "id": "phase-0",
       "title": "Placeholder bootstrap",
       "dependencies": [],
-      "status": "VALIDATED_NOT_LIVE",
-      "implemented_scope": "README-led documentation authority; v1 sample preserved in Git history and docs/archive/placeholder; sample/application material removed from the branch tip; aliases, sibling UNKNOWN pins, inventory, security, observability, acceptance, and administrator handoff; architecture ZIP absent; archive validator and failure-path tests; 2026-08-19 bootstrap refresh prepared.",
-      "missing_scope": "Landing the 2026-08-19 refresh and this ledger on origin/main. No runtime work remains in this repository.",
+      "status": "COMPLETE",
+      "implemented_scope": "README-led documentation authority; v1 sample preserved in Git history and docs/archive/placeholder; sample/application material removed from the branch tip; aliases, sibling UNKNOWN pins, inventory, security, observability, acceptance, and administrator handoff; architecture ZIP absent; archive validator and failure-path tests; 2026-08-19 bootstrap refresh and phase ledger landed on origin/main.",
+      "missing_scope": "None in this repository.",
       "acceptance_criteria": [
         "README links to one documentation authority and states this is not the production SteamCloud implementation",
         "relative Markdown links resolve",
@@ -43,11 +43,9 @@
       ],
       "production_or_migration_risk": "None for runtime. Documentation-only change to a public naming placeholder.",
       "rollback_path": "Revert the bootstrap refresh commit. Historical sample commits remain intact.",
-      "completing_commit": null,
-      "date_completed": null,
-      "remaining_blockers": [
-        "origin/main does not yet contain the 2026-08-19 refresh and ledger commit"
-      ],
+      "completing_commit": "5c66871812521e3d9a705d46a7297b69532894ba",
+      "date_completed": "2026-08-19",
+      "remaining_blockers": [],
       "waves": [
         {
           "id": "phase-0-wave-archive-handoff",
@@ -76,9 +74,9 @@
           "dependencies": [
             "phase-0-wave-archive-handoff"
           ],
-          "status": "VALIDATED_NOT_LIVE",
-          "implemented_scope": "Strengthened archive validator; failure-path tests; refreshed inventory and bootstrap report; machine-verifiable phase ledger.",
-          "missing_scope": "Landing on origin/main and recording the completing commit.",
+          "status": "COMPLETE",
+          "implemented_scope": "Strengthened archive validator; failure-path tests; refreshed inventory and bootstrap report; machine-verifiable phase ledger; landed on origin/main.",
+          "missing_scope": "None in this repository.",
           "acceptance_criteria": [
             "ledger covers phases 0-4 with required fields",
             "COMPLETE without completing_commit is refused",
@@ -91,11 +89,9 @@
           ],
           "production_or_migration_risk": "None for runtime.",
           "rollback_path": "Revert this wave's commit.",
-          "completing_commit": null,
-          "date_completed": null,
-          "remaining_blockers": [
-            "wave not yet landed on origin/main"
-          ]
+          "completing_commit": "5c66871812521e3d9a705d46a7297b69532894ba",
+          "date_completed": "2026-08-19",
+          "remaining_blockers": []
         }
       ]
     },

@@ -14,10 +14,10 @@ defined in the
 
 ## Phase 0 — Placeholder bootstrap
 
-**Status:** documentation `IMPLEMENTED BUT NOT LIVE`; ledger
-`VALIDATED_NOT_LIVE` until the 2026-08-19 refresh and phase ledger land on
-`origin/main`. The PR #2 archive handoff (`541ff22`) is already on `main`.
-This phase still changes no runtime authority.
+**Status:** ledger `COMPLETE` at `5c66871`. Documentation remains
+`IMPLEMENTED BUT NOT LIVE` for any runtime claim. The PR #2 archive
+handoff (`541ff22`) and the 2026-08-19 ledger refresh are on `origin/main`.
+This phase changed no runtime authority.
 
 Work:
 

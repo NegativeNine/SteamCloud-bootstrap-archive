@@ -46,6 +46,7 @@ GOVERNING_DOCUMENTS = [
     ROOT / "docs/decisions/ADR-002-placeholder-archive-disposition.md",
     ROOT / "docs/migration/ACCEPTANCE.md",
     ROOT / "docs/migration/ADMINISTRATOR_HANDOFF.md",
+    ROOT / "docs/migration/CLOSEOUT.md",
     ROOT / "docs/roadmap/MIGRATION_ROADMAP.md",
     ROOT / "docs/security/SECURITY_AND_SECRET_PLACEMENT.md",
 ]
