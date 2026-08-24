@@ -34,10 +34,17 @@
     "source_tree": { "const": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" },
     "change_commits": {
       "type": "array",
-      "minItems": 3,
-      "maxItems": 3,
+      "minItems": 5,
+      "maxItems": 5,
       "uniqueItems": true,
-      "items": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      "prefixItems": [
+        { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        { "const": "39b1bcefed30d0a7247fbbc259b192686657344f" },
+        { "const": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca" },
+        { "const": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337" },
+        { "const": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5" }
+      ],
+      "items": false
     },
     "commands": {
       "type": "array",
@@ -78,9 +85,57 @@
       "items": { "type": "string", "minLength": 1 }
     },
     "rollback": {
-      "type": "array",
-      "minItems": 1,
-      "items": { "type": "string", "minLength": 1 }
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_reconciliation", "revert_order", "strategy", "target"],
+      "properties": {
+        "strategy": { "const": "GIT_REVERT_SOURCE_ONLY_NEWEST_FIRST" },
+        "revert_order": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["expected_tree_after", "identity", "ordinal", "required_parent", "resolution"],
+              "properties": {
+                "ordinal": { "const": 1 },
+                "identity": { "const": "CURRENT_CANDIDATE_HEAD" },
+                "resolution": { "const": "VALIDATOR_RESOLVES_EXACT_CURRENT_CANDIDATE_COMMIT" },
+                "required_parent": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+                "expected_tree_after": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["expected_tree_after", "identity", "ordinal"],
+              "properties": {
+                "ordinal": { "const": 2 },
+                "identity": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+                "expected_tree_after": { "const": "735dfc52254e8a8727aa7427dbd2b6e43e3b7318" }
+              }
+            },
+            { "const": { "ordinal": 3, "identity": "39b1bcefed30d0a7247fbbc259b192686657344f", "expected_tree_after": "c44252c8868a6422dcc12d7925a5be459c11c6a6" } },
+            { "const": { "ordinal": 4, "identity": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca", "expected_tree_after": "f4a23b0eef2562be2991c766e0246e757d052877" } },
+            { "const": { "ordinal": 5, "identity": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337", "expected_tree_after": "b801be4af80b65aeeae49e1628ec70a3dc557917" } },
+            { "const": { "ordinal": 6, "identity": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5", "expected_tree_after": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" } }
+          ],
+          "items": false
+        },
+        "target": {
+          "const": {
+            "head": "9554180db2b73b426a87128e10fbe12c097ee786",
+            "tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
+            "phase01_path_count": 0,
+            "required_validation": "ORIGINAL_23_PLUS_PHASE00_8_TESTS"
+          }
+        },
+        "external_reconciliation": {
+          "const": "NONE_NO_RUNTIME_DEPLOYMENT_DURABLE_STATE_OR_AUTHORITY_EFFECT"
+        }
+      }
     },
     "non_claims": {
       "type": "array",
@@ -122,15 +177,27 @@
     },
     "review_gate": {
       "const": {
-        "remediated_review_path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
-        "remediated_review_sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
-        "remediated_finding_ids": [
-          "ARCHIVE-P1-R01",
-          "ARCHIVE-P1-R02",
-          "ARCHIVE-P1-R03",
-          "ARCHIVE-P1-R04",
-          "ARCHIVE-P1-R05",
-          "ARCHIVE-P1-R06"
+        "remediation_chain": [
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
+            "sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
+            "finding_ids": [
+              "ARCHIVE-P1-R01",
+              "ARCHIVE-P1-R02",
+              "ARCHIVE-P1-R03",
+              "ARCHIVE-P1-R04",
+              "ARCHIVE-P1-R05",
+              "ARCHIVE-P1-R06"
+            ]
+          },
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.remediated-final-head-independent-review.json",
+            "sha256": "65ef9897ea328295bab7c96137c396586b7d39b3d15f96ebd1ec386d9f3db0b6",
+            "finding_ids": [
+              "ARCHIVE-P1-R07",
+              "ARCHIVE-P1-R08"
+            ]
+          }
         ],
         "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
         "signed_acceptance": "NOT_OBSERVED",

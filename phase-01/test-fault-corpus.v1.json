@@ -10,7 +10,10 @@
     { "id": "ARCHIVE-P1-P04", "test": "test_code_spans_and_fences_are_ignored", "expected": "PASS" },
     { "id": "ARCHIVE-P1-P05", "test": "test_historical_evidence_is_exact_and_fail_closed", "expected": "PASS" },
     { "id": "ARCHIVE-P1-P06", "test": "test_issue_form_is_exact_archive_scope", "expected": "PASS" },
-    { "id": "ARCHIVE-P1-P07", "test": "test_exact_phase00_boundary_is_preserved", "expected": "PASS" }
+    { "id": "ARCHIVE-P1-P07", "test": "test_exact_phase00_boundary_is_preserved", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P08", "test": "test_nested_bracket_inline_link_is_checked", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P09", "test": "test_escaped_bracket_inline_link_is_checked", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P10", "test": "test_nested_bracket_image_link_is_checked", "expected": "PASS" }
   ],
   "negative_cases": [
     { "id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT" },
@@ -34,7 +37,24 @@
     { "id": "ARCHIVE-P1-N19", "test": "test_workflow_write_permission_is_rejected", "expected": "REJECT" },
     { "id": "ARCHIVE-P1-N20", "test": "test_duplicate_yaml_key_is_rejected", "expected": "REJECT" },
     { "id": "ARCHIVE-P1-N21", "test": "test_closeout_activation_authority_mutation_is_rejected", "expected": "REJECT" },
-    { "id": "ARCHIVE-P1-N22", "test": "test_fault_corpus_label_drift_is_rejected", "expected": "REJECT" }
+    { "id": "ARCHIVE-P1-N22", "test": "test_fault_corpus_label_drift_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N23", "test": "test_nested_bracket_missing_link_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N24", "test": "test_escaped_bracket_missing_link_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N25", "test": "test_nested_bracket_traversal_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N26", "test": "test_escaped_bracket_traversal_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N27", "test": "test_multiline_inline_link_is_typed_rejection", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N28", "test": "test_link_bracket_depth_limit_is_typed_rejection", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N29", "test": "test_unterminated_inline_destination_is_typed_rejection", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N30", "test": "test_closeout_nonclaims_replacement_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N31", "test": "test_closeout_known_limitations_replacement_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N32", "test": "test_closeout_command_result_replacement_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N33", "test": "test_closeout_blocker_replacement_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N34", "test": "test_closeout_rollback_permutation_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N35", "test": "test_closeout_rollback_omission_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N36", "test": "test_closeout_rollback_fake_identity_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N37", "test": "test_closeout_rollback_target_drift_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N38", "test": "test_closeout_semantic_negation_variants_are_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N39", "test": "test_closeout_unblocks_inflation_is_rejected", "expected": "REJECT" }
   ],
   "durable_state": {
     "writes": 0,

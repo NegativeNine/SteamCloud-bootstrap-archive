@@ -68,6 +68,33 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
     def test_exact_phase00_boundary_is_preserved(self) -> None:
         validate.validate_source_boundary(False)
 
+    def test_nested_bracket_inline_link_is_checked(self) -> None:
+        records = self.validate_extracted(
+            "[outer [inner]](docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual(
+            records,
+            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+        )
+
+    def test_escaped_bracket_inline_link_is_checked(self) -> None:
+        records = self.validate_extracted(
+            r"[outer \] bracket](docs/migration/CLOSEOUT.md)" + "\n"
+        )
+        self.assertEqual(
+            records,
+            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+        )
+
+    def test_nested_bracket_image_link_is_checked(self) -> None:
+        records = self.validate_extracted(
+            "![outer [inner]](docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual(
+            records,
+            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+        )
+
     def test_missing_inline_link_is_rejected(self) -> None:
         with self.assertRaisesRegex(AssertionError, "target missing"):
             self.validate_extracted("[broken](docs/migration/DOES_NOT_EXIST.md)\n")
@@ -232,6 +259,117 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
         }
         with self.assertRaises(AssertionError):
             validate.validate_closeout_document(closeout, manifest, verify_files=False)
+
+    def test_nested_bracket_missing_link_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "target missing"):
+            self.validate_extracted(
+                "[outer [inner]](docs/migration/DOES_NOT_EXIST.md)\n"
+            )
+
+    def test_escaped_bracket_missing_link_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "target missing"):
+            self.validate_extracted(
+                r"[outer \] bracket](docs/migration/DOES_NOT_EXIST.md)" + "\n"
+            )
+
+    def test_nested_bracket_traversal_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "escapes repository"):
+            self.validate_extracted("[outer [inner]](../outside.md)\n")
+
+    def test_escaped_bracket_traversal_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "encoded traversal"):
+            self.validate_extracted(r"[outer \] bracket](%2e%2e/outside.md)" + "\n")
+
+    def test_multiline_inline_link_is_typed_rejection(self) -> None:
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_link_destinations(
+                validate.ROOT / "README.md",
+                "[outer\ninner](docs/migration/CLOSEOUT.md)\n",
+            )
+        self.assertEqual(caught.exception.code, "MARKDOWN_UNSUPPORTED_MULTILINE_LINK_LABEL")
+
+    def test_link_bracket_depth_limit_is_typed_rejection(self) -> None:
+        text = "[" * 34 + "label" + "]" * 34 + "(docs/migration/CLOSEOUT.md)\n"
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_link_destinations(validate.ROOT / "README.md", text)
+        self.assertEqual(caught.exception.code, "MARKDOWN_LINK_BRACKET_DEPTH_EXCEEDED")
+
+    def test_unterminated_inline_destination_is_typed_rejection(self) -> None:
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_link_destinations(
+                validate.ROOT / "README.md",
+                "[link](docs/migration/CLOSEOUT.md\n",
+            )
+        self.assertEqual(caught.exception.code, "MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+
+    def closeout_fixture(self) -> tuple[dict[str, object], dict[str, object]]:
+        return (
+            copy.deepcopy(current_json("closeout.v1.json")),
+            current_json("artifact-manifest.v1.json"),
+        )
+
+    def assert_closeout_rejected(self, closeout: dict[str, object], manifest: dict[str, object]) -> None:
+        with self.assertRaises(AssertionError):
+            validate.validate_closeout_document(closeout, manifest, verify_files=False)
+
+    def test_closeout_nonclaims_replacement_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["non_claims"] = ["Deployment LIVE and CurrentAuthority ACTIVE."]
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_known_limitations_replacement_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["known_limitations"] = ["Production is live and qualified."]
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_command_result_replacement_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["commands"][0]["result"] = "PASS; deployment live; authority selected"
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_blocker_replacement_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["unresolved_blockers"][0]["blocker"] = "None; all qualified."
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_rollback_permutation_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        rows = closeout["rollback"]["revert_order"]
+        rows[1], rows[2] = rows[2], rows[1]
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_rollback_omission_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["rollback"]["revert_order"].pop(3)
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_rollback_fake_identity_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["rollback"]["revert_order"][1]["identity"] = "0" * 40
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_rollback_target_drift_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["rollback"]["target"]["head"] = "0" * 40
+        closeout["rollback"]["target"]["tree"] = "0" * 40
+        self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_semantic_negation_variants_are_rejected(self) -> None:
+        variants = (
+            ("non_claims", 0, "Runtime was not not added."),
+            ("known_limitations", 0, "The archive setting is no longer blocked."),
+            ("non_claims", 5, "Qualification and authority transitions did occur."),
+        )
+        for field, index, replacement in variants:
+            closeout, manifest = self.closeout_fixture()
+            closeout[field][index] = replacement
+            with self.subTest(field=field, replacement=replacement):
+                self.assert_closeout_rejected(closeout, manifest)
+
+    def test_closeout_unblocks_inflation_is_rejected(self) -> None:
+        closeout, manifest = self.closeout_fixture()
+        closeout["unblocks"] = ["Deployment, activation, qualification, and authority are unblocked."]
+        self.assert_closeout_rejected(closeout, manifest)
 
     def test_fault_corpus_label_drift_is_rejected(self) -> None:
         corpus = copy.deepcopy(current_json("test-fault-corpus.v1.json"))

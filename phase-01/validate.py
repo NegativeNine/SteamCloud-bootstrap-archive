@@ -23,12 +23,23 @@ REPOSITORY = "NegativeNine/SteamCloud-bootstrap-archive"
 PHASE00_HEAD = "9554180db2b73b426a87128e10fbe12c097ee786"
 PHASE00_TREE = "e0a9e141f14bdfd3b90131ff0ec55551393777a8"
 PREVIOUS_IMPLEMENTATION = "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
+PREVIOUS_IMPLEMENTATION_TREE = "b801be4af80b65aeeae49e1628ec70a3dc557917"
 PREVIOUS_SEAL = "9c307777d8555cf2ead5ecaef8faeb5b03ccf337"
+PREVIOUS_SEAL_TREE = "f4a23b0eef2562be2991c766e0246e757d052877"
+PREVIOUS_REMEDIATION = "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca"
+PREVIOUS_REMEDIATION_TREE = "c44252c8868a6422dcc12d7925a5be459c11c6a6"
+PREVIOUS_REMEDIATION_SEAL = "39b1bcefed30d0a7247fbbc259b192686657344f"
+PREVIOUS_REMEDIATION_SEAL_TREE = "735dfc52254e8a8727aa7427dbd2b6e43e3b7318"
 BLOCKING_REVIEW_PATH = (
     "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
     "phase-01.independent-review.json"
 )
 BLOCKING_REVIEW_SHA256 = "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8"
+RESIDUAL_REVIEW_PATH = (
+    "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
+    "phase-01.remediated-final-head-independent-review.json"
+)
+RESIDUAL_REVIEW_SHA256 = "65ef9897ea328295bab7c96137c396586b7d39b3d15f96ebd1ec386d9f3db0b6"
 SAMPLE_HEAD = "069c2448ee3c5e7c352d096494d15e8f120cf433"
 SAMPLE_TREE = "dcc70bd212ff8d1499aa5f2141a429629bf066a5"
 SAMPLE_ARCHIVE_SHA256 = "e9667fd5da1f20aa933b0503ff2249fc7b6c42f66e94f4c671658085592a9197"
@@ -37,6 +48,7 @@ SAMPLE_ROOT_CARGO_SHA256 = "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef1
 SAMPLE_CRATE_CARGO_SHA256 = "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734"
 SAMPLE_WORKFLOW_SHA256 = "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76"
 EXPECTED_LINK_INVENTORY_SHA256 = "bc8f41b7675500fc8757163d63e791822da3df1c6b68d0614d8fb84595e332bb"
+EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "638d4c2e08677a4385cbc409ab512ac78c01738de6a3bef35114d17836092325"
 
 WORK_CLASSES = [
     "implementation",
@@ -67,9 +79,18 @@ CLOSEOUT_WORK_ITEMS = [
 ]
 AUTHORITY_NONE = {"authorized": False, "performed": False, "effect": "NONE"}
 REVIEW_GATE = {
-    "remediated_review_path": BLOCKING_REVIEW_PATH,
-    "remediated_review_sha256": BLOCKING_REVIEW_SHA256,
-    "remediated_finding_ids": [f"ARCHIVE-P1-R0{index}" for index in range(1, 7)],
+    "remediation_chain": [
+        {
+            "path": BLOCKING_REVIEW_PATH,
+            "sha256": BLOCKING_REVIEW_SHA256,
+            "finding_ids": [f"ARCHIVE-P1-R0{index}" for index in range(1, 7)],
+        },
+        {
+            "path": RESIDUAL_REVIEW_PATH,
+            "sha256": RESIDUAL_REVIEW_SHA256,
+            "finding_ids": ["ARCHIVE-P1-R07", "ARCHIVE-P1-R08"],
+        },
+    ],
     "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
     "signed_acceptance": "NOT_OBSERVED",
     "qualification_effect": "NONE",
@@ -108,13 +129,26 @@ REFERENCE_DEFINITION = re.compile(
     r"^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]*)>|([^\s]+))"
     r"(?:[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^\)\n]*\)))?[ \t]*$", re.MULTILINE,
 )
-FULL_REFERENCE = re.compile(r"!?\[([^\]\n]+)\]\[([^\]\n]*)\]")
-INLINE_START = re.compile(r"!?\[[^\]\n]*\]\(")
 AUTOLINK = re.compile(r"<(https://[^<>\s]+)>")
+MAX_LINK_LABEL_CHARS = 4096
+MAX_LINK_BRACKET_DEPTH = 32
+MAX_LINK_DESTINATION_CHARS = 8192
+MAX_LINK_PAREN_DEPTH = 32
+MARKDOWN_ESCAPABLE = frozenset(r'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 
 
 def fail(message: str) -> None:
     raise AssertionError(message)
+
+
+class MarkdownSyntaxError(AssertionError):
+    """Deterministic typed rejection for intentionally unsupported Markdown syntax."""
+
+    def __init__(self, code: str, source: Path, offset: int) -> None:
+        self.code = code
+        self.source = source
+        self.offset = offset
+        super().__init__(f"{code}: {source}:{offset}")
 
 
 def run(*args: str, input_bytes: bytes | None = None) -> bytes:
@@ -335,7 +369,87 @@ def heading_anchors(path: Path) -> set[str]:
 
 
 def normalize_reference_label(value: str) -> str:
-    return re.sub(r"\s+", " ", value.strip()).casefold()
+    return re.sub(r"\s+", " ", unescape_markdown(value).strip()).casefold()
+
+
+def unescape_markdown(value: str) -> str:
+    output: list[str] = []
+    index = 0
+    while index < len(value):
+        if (
+            value[index] == "\\"
+            and index + 1 < len(value)
+            and value[index + 1] in MARKDOWN_ESCAPABLE
+        ):
+            output.append(value[index + 1])
+            index += 2
+            continue
+        output.append(value[index])
+        index += 1
+    return "".join(output)
+
+
+def is_markdown_escaped(text: str, index: int) -> bool:
+    backslashes = 0
+    index -= 1
+    while index >= 0 and text[index] == "\\":
+        backslashes += 1
+        index -= 1
+    return backslashes % 2 == 1
+
+
+def matching_bracket(
+    text: str,
+    open_index: int,
+    source: Path,
+) -> tuple[int, bool] | None:
+    depth = 1
+    contains_newline = False
+    index = open_index + 1
+    while index < len(text):
+        if index - open_index > MAX_LINK_LABEL_CHARS:
+            raise MarkdownSyntaxError("MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED", source, open_index)
+        char = text[index]
+        if char in "\r\n":
+            contains_newline = True
+        if char == "\\" and not is_markdown_escaped(text, index):
+            index += 2
+            continue
+        if char == "[" and not is_markdown_escaped(text, index):
+            depth += 1
+            if depth > MAX_LINK_BRACKET_DEPTH:
+                raise MarkdownSyntaxError("MARKDOWN_LINK_BRACKET_DEPTH_EXCEEDED", source, open_index)
+        elif char == "]" and not is_markdown_escaped(text, index):
+            depth -= 1
+            if depth == 0:
+                return index, contains_newline
+        index += 1
+    return None
+
+
+def matching_parenthesis(text: str, open_index: int, source: Path) -> tuple[int, bool]:
+    depth = 1
+    contains_newline = False
+    index = open_index + 1
+    while index < len(text):
+        if index - open_index > MAX_LINK_DESTINATION_CHARS:
+            raise MarkdownSyntaxError("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", source, open_index)
+        char = text[index]
+        if char in "\r\n":
+            contains_newline = True
+        if char == "\\" and not is_markdown_escaped(text, index):
+            index += 2
+            continue
+        if char == "(" and not is_markdown_escaped(text, index):
+            depth += 1
+            if depth > MAX_LINK_PAREN_DEPTH:
+                raise MarkdownSyntaxError("MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED", source, open_index)
+        elif char == ")" and not is_markdown_escaped(text, index):
+            depth -= 1
+            if depth == 0:
+                return index, contains_newline
+        index += 1
+    raise MarkdownSyntaxError("MARKDOWN_UNTERMINATED_INLINE_DESTINATION", source, open_index)
 
 
 def parse_inline_destination(value: str) -> str:
@@ -367,7 +481,78 @@ def parse_inline_destination(value: str) -> str:
         remainder = value[end:].strip()
     if remainder and not ((remainder.startswith('"') and remainder.endswith('"')) or (remainder.startswith("'") and remainder.endswith("'")) or (remainder.startswith("(") and remainder.endswith(")"))):
         fail(f"unsupported Markdown link title syntax: {remainder}")
-    return destination.replace("\\", "")
+    return unescape_markdown(destination)
+
+
+def scan_bracket_links(
+    source: Path,
+    text: str,
+    definitions: dict[str, str],
+) -> list[dict[str, str]]:
+    """Inventory inline links/images and validate full, collapsed, and shortcut references."""
+
+    records: list[dict[str, str]] = []
+    index = 0
+    while index < len(text):
+        if text[index] != "[" or is_markdown_escaped(text, index):
+            index += 1
+            continue
+        label_match = matching_bracket(text, index, source)
+        if label_match is None:
+            index += 1
+            continue
+        label_end, label_has_newline = label_match
+        after_label = label_end + 1
+        label = text[index + 1 : label_end]
+        if after_label < len(text) and text[after_label] == "(":
+            if label_has_newline:
+                raise MarkdownSyntaxError("MARKDOWN_UNSUPPORTED_MULTILINE_LINK_LABEL", source, index)
+            destination_end, destination_has_newline = matching_parenthesis(
+                text, after_label, source
+            )
+            if destination_has_newline:
+                raise MarkdownSyntaxError(
+                    "MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION",
+                    source,
+                    after_label,
+                )
+            destination = parse_inline_destination(
+                text[after_label + 1 : destination_end]
+            )
+            records.append({"syntax": "inline", "destination": destination})
+            index = destination_end + 1
+            continue
+        if after_label < len(text) and text[after_label] == "[":
+            reference_match = matching_bracket(text, after_label, source)
+            if reference_match is None:
+                raise MarkdownSyntaxError(
+                    "MARKDOWN_UNTERMINATED_REFERENCE_LABEL", source, after_label
+                )
+            reference_end, reference_has_newline = reference_match
+            if label_has_newline or reference_has_newline:
+                raise MarkdownSyntaxError(
+                    "MARKDOWN_UNSUPPORTED_MULTILINE_REFERENCE_LABEL",
+                    source,
+                    index,
+                )
+            reference = text[after_label + 1 : reference_end] or label
+            normalized = normalize_reference_label(reference)
+            if normalized not in definitions:
+                fail(f"undefined Markdown reference label in {source}: {normalized}")
+            index = reference_end + 1
+            continue
+        normalized = normalize_reference_label(label)
+        if normalized in definitions:
+            if label_has_newline:
+                raise MarkdownSyntaxError(
+                    "MARKDOWN_UNSUPPORTED_MULTILINE_REFERENCE_LABEL", source, index
+                )
+            index = label_end + 1
+            continue
+        # This is ordinary bracketed prose, not a link. Advance one byte so a
+        # nested link opener remains discoverable rather than being skipped.
+        index += 1
+    return records
 
 
 class LocalHtmlDestinationCollector(HTMLParser):
@@ -410,30 +595,7 @@ def extract_link_destinations(source: Path, text: str) -> list[dict[str, str]]:
             if chars[index] not in "\r\n":
                 chars[index] = " "
     masked = "".join(chars)
-    for match in FULL_REFERENCE.finditer(masked):
-        label = normalize_reference_label(match.group(2) or match.group(1))
-        if label not in definitions:
-            fail(f"undefined Markdown reference label in {source}: {label}")
-    for match in INLINE_START.finditer(masked):
-        open_index = match.end() - 1
-        depth = 1
-        escaped = False
-        index = open_index + 1
-        while index < len(masked) and depth:
-            char = masked[index]
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == "(":
-                depth += 1
-            elif char == ")":
-                depth -= 1
-            index += 1
-        if depth:
-            fail(f"unterminated inline Markdown link in {source}")
-        destination = parse_inline_destination(masked[open_index + 1:index - 1])
-        records.append({"syntax": "inline", "destination": destination})
+    records.extend(scan_bracket_links(source, masked, definitions))
     collector = LocalHtmlDestinationCollector()
     collector.feed(masked)
     collector.close()
@@ -652,6 +814,9 @@ POSITIVE_CORPUS = [
     {"id": "ARCHIVE-P1-P05", "test": "test_historical_evidence_is_exact_and_fail_closed", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P06", "test": "test_issue_form_is_exact_archive_scope", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P07", "test": "test_exact_phase00_boundary_is_preserved", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P08", "test": "test_nested_bracket_inline_link_is_checked", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P09", "test": "test_escaped_bracket_inline_link_is_checked", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P10", "test": "test_nested_bracket_image_link_is_checked", "expected": "PASS"},
 ]
 NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT"},
@@ -676,6 +841,23 @@ NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N20", "test": "test_duplicate_yaml_key_is_rejected", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N21", "test": "test_closeout_activation_authority_mutation_is_rejected", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N22", "test": "test_fault_corpus_label_drift_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N23", "test": "test_nested_bracket_missing_link_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N24", "test": "test_escaped_bracket_missing_link_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N25", "test": "test_nested_bracket_traversal_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N26", "test": "test_escaped_bracket_traversal_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N27", "test": "test_multiline_inline_link_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N28", "test": "test_link_bracket_depth_limit_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N29", "test": "test_unterminated_inline_destination_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N30", "test": "test_closeout_nonclaims_replacement_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N31", "test": "test_closeout_known_limitations_replacement_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N32", "test": "test_closeout_command_result_replacement_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N33", "test": "test_closeout_blocker_replacement_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N34", "test": "test_closeout_rollback_permutation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N35", "test": "test_closeout_rollback_omission_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N36", "test": "test_closeout_rollback_fake_identity_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N37", "test": "test_closeout_rollback_target_drift_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N38", "test": "test_closeout_semantic_negation_variants_are_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N39", "test": "test_closeout_unblocks_inflation_is_rejected", "expected": "REJECT"},
 ]
 EXPECTED_CORPUS = {
     "schema": "steamcloud.archive.phase-01-test-fault-corpus/v2", "architecture_binding": ARCHITECTURE,
@@ -749,17 +931,146 @@ def validate_manifest_document(manifest: dict[str, object], *, verify_files: boo
 
 
 CLOSEOUT_ROOT_KEYS = {"schema", "architecture_version", "repository", "phase", "source_head", "source_tree", "change_commits", "commands", "command_evidence_classification", "artifacts", "capability_status", "known_limitations", "rollback", "non_claims", "unresolved_blockers", "unblocks", "work_items", "authority_movement", "review_gate"}
-EXPECTED_COMMANDS = [
-    ("git fetch --prune origin", 0),
-    ("read-only GitHub release, deployment, secret-count, and variable-count metadata", 0),
-    ("python3 phase-01/validate.py --preseal", 0),
-    ("exact detached Phase 00 validation at " + PHASE00_HEAD, 0),
-    ("npm test --prefix <exact historical sample temp directory>", 0),
-    ("npm run check --prefix <exact historical sample temp directory>", 0),
-    ("cargo test --manifest-path <exact historical sample temp directory>/Cargo.toml --workspace --all-targets --offline", 101),
-    ("python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check", 0),
-]
 EXPECTED_ARTIFACT_PATHS = {"phase-01/artifact-manifest.v1.json", "phase-01/status.v1.json", "phase-01/test-fault-corpus.v1.json", "phase-01/historical-build-evidence.v1.json", "docs/archive/HISTORICAL_BUILD.md", ".github/ISSUE_TEMPLATE/archive-record.yml"}
+
+EXPECTED_COMMAND_ROWS = [
+    {
+        "command": "git fetch --prune origin",
+        "exit_code": 0,
+        "result": "PASS; refreshed main remained f395c6c922124c716d216d80fee42dba7d3547d2 and Phase 00 candidate remained 9554180db2b73b426a87128e10fbe12c097ee786",
+    },
+    {
+        "command": "read-only GitHub release, deployment, secret-count, and variable-count metadata",
+        "exit_code": 0,
+        "result": "OBSERVED: releases 0, deployments 0, repository Actions secret metadata count 0, variable metadata count 0; scoped metadata only, not provider, administrator, secret-custodian, or organization-wide absence evidence",
+    },
+    {
+        "command": "python3 phase-01/validate.py --preseal",
+        "exit_code": 0,
+        "result": "PASS; exact 26-destination inventory with balanced and escaped bracket parsing, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus/narrative gates, exact Phase 00 bytes, activation blocked, authority none",
+    },
+    {
+        "command": "exact detached Phase 00 validation at " + PHASE00_HEAD,
+        "exit_code": 0,
+        "result": "PASS; original placeholder validator and 23 tests plus Phase 00 validator and eight tests",
+    },
+    {
+        "command": "npm test --prefix <exact historical sample temp directory>",
+        "exit_code": 0,
+        "result": "OBSERVED PASS; exact sample commit 069c2448ee3c5e7c352d096494d15e8f120cf433 executed 20 Node tests under Node v22.18.0; not cross-toolchain qualification",
+    },
+    {
+        "command": "npm run check --prefix <exact historical sample temp directory>",
+        "exit_code": 0,
+        "result": "OBSERVED PASS; JavaScript syntax and historical repository validator under Node v22.18.0; bounded observation only",
+    },
+    {
+        "command": "cargo test --manifest-path <exact historical sample temp directory>/Cargo.toml --workspace --all-targets --offline",
+        "exit_code": 101,
+        "result": "BLOCKED; the historical tree has no Cargo.lock, uses moving stable and broad dependency constraints, selected eight latest-compatible packages, and the host lacks cc. No passing Rust result is claimed; status is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED.",
+    },
+    {
+        "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
+        "exit_code": 0,
+        "result": "PASS after exact source manifest and closeout seal; 49 retained tests execute every declared corpus identity",
+    },
+]
+
+EXPECTED_KNOWN_LIMITATIONS = [
+    "The GitHub Archived setting remains observed false and this implementation-only phase does not authorize changing it.",
+    "The default branch and open Phase 00 candidate are unprotected and no controlled-merge equivalent or signed provenance is evidenced.",
+    "The historical freeze tag, source manifest, build evidence, and closeout are unsigned and are not release or qualification evidence.",
+    "Repository-local content has no runtime dependency and no active consumer was observed, but no signed complete portfolio consumer inventory exists.",
+    "Only exact historical source recovery is reproducible; Node execution is a bounded observation and Rust is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED with no passing result.",
+    "The residual findings are source-remediated, but the new exact head still requires a fresh independent review and no signed accountable reviewer acceptance is observed.",
+    "No signed secret-history review spans deleted history, forks, caches, provider state, or inaccessible scopes.",
+    "No observation window binds an accepted archive release, restore, settings state, and accountable owner identities.",
+]
+
+EXPECTED_NON_CLAIMS = [
+    "No feature, runtime, schema, contract, package, profile, provider adapter, deployment configuration, active dependency, telemetry, data collection, write, effect, or authority role was added.",
+    "No repository setting, visibility, archive flag, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, credential, traffic, or authority was changed.",
+    "Scoped GitHub metadata observations do not prove provider, administrator, organization-wide, deleted-history, fork, cache, or inaccessible-scope absence.",
+    "The historical sample remains reference material. Exact source identities and bounded Node observations do not make it a current protocol, package, runtime, reproducible Rust build, or qualified capability.",
+    "The issue template is archive intake only and does not authorize an administrator, security, feature, deployment, product, or CurrentAuthority action.",
+    "No merge, signed release, independent qualification, live observation, activation, retirement, or CurrentAuthority transition occurred.",
+]
+
+EXPECTED_BLOCKERS = [
+    {
+        "blocker": "Protected main or an evidenced equivalent controlled-merge policy and signed provenance are absent.",
+        "owner": "repository source-governance, release-root, signer-set, provenance, and rollback owners; exact signed identities NOT_OBSERVED",
+    },
+    {
+        "blocker": "GitHub Archived remains false and this phase has no administrator authorization to change it.",
+        "owner": "repository administrator and archive-disposition owner; exact signed identities NOT_OBSERVED",
+    },
+    {
+        "blocker": "A complete signed inventory proving no active dependency or consumer points to the archive is absent.",
+        "owner": "SteamCloud product, portfolio dependency-inventory, package, documentation, and migration owners; exact signed identities NOT_OBSERVED",
+    },
+    {
+        "blocker": "Independent restore, history/secret review, new exact-head source-boundary acceptance, and rollback acceptance are absent.",
+        "owner": "archive rollback, secret-custody, security, and independent-review owners; exact signed identities NOT_OBSERVED",
+    },
+    {
+        "blocker": "No signed immutable archive release/tag or observation window is bound to exact settings, source, and owner identities.",
+        "owner": "archive release signer, observation, qualification, and owner authorities; exact signed identities NOT_OBSERVED",
+    },
+]
+
+EXPECTED_UNBLOCKS = [
+    "Fresh technical review of exact archive links, historical source recovery, provenance correction intake, fail-closed limitations, and exact source rollback.",
+    "Archive-safety and documentation corrections that remain within the same exact no-runtime boundary.",
+    "No feature, runtime, package, schema, deployment, setting, activation, qualification, retirement, or authority action is unblocked.",
+]
+
+
+def expected_rollback(source_commit: str, source_tree: str) -> dict[str, object]:
+    return {
+        "strategy": "GIT_REVERT_SOURCE_ONLY_NEWEST_FIRST",
+        "revert_order": [
+            {
+                "ordinal": 1,
+                "identity": "CURRENT_CANDIDATE_HEAD",
+                "resolution": "VALIDATOR_RESOLVES_EXACT_CURRENT_CANDIDATE_COMMIT",
+                "required_parent": source_commit,
+                "expected_tree_after": source_tree,
+            },
+            {
+                "ordinal": 2,
+                "identity": source_commit,
+                "expected_tree_after": PREVIOUS_REMEDIATION_SEAL_TREE,
+            },
+            {
+                "ordinal": 3,
+                "identity": PREVIOUS_REMEDIATION_SEAL,
+                "expected_tree_after": PREVIOUS_REMEDIATION_TREE,
+            },
+            {
+                "ordinal": 4,
+                "identity": PREVIOUS_REMEDIATION,
+                "expected_tree_after": PREVIOUS_SEAL_TREE,
+            },
+            {
+                "ordinal": 5,
+                "identity": PREVIOUS_SEAL,
+                "expected_tree_after": PREVIOUS_IMPLEMENTATION_TREE,
+            },
+            {
+                "ordinal": 6,
+                "identity": PREVIOUS_IMPLEMENTATION,
+                "expected_tree_after": PHASE00_TREE,
+            },
+        ],
+        "target": {
+            "head": PHASE00_HEAD,
+            "tree": PHASE00_TREE,
+            "phase01_path_count": 0,
+            "required_validation": "ORIGINAL_23_PLUS_PHASE00_8_TESTS",
+        },
+        "external_reconciliation": "NONE_NO_RUNTIME_DEPLOYMENT_DURABLE_STATE_OR_AUTHORITY_EFFECT",
+    }
 
 
 def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, object], *, verify_files: bool = True) -> None:
@@ -775,20 +1086,25 @@ def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, 
     for key, expected in constants.items():
         assert_exact(closeout[key], expected, f"$.closeout.{key}")
     source_commit = manifest["source_commit"]
-    assert_exact(closeout["change_commits"], [source_commit, PREVIOUS_SEAL, PREVIOUS_IMPLEMENTATION], "$.closeout.change_commits")
-    commands = closeout["commands"]
-    if not isinstance(commands, list) or len(commands) != len(EXPECTED_COMMANDS):
-        fail("closeout command rows drift")
-    for index, (command, exit_code) in enumerate(EXPECTED_COMMANDS):
-        row = commands[index]
-        if not isinstance(row, dict) or set(row) != {"command", "exit_code", "result"}:
-            fail(f"closeout command row {index} shape drift")
-        assert_exact(row["command"], command, f"$.closeout.commands[{index}].command")
-        assert_exact(row["exit_code"], exit_code, f"$.closeout.commands[{index}].exit_code")
-        if type(row["result"]) is not str or not row["result"]:
-            fail(f"closeout command row {index} result malformed")
-    if "No passing Rust result is claimed" not in commands[6]["result"]:
-        fail("closeout inflates historical Rust execution")
+    source_tree = manifest["source_tree"]
+    if type(source_commit) is not str or type(source_tree) is not str:
+        fail("closeout manifest source identity malformed")
+    if run("git", "rev-parse", f"{source_commit}^").decode().strip() != PREVIOUS_REMEDIATION_SEAL:
+        fail("residual source commit does not descend from exact reviewed head")
+    if run("git", "rev-parse", f"{candidate_head()}^").decode().strip() != source_commit:
+        fail("current candidate seal does not have exact source parent")
+    assert_exact(
+        closeout["change_commits"],
+        [
+            source_commit,
+            PREVIOUS_REMEDIATION_SEAL,
+            PREVIOUS_REMEDIATION,
+            PREVIOUS_SEAL,
+            PREVIOUS_IMPLEMENTATION,
+        ],
+        "$.closeout.change_commits",
+    )
+    assert_exact(closeout["commands"], EXPECTED_COMMAND_ROWS, "$.closeout.commands")
     artifacts = closeout["artifacts"]
     if not isinstance(artifacts, list):
         fail("closeout artifacts must be an array")
@@ -812,22 +1128,15 @@ def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, 
         fail("closeout exact artifact set drift")
     if [artifact["path"] for artifact in artifacts] != sorted(artifact_paths):
         fail("closeout artifacts must be lexically ordered")
-    for key in ("known_limitations", "rollback", "non_claims", "unblocks"):
-        value = closeout[key]
-        if not isinstance(value, list) or not value or any(type(item) is not str or not item for item in value):
-            fail(f"closeout {key} must be a nonempty string array")
-    rollback_text = " ".join(closeout["rollback"])
-    for identity in (source_commit, PREVIOUS_SEAL, PREVIOUS_IMPLEMENTATION, PHASE00_HEAD, PHASE00_TREE):
-        if identity not in rollback_text:
-            fail(f"closeout rollback omits exact identity: {identity}")
-    blockers = closeout["unresolved_blockers"]
-    if not isinstance(blockers, list) or len(blockers) != 5:
-        fail("closeout blocker cardinality drift")
-    for index, blocker in enumerate(blockers):
-        if not isinstance(blocker, dict) or set(blocker) != {"blocker", "owner"}:
-            fail(f"closeout blocker row {index} shape drift")
-        if any(type(blocker[key]) is not str or not blocker[key] for key in ("blocker", "owner")):
-            fail(f"closeout blocker row {index} malformed")
+    assert_exact(
+        closeout["known_limitations"],
+        EXPECTED_KNOWN_LIMITATIONS,
+        "$.closeout.known_limitations",
+    )
+    assert_exact(closeout["rollback"], expected_rollback(source_commit, source_tree), "$.closeout.rollback")
+    assert_exact(closeout["non_claims"], EXPECTED_NON_CLAIMS, "$.closeout.non_claims")
+    assert_exact(closeout["unresolved_blockers"], EXPECTED_BLOCKERS, "$.closeout.unresolved_blockers")
+    assert_exact(closeout["unblocks"], EXPECTED_UNBLOCKS, "$.closeout.unblocks")
 
 
 def validate_schema_document(schema: dict[str, object]) -> None:
@@ -840,6 +1149,9 @@ def validate_schema_document(schema: dict[str, object]) -> None:
     properties = schema["properties"]
     if not isinstance(properties, dict) or set(properties) != CLOSEOUT_ROOT_KEYS:
         fail("local closeout schema property drift")
+    canonical = sha256(json.dumps(schema, sort_keys=True, separators=(",", ":")).encode())
+    if canonical != EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256:
+        fail(f"local closeout schema semantic drift: {canonical}")
 
 
 def validate_closeout(preseal: bool) -> None:
