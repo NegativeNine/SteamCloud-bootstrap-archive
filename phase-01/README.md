@@ -1,13 +1,17 @@
 # Phase 01 historical usability
 
-This additive candidate implements the final-synthesis Phase 01 archive boundary. It inventories and
-checks every supported repository-local inline Markdown, reference-definition, HTML, and heading-
-fragment destination while ignoring fenced and inline code. Inline labels are parsed with bounded,
-escape-aware bracket balancing, including nested link and image labels. Supported balanced and escaped
-labels cannot bypass destination validation; deliberately unsupported multiline or over-limit link
-forms fail with stable typed reason codes. The exact destination inventory is digest-bound by the
-validator. It records exact read-only recovery for the historical v1 source and supplies a closed issue
-form for link, provenance, and archive-safety corrections.
+This additive candidate implements the final-synthesis Phase 01 archive boundary. A pinned
+markdown-it-py 3.0.0 CommonMark token traversal inventories every active link and image occurrence,
+including reference uses, autolinks, nested images, links nested in images, and active inner links when
+an enclosing bracket construct is not a link. Raw HTML `href` and `src` attributes are also checked;
+fenced code, inline code, and inactive Markdown inside raw HTML blocks are not treated as links. Each
+occurrence retains its containing CommonMark block line span and document-local ordinal, so repeated
+destinations are never deduplicated. A separate bounded syntax audit gives stable typed failures for
+malformed angle destinations, titles, tails, multiline forms, and depth or size limits. Quoted titles
+may contain unmatched literal parentheses. The exact 26-destination repository inventory and its
+location identities are digest-bound by the validator. It records exact read-only recovery for the
+historical v1 source and supplies a closed issue form for link, provenance, and archive-safety
+corrections.
 
 The phase accepts no feature work. It adds no runtime, package, contract, schema dialect, provider
 adapter, deployment workflow, data collection, telemetry, effect, or authority role. The current
@@ -17,6 +21,7 @@ secrets, DNS, and CurrentAuthority are unchanged.
 ## Commands
 
 ```bash
+python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3
 python3 phase-01/validate.py
 python3 phase-01/test_validate.py
 ```

@@ -23,23 +23,32 @@ def current_json(name: str) -> dict[str, object]:
 
 
 class ArchivePhase01ValidationTests(unittest.TestCase):
-    def validate_extracted(self, text: str) -> list[dict[str, str]]:
+    def validate_extracted(self, text: str) -> list[dict[str, object]]:
         source = validate.ROOT / "README.md"
         records = validate.extract_link_destinations(source, text)
         for record in records:
-            validate.validate_link_destination(source, record["destination"])
+            destination = record["destination"]
+            self.assertIsInstance(destination, str)
+            validate.validate_link_destination(source, destination)
         return records
 
+    @staticmethod
+    def semantic(records: list[dict[str, object]]) -> list[dict[str, object]]:
+        return [
+            {"syntax": record["syntax"], "destination": record["destination"]}
+            for record in records
+        ]
+
     def test_current_link_inventory_is_exact(self) -> None:
-        self.assertGreater(validate.validate_links(), 20)
+        self.assertEqual(validate.validate_links(), 26)
 
     def test_reference_style_local_link_is_checked(self) -> None:
         records = self.validate_extracted(
             "See [the closeout][close].\n\n[close]: docs/migration/CLOSEOUT.md\n"
         )
         self.assertEqual(
-            records,
-            [{"syntax": "reference-definition", "destination": "docs/migration/CLOSEOUT.md"}],
+            self.semantic(records),
+            [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
         )
 
     def test_html_local_link_is_checked(self) -> None:
@@ -47,7 +56,7 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
             '<a href="docs/migration/CLOSEOUT.md">closeout</a>\n'
         )
         self.assertEqual(
-            records,
+            self.semantic(records),
             [{"syntax": "html", "destination": "docs/migration/CLOSEOUT.md"}],
         )
 
@@ -73,8 +82,8 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
             "[outer [inner]](docs/migration/CLOSEOUT.md)\n"
         )
         self.assertEqual(
-            records,
-            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+            self.semantic(records),
+            [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
         )
 
     def test_escaped_bracket_inline_link_is_checked(self) -> None:
@@ -82,8 +91,8 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
             r"[outer \] bracket](docs/migration/CLOSEOUT.md)" + "\n"
         )
         self.assertEqual(
-            records,
-            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+            self.semantic(records),
+            [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
         )
 
     def test_nested_bracket_image_link_is_checked(self) -> None:
@@ -91,13 +100,158 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
             "![outer [inner]](docs/migration/CLOSEOUT.md)\n"
         )
         self.assertEqual(
-            records,
-            [{"syntax": "inline", "destination": "docs/migration/CLOSEOUT.md"}],
+            self.semantic(records),
+            [{"syntax": "image", "destination": "docs/migration/CLOSEOUT.md"}],
         )
+
+    def test_nested_image_inside_link_inventories_both(self) -> None:
+        records = self.validate_extracted(
+            "[![alt](docs/archive/HISTORICAL_BUILD.md)](docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+                {"syntax": "image", "destination": "docs/archive/HISTORICAL_BUILD.md"},
+            ],
+        )
+
+    def test_recursive_image_children_inventory_every_active_destination(self) -> None:
+        records = self.validate_extracted(
+            "[![![alt](docs/migration/ACCEPTANCE.md)](docs/archive/HISTORICAL_BUILD.md)]"
+            "(docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+                {"syntax": "image", "destination": "docs/archive/HISTORICAL_BUILD.md"},
+                {"syntax": "image", "destination": "docs/migration/ACCEPTANCE.md"},
+            ],
+        )
+
+    def test_inner_link_inside_nonlink_outer_uses_commonmark_precedence(self) -> None:
+        records = self.validate_extracted(
+            "[outer [inner](docs/migration/CLOSEOUT.md)](docs/archive/DOES_NOT_EXIST.md)\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
+        )
+
+    def test_quoted_titles_with_unbalanced_parentheses_are_valid(self) -> None:
+        variants = (
+            '[x](docs/migration/CLOSEOUT.md "literal ) title")',
+            '[x](docs/migration/CLOSEOUT.md "literal ( title")',
+            "[x](docs/migration/CLOSEOUT.md 'literal ) title')",
+            "[x](docs/migration/CLOSEOUT.md 'literal ( title')",
+        )
+        for text in variants:
+            with self.subTest(text=text):
+                records = self.validate_extracted(text + "\n")
+                self.assertEqual(
+                    self.semantic(records),
+                    [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
+                )
+
+    def test_angle_and_parenthesized_titles_are_valid(self) -> None:
+        variants = (
+            '[x](<docs/migration/CLOSEOUT.md> "literal ) title")',
+            r"[x](docs/migration/CLOSEOUT.md (literal \) title))",
+            "[x](<docs/migration/CLOSEOUT.md>)",
+        )
+        for text in variants:
+            with self.subTest(text=text):
+                records = self.validate_extracted(text + "\n")
+                self.assertEqual(len(records), 1)
+                self.assertEqual(records[0]["destination"], "docs/migration/CLOSEOUT.md")
+
+    def test_reference_variants_inventory_each_active_use(self) -> None:
+        records = self.validate_extracted(
+            "[one][close]\n\n[close][] and [close]\n\n"
+            "[close]: docs/migration/CLOSEOUT.md 'literal ) title'\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+            ],
+        )
+
+    def test_duplicate_destinations_preserve_occurrence_and_line_identity(self) -> None:
+        records = self.validate_extracted(
+            "[one](docs/migration/CLOSEOUT.md)\n\n"
+            "[two](docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual([record["occurrence"] for record in records], [1, 2])
+        self.assertEqual([record["line_start"] for record in records], [1, 3])
+        self.assertEqual([record["line_end"] for record in records], [1, 3])
+        self.assertEqual(
+            [record["destination"] for record in records],
+            ["docs/migration/CLOSEOUT.md", "docs/migration/CLOSEOUT.md"],
+        )
+
+    def test_autolink_inline_html_and_markdown_boundaries_are_exact(self) -> None:
+        records = self.validate_extracted(
+            "<https://example.com/archive>\n\n"
+            '<a href="docs/migration/CLOSEOUT.md"><img src="docs/archive/HISTORICAL_BUILD.md"></a>\n\n'
+            "<span>[close](docs/migration/CLOSEOUT.md)</span>\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [
+                {"syntax": "autolink", "destination": "https://example.com/archive"},
+                {"syntax": "html", "destination": "docs/migration/CLOSEOUT.md"},
+                {"syntax": "html", "destination": "docs/archive/HISTORICAL_BUILD.md"},
+                {"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"},
+            ],
+        )
+
+    def test_raw_html_blocks_do_not_activate_markdown_syntax(self) -> None:
+        records = validate.extract_link_destinations(
+            validate.ROOT / "README.md",
+            "<div>\n[not active](docs/migration/DOES_NOT_EXIST.md)\n"
+            "[broken](<unterminated\n</div>\n",
+        )
+        self.assertEqual(records, [])
+
+    def test_inline_raw_html_special_forms_do_not_hide_or_invent_links(self) -> None:
+        records = self.validate_extracted(
+            "prefix <!-- [bad](<unterminated) --> "
+            "<?archive [bad](<unterminated)?> "
+            "<![CDATA[[bad](<unterminated)]]> "
+            "[good](docs/migration/CLOSEOUT.md)\n"
+        )
+        self.assertEqual(
+            self.semantic(records),
+            [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
+        )
+
+    def test_parser_dependency_identity_is_exact(self) -> None:
+        validate.validate_markdown_parser_identity()
 
     def test_missing_inline_link_is_rejected(self) -> None:
         with self.assertRaisesRegex(AssertionError, "target missing"):
             self.validate_extracted("[broken](docs/migration/DOES_NOT_EXIST.md)\n")
+
+    def test_nested_image_inside_link_missing_inner_is_rejected(self) -> None:
+        variants = (
+            "[![alt](docs/migration/DOES_NOT_EXIST.md)](docs/migration/CLOSEOUT.md)\n",
+            "[![![alt](docs/migration/DOES_NOT_EXIST.md)](docs/archive/HISTORICAL_BUILD.md)]"
+            "(docs/migration/CLOSEOUT.md)\n",
+        )
+        for text in variants:
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(AssertionError, "target missing"):
+                    self.validate_extracted(text)
+
+    def test_inner_link_inside_nonlink_outer_missing_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "target missing"):
+            self.validate_extracted(
+                "[outer [inner](docs/migration/DOES_NOT_EXIST.md)](docs/migration/CLOSEOUT.md)\n"
+            )
 
     def test_missing_reference_link_is_rejected(self) -> None:
         with self.assertRaisesRegex(AssertionError, "target missing"):
@@ -301,6 +455,119 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
                 "[link](docs/migration/CLOSEOUT.md\n",
             )
         self.assertEqual(caught.exception.code, "MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+
+    def assert_markdown_code(self, text: str, code: str) -> None:
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_link_destinations(validate.ROOT / "README.md", text)
+        self.assertEqual(caught.exception.code, code)
+        self.assertIsNotNone(caught.exception.line)
+        self.assertIsNotNone(caught.exception.column)
+
+    def test_unterminated_angle_destinations_are_typed_rejections(self) -> None:
+        variants = (
+            "[x](<docs/migration/CLOSEOUT.md)\n",
+            "![x](<docs/migration/CLOSEOUT.md\n",
+            "[outer [x](<docs/migration/CLOSEOUT.md)](docs/migration/CLOSEOUT.md)\n",
+        )
+        for text in variants:
+            with self.subTest(text=text):
+                self.assert_markdown_code(text, "MARKDOWN_UNTERMINATED_ANGLE_DESTINATION")
+
+    def test_malformed_angle_destination_is_typed_rejection(self) -> None:
+        self.assert_markdown_code(
+            "[x](<docs/<migration/CLOSEOUT.md>)\n",
+            "MARKDOWN_MALFORMED_ANGLE_DESTINATION",
+        )
+
+    def test_unterminated_quoted_titles_are_typed_rejections(self) -> None:
+        for quote in ('"', "'"):
+            text = f"[x](docs/migration/CLOSEOUT.md {quote}literal ) title)\n"
+            with self.subTest(quote=quote):
+                self.assert_markdown_code(text, "MARKDOWN_UNTERMINATED_QUOTED_TITLE")
+
+    def test_unterminated_parenthesized_title_is_typed_rejection(self) -> None:
+        self.assert_markdown_code(
+            "[x](docs/migration/CLOSEOUT.md (unterminated title)",
+            "MARKDOWN_UNTERMINATED_INLINE_DESTINATION",
+        )
+        self.assert_markdown_code(
+            "[x](docs/migration/CLOSEOUT.md (unterminated title",
+            "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE",
+        )
+
+    def test_malformed_inline_title_and_tail_are_typed_rejections(self) -> None:
+        cases = (
+            (
+                "[x](docs/migration/CLOSEOUT.md bare-title)\n",
+                "MARKDOWN_MALFORMED_INLINE_TITLE",
+            ),
+            (
+                '[x](docs/migration/CLOSEOUT.md "title" trailing)\n',
+                "MARKDOWN_MALFORMED_INLINE_TAIL",
+            ),
+        )
+        for text, code in cases:
+            with self.subTest(text=text):
+                self.assert_markdown_code(text, code)
+
+    def test_multiline_title_is_typed_rejection(self) -> None:
+        self.assert_markdown_code(
+            '[x](docs/migration/CLOSEOUT.md "line one\nline two")\n',
+            "MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_TITLE",
+        )
+
+    def test_destination_depth_and_size_limits_are_typed(self) -> None:
+        self.assert_markdown_code(
+            "[x](" + "(" * 33 + "target" + ")" * 34 + "\n",
+            "MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED",
+        )
+        self.assert_markdown_code(
+            "[x](" + "a" * (validate.MAX_LINK_DESTINATION_CHARS + 1) + ")\n",
+            "MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED",
+        )
+
+    def test_reference_definition_malformed_forms_are_typed(self) -> None:
+        cases = (
+            (
+                "[x][r]\n\n[r]: <docs/migration/CLOSEOUT.md\n",
+                "MARKDOWN_UNTERMINATED_ANGLE_DESTINATION",
+            ),
+            (
+                '[x][r]\n\n[r]: docs/migration/CLOSEOUT.md "title\n',
+                "MARKDOWN_UNTERMINATED_QUOTED_TITLE",
+            ),
+            (
+                "[x][r]\n\n[r]: docs/migration/CLOSEOUT.md bare\n",
+                "MARKDOWN_MALFORMED_REFERENCE_TITLE",
+            ),
+        )
+        for text, code in cases:
+            with self.subTest(text=text):
+                self.assert_markdown_code(text, code)
+
+    def test_duplicate_reference_definitions_are_typed_rejection(self) -> None:
+        self.assert_markdown_code(
+            "[x][r]\n\n[r]: docs/migration/CLOSEOUT.md\n"
+            "[R]: docs/archive/HISTORICAL_BUILD.md\n",
+            "MARKDOWN_DUPLICATE_REFERENCE_DEFINITION",
+        )
+
+    def test_nested_active_traversal_and_query_vectors_are_rejected(self) -> None:
+        variants = (
+            "[![alt](../outside.md)](docs/migration/CLOSEOUT.md)\n",
+            "[outer [inner](%2e%2e/outside.md)](docs/migration/CLOSEOUT.md)\n",
+            "[![alt](docs/migration/CLOSEOUT.md?activate=true)](docs/migration/CLOSEOUT.md)\n",
+        )
+        for text in variants:
+            with self.subTest(text=text):
+                with self.assertRaises(AssertionError):
+                    self.validate_extracted(text)
+
+    def test_inline_html_wrapping_missing_markdown_is_rejected(self) -> None:
+        with self.assertRaisesRegex(AssertionError, "target missing"):
+            self.validate_extracted(
+                "<span>[missing](docs/migration/DOES_NOT_EXIST.md)</span>\n"
+            )
 
     def closeout_fixture(self) -> tuple[dict[str, object], dict[str, object]]:
         return (

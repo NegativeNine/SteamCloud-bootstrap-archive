@@ -27,7 +27,8 @@ private source, or production datum in an issue.
 Use the commands in
 [Acceptance and validation gates](docs/migration/ACCEPTANCE.md) before review.
 That currently means `python3 scripts/validate_placeholder.py` and
-`python3 scripts/test_validate_placeholder.py` after the pinned PyYAML
-validation dependency is available for the exact Phase 00 worktree, followed by
+`python3 scripts/test_validate_placeholder.py` after pinned PyYAML 6.0.3,
+markdown-it-py 3.0.0, and mdurl 0.1.2 validation dependencies are available,
+followed by
 `python3 phase-01/validate.py` and `python3 phase-01/test_validate.py` on the
 Phase 01 candidate.

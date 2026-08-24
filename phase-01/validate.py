@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 from html.parser import HTMLParser
+from importlib.metadata import PackageNotFoundError, version as package_version
 import json
 import re
 import subprocess
@@ -13,6 +14,7 @@ import sys
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
+from markdown_it import MarkdownIt
 import yaml
 
 
@@ -30,6 +32,10 @@ PREVIOUS_REMEDIATION = "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca"
 PREVIOUS_REMEDIATION_TREE = "c44252c8868a6422dcc12d7925a5be459c11c6a6"
 PREVIOUS_REMEDIATION_SEAL = "39b1bcefed30d0a7247fbbc259b192686657344f"
 PREVIOUS_REMEDIATION_SEAL_TREE = "735dfc52254e8a8727aa7427dbd2b6e43e3b7318"
+PREVIOUS_RESIDUAL_REMEDIATION = "be729cb07276c01d614e56b4848a218b88f1a4a5"
+PREVIOUS_RESIDUAL_REMEDIATION_TREE = "7b7442a24d54c2627dc1abce276c55bd534e860c"
+PREVIOUS_RESIDUAL_REMEDIATION_SEAL = "d32437abc20b16884a76587aa145b1bea152cdc5"
+PREVIOUS_RESIDUAL_REMEDIATION_SEAL_TREE = "669d240fd205e78f5dceac117ce2cc6219da8540"
 BLOCKING_REVIEW_PATH = (
     "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
     "phase-01.independent-review.json"
@@ -40,6 +46,11 @@ RESIDUAL_REVIEW_PATH = (
     "phase-01.remediated-final-head-independent-review.json"
 )
 RESIDUAL_REVIEW_SHA256 = "65ef9897ea328295bab7c96137c396586b7d39b3d15f96ebd1ec386d9f3db0b6"
+R09_REVIEW_PATH = (
+    "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
+    "phase-01.residual-remediation-exact-head-independent-review.json"
+)
+R09_REVIEW_SHA256 = "6915198c342339184cb10b049f03beb7f26170f1f9b692f4fd906e8cc24fac91"
 SAMPLE_HEAD = "069c2448ee3c5e7c352d096494d15e8f120cf433"
 SAMPLE_TREE = "dcc70bd212ff8d1499aa5f2141a429629bf066a5"
 SAMPLE_ARCHIVE_SHA256 = "e9667fd5da1f20aa933b0503ff2249fc7b6c42f66e94f4c671658085592a9197"
@@ -47,8 +58,8 @@ SAMPLE_MANIFEST_SHA256 = "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e
 SAMPLE_ROOT_CARGO_SHA256 = "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef11f79c71c6521"
 SAMPLE_CRATE_CARGO_SHA256 = "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734"
 SAMPLE_WORKFLOW_SHA256 = "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76"
-EXPECTED_LINK_INVENTORY_SHA256 = "bc8f41b7675500fc8757163d63e791822da3df1c6b68d0614d8fb84595e332bb"
-EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "638d4c2e08677a4385cbc409ab512ac78c01738de6a3bef35114d17836092325"
+EXPECTED_LINK_INVENTORY_SHA256 = "a076b5cc476791ba0213f216a16731605ee9c2e427f223e23dc77cd20844f537"
+EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "449f6f17b239e3b098c6ab29b900a9947da0ba86c94219d125842e9e7f50996e"
 
 WORK_CLASSES = [
     "implementation",
@@ -90,6 +101,11 @@ REVIEW_GATE = {
             "sha256": RESIDUAL_REVIEW_SHA256,
             "finding_ids": ["ARCHIVE-P1-R07", "ARCHIVE-P1-R08"],
         },
+        {
+            "path": R09_REVIEW_PATH,
+            "sha256": R09_REVIEW_SHA256,
+            "finding_ids": ["ARCHIVE-P1-R09"],
+        },
     ],
     "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
     "signed_acceptance": "NOT_OBSERVED",
@@ -125,16 +141,13 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
 HEADING = re.compile(r"^#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", re.MULTILINE)
 FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(?:[^\n]*)$")
-REFERENCE_DEFINITION = re.compile(
-    r"^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]*)>|([^\s]+))"
-    r"(?:[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^\)\n]*\)))?[ \t]*$", re.MULTILINE,
-)
-AUTOLINK = re.compile(r"<(https://[^<>\s]+)>")
 MAX_LINK_LABEL_CHARS = 4096
 MAX_LINK_BRACKET_DEPTH = 32
 MAX_LINK_DESTINATION_CHARS = 8192
 MAX_LINK_PAREN_DEPTH = 32
 MARKDOWN_ESCAPABLE = frozenset(r'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+MARKDOWN_IT_PACKAGE_VERSION = "3.0.0"
+MDURL_PACKAGE_VERSION = "0.1.2"
 
 
 def fail(message: str) -> None:
@@ -142,13 +155,24 @@ def fail(message: str) -> None:
 
 
 class MarkdownSyntaxError(AssertionError):
-    """Deterministic typed rejection for intentionally unsupported Markdown syntax."""
+    """Deterministic typed rejection for malformed or deliberately bounded Markdown."""
 
-    def __init__(self, code: str, source: Path, offset: int) -> None:
+    def __init__(
+        self,
+        code: str,
+        source: Path,
+        offset: int,
+        *,
+        line: int | None = None,
+        column: int | None = None,
+    ) -> None:
         self.code = code
         self.source = source
         self.offset = offset
-        super().__init__(f"{code}: {source}:{offset}")
+        self.line = line
+        self.column = column
+        location = f"{source}:{line}:{column}" if line is not None and column is not None else f"{source}:{offset}"
+        super().__init__(f"{code}: {location}")
 
 
 def run(*args: str, input_bytes: bytes | None = None) -> bytes:
@@ -398,161 +422,377 @@ def is_markdown_escaped(text: str, index: int) -> bool:
     return backslashes % 2 == 1
 
 
-def matching_bracket(
-    text: str,
-    open_index: int,
-    source: Path,
-) -> tuple[int, bool] | None:
-    depth = 1
-    contains_newline = False
-    index = open_index + 1
-    while index < len(text):
-        if index - open_index > MAX_LINK_LABEL_CHARS:
-            raise MarkdownSyntaxError("MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED", source, open_index)
-        char = text[index]
-        if char in "\r\n":
-            contains_newline = True
-        if char == "\\" and not is_markdown_escaped(text, index):
-            index += 2
-            continue
-        if char == "[" and not is_markdown_escaped(text, index):
-            depth += 1
-            if depth > MAX_LINK_BRACKET_DEPTH:
-                raise MarkdownSyntaxError("MARKDOWN_LINK_BRACKET_DEPTH_EXCEEDED", source, open_index)
-        elif char == "]" and not is_markdown_escaped(text, index):
-            depth -= 1
-            if depth == 0:
-                return index, contains_newline
-        index += 1
-    return None
-
-
-def matching_parenthesis(text: str, open_index: int, source: Path) -> tuple[int, bool]:
-    depth = 1
-    contains_newline = False
-    index = open_index + 1
-    while index < len(text):
-        if index - open_index > MAX_LINK_DESTINATION_CHARS:
-            raise MarkdownSyntaxError("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", source, open_index)
-        char = text[index]
-        if char in "\r\n":
-            contains_newline = True
-        if char == "\\" and not is_markdown_escaped(text, index):
-            index += 2
-            continue
-        if char == "(" and not is_markdown_escaped(text, index):
-            depth += 1
-            if depth > MAX_LINK_PAREN_DEPTH:
-                raise MarkdownSyntaxError("MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED", source, open_index)
-        elif char == ")" and not is_markdown_escaped(text, index):
-            depth -= 1
-            if depth == 0:
-                return index, contains_newline
-        index += 1
-    raise MarkdownSyntaxError("MARKDOWN_UNTERMINATED_INLINE_DESTINATION", source, open_index)
-
-
-def parse_inline_destination(value: str) -> str:
-    value = value.strip()
-    if value.startswith("<"):
-        end = value.find(">")
-        if end == -1:
-            fail("unterminated angle-bracket Markdown destination")
-        destination = value[1:end]
-        remainder = value[end + 1:].strip()
-    else:
-        depth = 0
-        escaped = False
-        end = len(value)
-        for index, char in enumerate(value):
-            if escaped:
-                escaped = False
-                continue
-            if char == "\\":
-                escaped = True
-            elif char == "(":
-                depth += 1
-            elif char == ")" and depth:
-                depth -= 1
-            elif char.isspace() and depth == 0:
-                end = index
-                break
-        destination = value[:end]
-        remainder = value[end:].strip()
-    if remainder and not ((remainder.startswith('"') and remainder.endswith('"')) or (remainder.startswith("'") and remainder.endswith("'")) or (remainder.startswith("(") and remainder.endswith(")"))):
-        fail(f"unsupported Markdown link title syntax: {remainder}")
-    return unescape_markdown(destination)
-
-
-def scan_bracket_links(
+def markdown_error(
+    code: str,
     source: Path,
     text: str,
-    definitions: dict[str, str],
-) -> list[dict[str, str]]:
-    """Inventory inline links/images and validate full, collapsed, and shortcut references."""
+    offset: int,
+    base_line: int,
+) -> MarkdownSyntaxError:
+    line = base_line + text.count("\n", 0, offset)
+    last_newline = text.rfind("\n", 0, offset)
+    column = offset + 1 if last_newline == -1 else offset - last_newline
+    return MarkdownSyntaxError(code, source, offset, line=line, column=column)
 
-    records: list[dict[str, str]] = []
+
+def validate_markdown_parser_identity() -> None:
+    identities = {
+        "markdown-it-py": MARKDOWN_IT_PACKAGE_VERSION,
+        "mdurl": MDURL_PACKAGE_VERSION,
+    }
+    for package, expected in identities.items():
+        try:
+            actual = package_version(package)
+        except PackageNotFoundError:
+            fail(f"Markdown parser dependency missing: {package}=={expected}")
+        if actual != expected:
+            fail(f"Markdown parser dependency drift: {package} expected {expected}, got {actual}")
+
+
+def mask_inline_code_and_html(text: str) -> str:
+    """Mask inactive inline code and raw-HTML tag bytes without changing offsets."""
+
+    chars = list(text)
+
+    def mask_range(start: int, end: int) -> None:
+        for masked in range(start, end):
+            if chars[masked] not in "\r\n":
+                chars[masked] = " "
+
     index = 0
     while index < len(text):
-        if text[index] != "[" or is_markdown_escaped(text, index):
-            index += 1
-            continue
-        label_match = matching_bracket(text, index, source)
-        if label_match is None:
-            index += 1
-            continue
-        label_end, label_has_newline = label_match
-        after_label = label_end + 1
-        label = text[index + 1 : label_end]
-        if after_label < len(text) and text[after_label] == "(":
-            if label_has_newline:
-                raise MarkdownSyntaxError("MARKDOWN_UNSUPPORTED_MULTILINE_LINK_LABEL", source, index)
-            destination_end, destination_has_newline = matching_parenthesis(
-                text, after_label, source
-            )
-            if destination_has_newline:
-                raise MarkdownSyntaxError(
-                    "MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION",
-                    source,
-                    after_label,
+        if text[index] == "`":
+            run_length = 1
+            while index + run_length < len(text) and text[index + run_length] == "`":
+                run_length += 1
+            delimiter = "`" * run_length
+            closing = text.find(delimiter, index + run_length)
+            if closing != -1:
+                mask_range(index, closing + run_length)
+                index = closing + run_length
+                continue
+        special = next(
+            (
+                (opening, closing)
+                for opening, closing in (
+                    ("<!--", "-->"),
+                    ("<![CDATA[", "]]>") ,
+                    ("<?", "?>"),
                 )
-            destination = parse_inline_destination(
-                text[after_label + 1 : destination_end]
-            )
-            records.append({"syntax": "inline", "destination": destination})
-            index = destination_end + 1
+                if text.startswith(opening, index)
+            ),
+            None,
+        )
+        if special is not None:
+            opening, terminator = special
+            closing = text.find(terminator, index + len(opening))
+            if closing != -1:
+                closing += len(terminator)
+                mask_range(index, closing)
+                index = closing
+                continue
+        declaration = re.match(r"<![A-Z][^>]*>", text[index:])
+        if declaration:
+            closing = index + len(declaration.group(0))
+            mask_range(index, closing)
+            index = closing
             continue
-        if after_label < len(text) and text[after_label] == "[":
-            reference_match = matching_bracket(text, after_label, source)
-            if reference_match is None:
-                raise MarkdownSyntaxError(
-                    "MARKDOWN_UNTERMINATED_REFERENCE_LABEL", source, after_label
-                )
-            reference_end, reference_has_newline = reference_match
-            if label_has_newline or reference_has_newline:
-                raise MarkdownSyntaxError(
-                    "MARKDOWN_UNSUPPORTED_MULTILINE_REFERENCE_LABEL",
-                    source,
-                    index,
-                )
-            reference = text[after_label + 1 : reference_end] or label
-            normalized = normalize_reference_label(reference)
-            if normalized not in definitions:
-                fail(f"undefined Markdown reference label in {source}: {normalized}")
-            index = reference_end + 1
+        tag = re.match(r"</?[A-Za-z][A-Za-z0-9-]*(?=[\t\n\f />])", text[index:])
+        if tag:
+            cursor = index + len(tag.group(0))
+            quote: str | None = None
+            while cursor < len(text):
+                char = text[cursor]
+                if quote is not None:
+                    if char == quote:
+                        quote = None
+                elif char in {'"', "'"}:
+                    quote = char
+                elif char == ">":
+                    cursor += 1
+                    mask_range(index, cursor)
+                    index = cursor
+                    break
+                cursor += 1
+            else:
+                index += 1
             continue
-        normalized = normalize_reference_label(label)
-        if normalized in definitions:
-            if label_has_newline:
-                raise MarkdownSyntaxError(
-                    "MARKDOWN_UNSUPPORTED_MULTILINE_REFERENCE_LABEL", source, index
-                )
-            index = label_end + 1
-            continue
-        # This is ordinary bracketed prose, not a link. Advance one byte so a
-        # nested link opener remains discoverable rather than being skipped.
         index += 1
-    return records
+    return "".join(chars)
+
+
+def audit_inline_destination(
+    source: Path,
+    text: str,
+    open_index: int,
+    base_line: int,
+) -> int:
+    """Validate one link-like ``](...)`` tail; the AST alone decides activity."""
+
+    def reject(code: str, at: int = open_index) -> None:
+        raise markdown_error(code, source, text, at, base_line)
+
+    index = open_index + 1
+    while index < len(text) and text[index] in " \t":
+        index += 1
+    if index >= len(text):
+        reject("MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+    if text[index] in "\r\n":
+        reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION", index)
+
+    if text[index] == "<":
+        angle_open = index
+        index += 1
+        while index < len(text):
+            if index - open_index > MAX_LINK_DESTINATION_CHARS:
+                reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED")
+            char = text[index]
+            if char in "\r\n":
+                reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION", index)
+            if char == "\\" and not is_markdown_escaped(text, index):
+                index += 2
+                continue
+            if char == ">" and not is_markdown_escaped(text, index):
+                index += 1
+                break
+            if char == "<" and not is_markdown_escaped(text, index):
+                reject("MARKDOWN_MALFORMED_ANGLE_DESTINATION", index)
+            index += 1
+        else:
+            reject("MARKDOWN_UNTERMINATED_ANGLE_DESTINATION", angle_open)
+    else:
+        depth = 0
+        while index < len(text):
+            if index - open_index > MAX_LINK_DESTINATION_CHARS:
+                reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED")
+            char = text[index]
+            if char in "\r\n":
+                reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION", index)
+            if char == "\\" and not is_markdown_escaped(text, index):
+                index += 2
+                continue
+            if char == "<" and not is_markdown_escaped(text, index):
+                reject("MARKDOWN_MALFORMED_INLINE_DESTINATION", index)
+            if char == "(" and not is_markdown_escaped(text, index):
+                depth += 1
+                if depth > MAX_LINK_PAREN_DEPTH:
+                    reject("MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED")
+            elif char == ")" and not is_markdown_escaped(text, index):
+                if depth == 0:
+                    return index
+                depth -= 1
+            elif char in " \t" and depth == 0:
+                break
+            index += 1
+        else:
+            reject("MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+
+    while index < len(text) and text[index] in " \t":
+        index += 1
+    if index >= len(text):
+        reject("MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+    if text[index] in "\r\n":
+        reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_DESTINATION", index)
+    if text[index] == ")":
+        return index
+
+    delimiter = text[index]
+    if delimiter not in {'"', "'", "("}:
+        reject("MARKDOWN_MALFORMED_INLINE_TITLE", index)
+    title_open = index
+    title_close = ")" if delimiter == "(" else delimiter
+    index += 1
+    while index < len(text):
+        if index - open_index > MAX_LINK_DESTINATION_CHARS:
+            reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED")
+        char = text[index]
+        if char in "\r\n":
+            reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_TITLE", index)
+        if char == "\\" and not is_markdown_escaped(text, index):
+            index += 2
+            continue
+        if char == title_close and not is_markdown_escaped(text, index):
+            index += 1
+            break
+        index += 1
+    else:
+        code = (
+            "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE"
+            if delimiter == "("
+            else "MARKDOWN_UNTERMINATED_QUOTED_TITLE"
+        )
+        reject(code, title_open)
+
+    while index < len(text) and text[index] in " \t":
+        index += 1
+    if index >= len(text):
+        reject("MARKDOWN_UNTERMINATED_INLINE_DESTINATION")
+    if text[index] in "\r\n":
+        reject("MARKDOWN_UNSUPPORTED_MULTILINE_INLINE_TITLE", index)
+    if text[index] != ")":
+        reject("MARKDOWN_MALFORMED_INLINE_TAIL", index)
+    return index
+
+
+def audit_inline_syntax(source: Path, text: str, base_line: int) -> None:
+    """Bound link-like syntax while deferring active-link precedence to CommonMark."""
+
+    masked = mask_inline_code_and_html(text)
+    bracket_stack: list[int] = []
+    index = 0
+    while index < len(masked):
+        char = masked[index]
+        if char == "\\" and not is_markdown_escaped(masked, index):
+            index += 2
+            continue
+        if char == "[" and not is_markdown_escaped(masked, index):
+            bracket_stack.append(index)
+            if len(bracket_stack) > MAX_LINK_BRACKET_DEPTH:
+                raise markdown_error(
+                    "MARKDOWN_LINK_BRACKET_DEPTH_EXCEEDED",
+                    source,
+                    text,
+                    bracket_stack[0],
+                    base_line,
+                )
+        elif char == "]" and not is_markdown_escaped(masked, index):
+            label_open = bracket_stack.pop() if bracket_stack else None
+            if label_open is not None and index - label_open > MAX_LINK_LABEL_CHARS:
+                raise markdown_error(
+                    "MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED",
+                    source,
+                    text,
+                    label_open,
+                    base_line,
+                )
+            if index + 1 < len(masked) and masked[index + 1] == "(":
+                if label_open is not None and any(
+                    newline in text[label_open:index] for newline in ("\r", "\n")
+                ):
+                    raise markdown_error(
+                        "MARKDOWN_UNSUPPORTED_MULTILINE_LINK_LABEL",
+                        source,
+                        text,
+                        label_open,
+                        base_line,
+                    )
+                index = audit_inline_destination(source, text, index + 1, base_line)
+            elif index + 1 < len(masked) and masked[index + 1] == "[":
+                reference_end = index + 2
+                while reference_end < len(masked):
+                    if masked[reference_end] in "\r\n":
+                        raise markdown_error(
+                            "MARKDOWN_UNSUPPORTED_MULTILINE_REFERENCE_LABEL",
+                            source,
+                            text,
+                            index + 1,
+                            base_line,
+                        )
+                    if masked[reference_end] == "\\" and not is_markdown_escaped(masked, reference_end):
+                        reference_end += 2
+                        continue
+                    if masked[reference_end] == "]" and not is_markdown_escaped(masked, reference_end):
+                        break
+                    reference_end += 1
+                else:
+                    raise markdown_error(
+                        "MARKDOWN_UNTERMINATED_REFERENCE_LABEL",
+                        source,
+                        text,
+                        index + 1,
+                        base_line,
+                    )
+        index += 1
+
+
+def audit_reference_definitions(source: Path, text: str, tokens: list[object]) -> None:
+    """Reject ambiguous or malformed single-line reference definitions deterministically."""
+
+    excluded_lines: set[int] = set()
+    for token in tokens:
+        token_type = getattr(token, "type", "")
+        token_map = getattr(token, "map", None)
+        if token_type in {"fence", "code_block", "html_block"} and token_map:
+            excluded_lines.update(range(token_map[0], token_map[1]))
+    definitions: set[str] = set()
+    offset = 0
+    for line_index, line_with_ending in enumerate(text.splitlines(keepends=True)):
+        line = line_with_ending.rstrip("\r\n")
+        if line_index in excluded_lines:
+            offset += len(line_with_ending)
+            continue
+        prefix = re.match(r"^[ \t]{0,3}\[", line)
+        if not prefix:
+            offset += len(line_with_ending)
+            continue
+        label_open = prefix.end() - 1
+        label_end = label_open + 1
+        while label_end < len(line):
+            if line[label_end] == "\\" and not is_markdown_escaped(line, label_end):
+                label_end += 2
+                continue
+            if line[label_end] == "]" and not is_markdown_escaped(line, label_end):
+                break
+            label_end += 1
+        if label_end >= len(line) or label_end + 1 >= len(line) or line[label_end + 1] != ":":
+            offset += len(line_with_ending)
+            continue
+        if label_end - label_open > MAX_LINK_LABEL_CHARS:
+            raise markdown_error("MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED", source, text, offset + label_open, 1)
+        label = normalize_reference_label(line[label_open + 1 : label_end])
+        if label in definitions:
+            raise markdown_error("MARKDOWN_DUPLICATE_REFERENCE_DEFINITION", source, text, offset + label_open, 1)
+        definitions.add(label)
+        cursor = label_end + 2
+        while cursor < len(line) and line[cursor] in " \t":
+            cursor += 1
+        if cursor >= len(line):
+            raise markdown_error("MARKDOWN_MISSING_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
+        if line[cursor] == "<":
+            angle_open = cursor
+            cursor += 1
+            while cursor < len(line) and not (line[cursor] == ">" and not is_markdown_escaped(line, cursor)):
+                if line[cursor] == "<" and not is_markdown_escaped(line, cursor):
+                    raise markdown_error("MARKDOWN_MALFORMED_ANGLE_DESTINATION", source, text, offset + cursor, 1)
+                cursor += 1
+            if cursor >= len(line):
+                raise markdown_error("MARKDOWN_UNTERMINATED_ANGLE_DESTINATION", source, text, offset + angle_open, 1)
+            cursor += 1
+        else:
+            start = cursor
+            while cursor < len(line) and line[cursor] not in " \t":
+                if line[cursor] == "<" and not is_markdown_escaped(line, cursor):
+                    raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
+                cursor += 1
+            if cursor == start:
+                raise markdown_error("MARKDOWN_MISSING_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
+        while cursor < len(line) and line[cursor] in " \t":
+            cursor += 1
+        if cursor < len(line):
+            delimiter = line[cursor]
+            if delimiter not in {'"', "'", "("}:
+                raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_TITLE", source, text, offset + cursor, 1)
+            closing = ")" if delimiter == "(" else delimiter
+            title_open = cursor
+            cursor += 1
+            while cursor < len(line):
+                if line[cursor] == "\\" and not is_markdown_escaped(line, cursor):
+                    cursor += 2
+                    continue
+                if line[cursor] == closing and not is_markdown_escaped(line, cursor):
+                    cursor += 1
+                    break
+                cursor += 1
+            else:
+                code = (
+                    "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE"
+                    if delimiter == "("
+                    else "MARKDOWN_UNTERMINATED_QUOTED_TITLE"
+                )
+                raise markdown_error(code, source, text, offset + title_open, 1)
+            if line[cursor:].strip():
+                raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_TAIL", source, text, offset + cursor, 1)
+        offset += len(line_with_ending)
 
 
 class LocalHtmlDestinationCollector(HTMLParser):
@@ -576,31 +816,74 @@ class LocalHtmlDestinationCollector(HTMLParser):
         self.handle_starttag(tag, attrs)
 
 
-def extract_link_destinations(source: Path, text: str) -> list[dict[str, str]]:
-    masked = mask_markdown_code(text)
-    records: list[dict[str, str]] = []
-    definitions: dict[str, str] = {}
-    definition_spans: list[tuple[int, int]] = []
-    for match in REFERENCE_DEFINITION.finditer(masked):
-        label = normalize_reference_label(match.group(1))
-        if label in definitions:
-            fail(f"duplicate Markdown reference label in {source}: {label}")
-        destination = match.group(2) if match.group(2) is not None else match.group(3)
-        definitions[label] = destination
-        definition_spans.append(match.span())
-        records.append({"syntax": "reference-definition", "destination": destination})
-    chars = list(masked)
-    for start, end in definition_spans:
-        for index in range(start, end):
-            if chars[index] not in "\r\n":
-                chars[index] = " "
-    masked = "".join(chars)
-    records.extend(scan_bracket_links(source, masked, definitions))
-    collector = LocalHtmlDestinationCollector()
-    collector.feed(masked)
-    collector.close()
-    records.extend({"syntax": "html", "destination": destination} for destination in collector.destinations)
-    records.extend({"syntax": "autolink", "destination": match.group(1)} for match in AUTOLINK.finditer(masked))
+def extract_link_destinations(source: Path, text: str) -> list[dict[str, object]]:
+    """Return every active CommonMark/HTML destination as an occurrence, never a set."""
+
+    validate_markdown_parser_identity()
+    # Retain the earlier deterministic rejection of unterminated fenced blocks.
+    mask_markdown_code(text)
+    parser = MarkdownIt(
+        "commonmark",
+        {"html": True, "maxNesting": MAX_LINK_BRACKET_DEPTH * 2},
+    )
+    environment: dict[str, object] = {}
+    tokens = parser.parse(text, environment)
+    audit_reference_definitions(source, text, tokens)
+
+    records: list[dict[str, object]] = []
+
+    def emit(syntax: str, destination: str, line_start: int, line_end: int) -> None:
+        records.append(
+            {
+                "occurrence": len(records) + 1,
+                "line_start": line_start,
+                "line_end": line_end,
+                "syntax": syntax,
+                "destination": destination,
+            }
+        )
+
+    def collect_html(content: str, line_start: int, line_end: int) -> None:
+        collector = LocalHtmlDestinationCollector()
+        collector.feed(content)
+        collector.close()
+        for destination in collector.destinations:
+            emit("html", destination, line_start, line_end)
+
+    def walk_children(children: list[object], line_start: int, line_end: int) -> None:
+        for child in children:
+            child_type = getattr(child, "type", "")
+            attrs = getattr(child, "attrs", {})
+            if child_type == "link_open":
+                destination = attrs.get("href")
+                if not isinstance(destination, str):
+                    fail("CommonMark link token lacks a string href")
+                syntax = "autolink" if getattr(child, "markup", "") == "autolink" else "link"
+                emit(syntax, destination, line_start, line_end)
+            elif child_type == "image":
+                destination = attrs.get("src")
+                if not isinstance(destination, str):
+                    fail("CommonMark image token lacks a string src")
+                emit("image", destination, line_start, line_end)
+            elif child_type == "html_inline":
+                collect_html(getattr(child, "content", ""), line_start, line_end)
+            nested = getattr(child, "children", None)
+            if nested:
+                walk_children(nested, line_start, line_end)
+
+    for token in tokens:
+        token_type = token.type
+        token_map = token.map
+        if token_type == "inline":
+            if token_map is None:
+                fail("CommonMark inline token lacks a source line map")
+            line_start, line_end = token_map[0] + 1, token_map[1]
+            audit_inline_syntax(source, token.content, line_start)
+            walk_children(token.children or [], line_start, line_end)
+        elif token_type == "html_block":
+            if token_map is None:
+                fail("CommonMark HTML block token lacks a source line map")
+            collect_html(token.content, token_map[0] + 1, token_map[1])
     return records
 
 
@@ -641,20 +924,28 @@ def validate_link_destination(source: Path, destination: str) -> None:
             fail(f"missing Markdown heading fragment: {source}: {destination}")
 
 
-def link_inventory() -> list[dict[str, str]]:
+def link_inventory() -> list[dict[str, object]]:
     markdown_paths = sorted(path for path in current_paths() if path.endswith(".md"))
     if len(markdown_paths) > 128:
         fail("Markdown file count exceeds fixed archive limit")
-    inventory: list[dict[str, str]] = []
+    inventory: list[dict[str, object]] = []
     for relative in markdown_paths:
         source = repository_file(relative)
         text = source.read_text(encoding="utf-8")
         if len(text.encode("utf-8")) > 1_048_576:
             fail(f"Markdown file exceeds fixed byte limit: {relative}")
-        for record in extract_link_destinations(source, text):
-            validate_link_destination(source, record["destination"])
+        records = extract_link_destinations(source, text)
+        if [record["occurrence"] for record in records] != list(range(1, len(records) + 1)):
+            fail(f"non-contiguous link occurrence identities: {relative}")
+        for record in records:
+            destination = record["destination"]
+            if not isinstance(destination, str):
+                fail(f"non-string link destination: {relative}")
+            validate_link_destination(source, destination)
             inventory.append({"source": relative, **record})
-    return sorted(inventory, key=lambda item: (item["source"], item["syntax"], item["destination"]))
+    # Occurrences are intentionally not deduplicated: repeated destinations are
+    # distinct active parser events with stable document-local identities.
+    return sorted(inventory, key=lambda item: (str(item["source"]), int(item["occurrence"])))
 
 
 def validate_links() -> int:
@@ -741,7 +1032,7 @@ def validate_issue_form() -> None:
 
 EXPECTED_WORKFLOW_COMMANDS = [
     None,
-    "python3 -m pip install --disable-pip-version-check PyYAML==6.0.3",
+    "python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3",
     "phase00_worktree=\"$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)\"\ngit worktree add --detach \"$phase00_worktree\" 9554180db2b73b426a87128e10fbe12c097ee786\n(\n  cd \"$phase00_worktree\"\n  python3 scripts/validate_placeholder.py\n  python3 scripts/test_validate_placeholder.py\n  python3 phase-00/validate.py\n  python3 phase-00/test_validate.py\n)\ngit worktree remove --force \"$phase00_worktree\"\n",
     "python3 phase-01/validate.py", "python3 phase-01/test_validate.py", "git diff --check HEAD^ HEAD", "git fsck --full",
 ]
@@ -817,6 +1108,17 @@ POSITIVE_CORPUS = [
     {"id": "ARCHIVE-P1-P08", "test": "test_nested_bracket_inline_link_is_checked", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P09", "test": "test_escaped_bracket_inline_link_is_checked", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P10", "test": "test_nested_bracket_image_link_is_checked", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P11", "test": "test_nested_image_inside_link_inventories_both", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P12", "test": "test_recursive_image_children_inventory_every_active_destination", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P13", "test": "test_inner_link_inside_nonlink_outer_uses_commonmark_precedence", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P14", "test": "test_quoted_titles_with_unbalanced_parentheses_are_valid", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P15", "test": "test_angle_and_parenthesized_titles_are_valid", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P16", "test": "test_reference_variants_inventory_each_active_use", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P17", "test": "test_duplicate_destinations_preserve_occurrence_and_line_identity", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P18", "test": "test_autolink_inline_html_and_markdown_boundaries_are_exact", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P19", "test": "test_raw_html_blocks_do_not_activate_markdown_syntax", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P20", "test": "test_inline_raw_html_special_forms_do_not_hide_or_invent_links", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P21", "test": "test_parser_dependency_identity_is_exact", "expected": "PASS"},
 ]
 NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT"},
@@ -858,6 +1160,19 @@ NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N37", "test": "test_closeout_rollback_target_drift_is_rejected", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N38", "test": "test_closeout_semantic_negation_variants_are_rejected", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N39", "test": "test_closeout_unblocks_inflation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N40", "test": "test_nested_image_inside_link_missing_inner_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N41", "test": "test_inner_link_inside_nonlink_outer_missing_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N42", "test": "test_unterminated_angle_destinations_are_typed_rejections", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N43", "test": "test_malformed_angle_destination_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N44", "test": "test_unterminated_quoted_titles_are_typed_rejections", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N45", "test": "test_unterminated_parenthesized_title_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N46", "test": "test_malformed_inline_title_and_tail_are_typed_rejections", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N47", "test": "test_multiline_title_is_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N48", "test": "test_destination_depth_and_size_limits_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N49", "test": "test_reference_definition_malformed_forms_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N50", "test": "test_duplicate_reference_definitions_are_typed_rejection", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N51", "test": "test_nested_active_traversal_and_query_vectors_are_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N52", "test": "test_inline_html_wrapping_missing_markdown_is_rejected", "expected": "REJECT"},
 ]
 EXPECTED_CORPUS = {
     "schema": "steamcloud.archive.phase-01-test-fault-corpus/v2", "architecture_binding": ARCHITECTURE,
@@ -947,7 +1262,7 @@ EXPECTED_COMMAND_ROWS = [
     {
         "command": "python3 phase-01/validate.py --preseal",
         "exit_code": 0,
-        "result": "PASS; exact 26-destination inventory with balanced and escaped bracket parsing, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus/narrative gates, exact Phase 00 bytes, activation blocked, authority none",
+        "result": "PASS; exact 26-occurrence pinned CommonMark inventory with nested precedence, line identities, typed malformed-syntax rejection, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus/narrative gates, exact Phase 00 bytes, activation blocked, authority none",
     },
     {
         "command": "exact detached Phase 00 validation at " + PHASE00_HEAD,
@@ -972,7 +1287,7 @@ EXPECTED_COMMAND_ROWS = [
     {
         "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
         "exit_code": 0,
-        "result": "PASS after exact source manifest and closeout seal; 49 retained tests execute every declared corpus identity",
+        "result": "PASS after exact source manifest and closeout seal; 73 retained tests execute every declared corpus identity",
     },
 ]
 
@@ -1040,25 +1355,35 @@ def expected_rollback(source_commit: str, source_tree: str) -> dict[str, object]
             {
                 "ordinal": 2,
                 "identity": source_commit,
-                "expected_tree_after": PREVIOUS_REMEDIATION_SEAL_TREE,
+                "expected_tree_after": PREVIOUS_RESIDUAL_REMEDIATION_SEAL_TREE,
             },
             {
                 "ordinal": 3,
+                "identity": PREVIOUS_RESIDUAL_REMEDIATION_SEAL,
+                "expected_tree_after": PREVIOUS_RESIDUAL_REMEDIATION_TREE,
+            },
+            {
+                "ordinal": 4,
+                "identity": PREVIOUS_RESIDUAL_REMEDIATION,
+                "expected_tree_after": PREVIOUS_REMEDIATION_SEAL_TREE,
+            },
+            {
+                "ordinal": 5,
                 "identity": PREVIOUS_REMEDIATION_SEAL,
                 "expected_tree_after": PREVIOUS_REMEDIATION_TREE,
             },
             {
-                "ordinal": 4,
+                "ordinal": 6,
                 "identity": PREVIOUS_REMEDIATION,
                 "expected_tree_after": PREVIOUS_SEAL_TREE,
             },
             {
-                "ordinal": 5,
+                "ordinal": 7,
                 "identity": PREVIOUS_SEAL,
                 "expected_tree_after": PREVIOUS_IMPLEMENTATION_TREE,
             },
             {
-                "ordinal": 6,
+                "ordinal": 8,
                 "identity": PREVIOUS_IMPLEMENTATION,
                 "expected_tree_after": PHASE00_TREE,
             },
@@ -1089,14 +1414,16 @@ def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, 
     source_tree = manifest["source_tree"]
     if type(source_commit) is not str or type(source_tree) is not str:
         fail("closeout manifest source identity malformed")
-    if run("git", "rev-parse", f"{source_commit}^").decode().strip() != PREVIOUS_REMEDIATION_SEAL:
-        fail("residual source commit does not descend from exact reviewed head")
+    if run("git", "rev-parse", f"{source_commit}^").decode().strip() != PREVIOUS_RESIDUAL_REMEDIATION_SEAL:
+        fail("R09 source commit does not descend from exact reviewed head")
     if run("git", "rev-parse", f"{candidate_head()}^").decode().strip() != source_commit:
         fail("current candidate seal does not have exact source parent")
     assert_exact(
         closeout["change_commits"],
         [
             source_commit,
+            PREVIOUS_RESIDUAL_REMEDIATION_SEAL,
+            PREVIOUS_RESIDUAL_REMEDIATION,
             PREVIOUS_REMEDIATION_SEAL,
             PREVIOUS_REMEDIATION,
             PREVIOUS_SEAL,
@@ -1180,7 +1507,7 @@ def main() -> int:
     validate_status()
     validate_corpus()
     validate_closeout(args.preseal)
-    print(f"PASS: exact {link_count}-destination Markdown/HTML inventory; exact historical source; Rust structurally unpinned/no pass claimed; archive-only issue intake; executable fault corpus; Phase 00 bytes preserved; deployment/activation BLOCKED; authority NONE")
+    print(f"PASS: exact {link_count}-occurrence pinned CommonMark/HTML inventory; exact historical source; Rust structurally unpinned/no pass claimed; archive-only issue intake; executable fault corpus; Phase 00 bytes preserved; deployment/activation BLOCKED; authority NONE")
     return 0
 
 

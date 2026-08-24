@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: python3 -m pip install --disable-pip-version-check PyYAML==6.0.3
+      - run: python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3
       - name: Verify the exact Phase 00 candidate
         run: |
           phase00_worktree="$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)"
