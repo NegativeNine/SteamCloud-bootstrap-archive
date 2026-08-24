@@ -1,8 +1,11 @@
 # SteamCloud-bootstrap-archive
 
-> **CURRENT LIVE:** This public repository is a historical naming archive and
-> owns no runtime, data, credential, execution, or semantic authority. It is
-> not the production SteamCloud implementation. It is not a live public
+> **OBSERVATION:** GitHub exposed this repository as a public historical naming
+> archive during the Phase 00 refresh. That repository observation is not an
+> `OBSERVED_LIVE` capability claim. This repository owns no runtime, data,
+> credential, execution, or semantic authority.
+>
+> It is not the production SteamCloud implementation. It is not a live public
 > service.
 
 GitHub repository id `1338764433` was renamed from `NegativeNine/SteamCloud`
@@ -20,15 +23,18 @@ work (restore-tested backup evidence, secret-history review, protected
 
 | Status | This repository |
 |---|---|
-| `CURRENT LIVE` | Public naming placeholder only; no runtime authority. |
-| `IMPLEMENTED BUT NOT LIVE` | Archive documentation and validation only. |
-| `SHADOW/CANARY` | None. |
-| `REFERENCE/PROTOTYPE` | Historical v1 sample recoverable in Git history. |
-| `BLOCKED/NOT QUALIFIED` | Any use as a SteamCloud service, package, schema, or deployment. |
-| `TARGET` | Remain a historical public archive; operational SteamCloud stays private. |
+| `IMPLEMENTED` | Archive documentation and archive-only validation on the Phase 00 candidate branch. |
+| `REFERENCE` | Historical v1 sample recoverable by exact Git identity. |
+| `SHADOW` / `CANARY` / `QUALIFIED` | None. |
+| `CURRENT_AUTHORITY` | None is claimed by this repository. |
+| `OBSERVED_LIVE` | No runtime or service capability is claimed. |
+| `UNKNOWN` | Sibling deployment, provider, secret, DNS, qualification, and authority state. |
+| Phase disposition | `IMPLEMENTED_NOT_QUALIFIED`; activation remains disabled. |
 
-Sibling deployed state is `UNKNOWN`. Architecture package v2.0 is target
-guidance only.
+Sibling deployed state is `UNKNOWN`. Architecture package v2.0 is historical
+target guidance only. The current binding and exact Phase 00 non-claims are in
+[`phase-00/`](phase-00/README.md); older migration records remain provenance
+and do not override that binding.
 
 ## Pointers
 

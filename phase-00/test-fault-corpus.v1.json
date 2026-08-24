@@ -1,0 +1,46 @@
+{
+  "schema": "steamcloud.archive.phase-00-test-fault-corpus/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "commands": [
+    {
+      "command": "python3 scripts/validate_placeholder.py",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 scripts/test_validate_placeholder.py",
+      "result": "PASS",
+      "tests": 23
+    },
+    {
+      "command": "git fsck --full",
+      "result": "PASS"
+    },
+    {
+      "command": "python3 phase-00/test_validate.py",
+      "result": "PASS",
+      "tests": 8
+    },
+    {
+      "command": "gitleaks git --redact=100 --no-banner --exit-code 0 --report-format json .",
+      "result": "PASS_BOUNDED_SCAN",
+      "commits_scanned": 13,
+      "findings": 0
+    }
+  ],
+  "positive_cases": [
+    "exact base archive checksum is reproducible",
+    "existing freeze tag resolves to its recorded tag object and target commit",
+    "archive-only workflow uses read-only contents permission",
+    "root contains no application package or deployment manifest"
+  ],
+  "negative_and_adversarial_cases": [
+    "duplicate JSON keys are rejected",
+    "application scaffold and architecture ZIP additions are rejected",
+    "admin phase completion without evidence is rejected",
+    "production, deployment, release, and authority claims are rejected",
+    "freeze identity, archive digest, tag target, or workflow permission drift is rejected",
+    "private-key and high-confidence credential patterns in reachable Git blobs are rejected"
+  ],
+  "durable_state_faults": "NOT_APPLICABLE: this candidate introduces no write path, effect, queue, runtime, or durable state",
+  "qualification_non_claim": "Green tests and a bounded secret scan are implementation evidence only."
+}
