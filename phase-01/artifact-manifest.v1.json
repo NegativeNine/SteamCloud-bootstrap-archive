@@ -1,0 +1,61 @@
+{
+  "schema": "steamcloud.archive.phase-01-artifact-manifest/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "phase": "01",
+  "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
+  "source_commit": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5",
+  "signed": false,
+  "publishable": false,
+  "entries": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "18167b21734522d61a99628a32267abcbad30a9a0dbd79b479a0f461aa714d2e"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/archive-record.yml",
+      "sha256": "efef147501c0d20c38b4599b3473b0d09e977a86a10b5f0a36f92d04f7ea928d"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/config.yml",
+      "sha256": "8b09e7df09fc7534371988062769ee427af2954a02c04c763e8a8005be0f2be4"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "9c0593e0522f40260603d19d19292f0457cd93e6f3ff54e2e85276e381fad594"
+    },
+    {
+      "path": "README.md",
+      "sha256": "594b66ae99dc495e489c023b6cde2cef6adaa7ded7a098ccb2f023fd3329450a"
+    },
+    {
+      "path": "docs/archive/HISTORICAL_BUILD.md",
+      "sha256": "3b4ab8bfbfd5797a558f8fd51201b4fd9c062e2fe6e0d95a007c133caf1300a1"
+    },
+    {
+      "path": "phase-01/README.md",
+      "sha256": "47d6711f262f72e3cb8fad1175a5be2d3236190f0ae6a8cad979f782be0fb0c8"
+    },
+    {
+      "path": "phase-01/repository-phase-closeout.schema.json",
+      "sha256": "6b575b251cbd7a3e6b9e09245d497785b9b6ec1cc57d3843d805482ab74b27f9"
+    },
+    {
+      "path": "phase-01/status.v1.json",
+      "sha256": "482865d203dbcef3d9fc988b27a119d701ca33a2bb11e086239adef7712fcce6"
+    },
+    {
+      "path": "phase-01/test-fault-corpus.v1.json",
+      "sha256": "9cb97762631fc7e5ca9f6e273f1afc17aaa782db458629e2c0b5a22a4ae75946"
+    },
+    {
+      "path": "phase-01/test_validate.py",
+      "sha256": "a5b822efe0fc97cb47b604e16787e7f007c662889301e3141cb291b6226508e6"
+    },
+    {
+      "path": "phase-01/validate.py",
+      "sha256": "db66129f7b2202c79cf9db641a20d4536a9064623757be3692a06166a8a2b1a2"
+    }
+  ],
+  "non_claim": "Unsigned source manifest only; not release, deployment, qualification, observed-live, activation, or authority evidence."
+}

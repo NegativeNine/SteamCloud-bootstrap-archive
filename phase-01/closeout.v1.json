@@ -1,0 +1,164 @@
+{
+  "schema": "solarflare.repository-phase-closeout/v3",
+  "architecture_version": "2026-08-23-final-phased-prompts.3",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "phase": "01",
+  "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
+  "source_tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
+  "change_commits": [
+    "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
+  ],
+  "commands": [
+    {
+      "command": "git fetch --prune origin",
+      "exit_code": 0,
+      "result": "PASS; refreshed main remained f395c6c922124c716d216d80fee42dba7d3547d2 and Phase 00 candidate remained 9554180db2b73b426a87128e10fbe12c097ee786"
+    },
+    {
+      "command": "read-only GitHub release, deployment, secret-count, and variable-count metadata",
+      "exit_code": 0,
+      "result": "OBSERVED: releases 0, deployments 0, repository Actions secret metadata count 0, variable metadata count 0; this is scoped GitHub metadata and not proof of provider or organization-wide absence"
+    },
+    {
+      "command": "python3 phase-01/validate.py --preseal; python3 phase-01/test_validate.py",
+      "exit_code": 0,
+      "result": "PASS; 25 local links/fragments, exact historical archive identities, archive-only issue boundary, exact Phase 00 preservation, and eight adversarial tests"
+    },
+    {
+      "command": "exact detached Phase 00 validation at 9554180db2b73b426a87128e10fbe12c097ee786",
+      "exit_code": 0,
+      "result": "PASS; original placeholder validator and 23 tests plus Phase 00 validator and eight tests"
+    },
+    {
+      "command": "npm test --prefix <exact historical sample temp directory>",
+      "exit_code": 0,
+      "result": "PASS; exact sample commit 069c2448ee3c5e7c352d096494d15e8f120cf433 executed 20 Node tests"
+    },
+    {
+      "command": "npm run check --prefix <exact historical sample temp directory>",
+      "exit_code": 0,
+      "result": "PASS; JavaScript syntax and historical repository validator"
+    },
+    {
+      "command": "cargo test --manifest-path <exact historical sample temp directory>/Cargo.toml --workspace --all-targets --offline",
+      "exit_code": 101,
+      "result": "BLOCKED retained; local host lacks cc linker, so no Rust passing result is claimed"
+    },
+    {
+      "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
+      "exit_code": 0,
+      "result": "PASS after source manifest and closeout seal"
+    }
+  ],
+  "command_evidence_classification": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE",
+  "artifacts": [
+    {
+      "path": "phase-01/artifact-manifest.v1.json",
+      "digest": "sha256:fddd138ec2aa89d4fd5cf09377baff685d5fd935cdaf6784f6dffb9d189a6d0b"
+    },
+    {
+      "path": "phase-01/status.v1.json",
+      "digest": "sha256:482865d203dbcef3d9fc988b27a119d701ca33a2bb11e086239adef7712fcce6"
+    },
+    {
+      "path": "phase-01/test-fault-corpus.v1.json",
+      "digest": "sha256:9cb97762631fc7e5ca9f6e273f1afc17aaa782db458629e2c0b5a22a4ae75946"
+    },
+    {
+      "path": "docs/archive/HISTORICAL_BUILD.md",
+      "digest": "sha256:3b4ab8bfbfd5797a558f8fd51201b4fd9c062e2fe6e0d95a007c133caf1300a1"
+    },
+    {
+      "path": ".github/ISSUE_TEMPLATE/archive-record.yml",
+      "digest": "sha256:efef147501c0d20c38b4599b3473b0d09e977a86a10b5f0a36f92d04f7ea928d"
+    }
+  ],
+  "capability_status": "IMPLEMENTED_NOT_QUALIFIED",
+  "known_limitations": [
+    "The GitHub Archived setting remains observed false and this implementation-only phase does not authorize changing it.",
+    "The default branch and open Phase 00 candidate are unprotected and no controlled-merge equivalent or signed provenance is evidenced.",
+    "The historical freeze tag and Phase 01 artifact manifest are unsigned and are not release or qualification evidence.",
+    "Repository-local content has no runtime dependency and no active consumer was observed, but no signed complete portfolio consumer inventory exists.",
+    "The local coordinator host passed the historical Node checks but lacks the cc linker required to complete the historical Rust check.",
+    "No independent reviewer accepted the exact source boundary, link checker, historical restore, or rollback.",
+    "No signed secret-history review spans deleted history, forks, caches, provider state, or inaccessible scopes.",
+    "No observation window binds an accepted archive release, restore, settings state, and accountable owner identities."
+  ],
+  "rollback": [
+    "Preserve the current public archive, private SteamCloud implementation, freeze tag, repository settings, branches, deployments, traffic, DNS, secrets, and CurrentAuthority unchanged.",
+    "Before merge, close the Phase 01 pull request and remove only phase01/historical-usability-20260824.",
+    "If separately merged, revert the Phase 01 seal then ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5 to exact Phase 00 head 9554180db2b73b426a87128e10fbe12c097ee786 and tree e0a9e141f14bdfd3b90131ff0ec55551393777a8.",
+    "Rerun the exact detached Phase 00 validators and compare its exact tree before accepting source restoration.",
+    "No runtime drain, durable-data reconciliation, queue replay, deployment restoration, or authority selection is required because this phase performs none."
+  ],
+  "non_claims": [
+    "No feature, runtime, schema, contract, package, profile, provider adapter, deployment configuration, active dependency, telemetry, data collection, write, effect, or authority role was added.",
+    "No repository setting, visibility, archive flag, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, credential, traffic, or authority was read beyond scoped metadata or changed.",
+    "Zero GitHub-visible releases, deployments, secret metadata rows, or variable rows do not prove absence in provider, organization, deleted-history, fork, cache, or inaccessible scopes.",
+    "The historical sample remains reference material and its exact identities or green Node tests do not make it a current protocol, package, runtime, or qualified capability.",
+    "The issue template is archive intake only and does not authorize an administrator, security, feature, deployment, product, or CurrentAuthority action.",
+    "No merge, signed release, independent qualification, live observation, activation, retirement, or CurrentAuthority transition occurred."
+  ],
+  "unresolved_blockers": [
+    {
+      "blocker": "Protected main or an evidenced equivalent controlled-merge policy and signed provenance are absent.",
+      "owner": "repository source-governance, release-root, signer-set, provenance, and rollback owners; exact signed identities NOT_OBSERVED"
+    },
+    {
+      "blocker": "GitHub Archived remains false and this phase has no administrator authorization to change it.",
+      "owner": "repository administrator and archive-disposition owner; exact signed identities NOT_OBSERVED"
+    },
+    {
+      "blocker": "A complete signed inventory proving no active dependency or consumer points to the archive is absent.",
+      "owner": "SteamCloud product, portfolio dependency-inventory, package, documentation, and migration owners; exact signed identities NOT_OBSERVED"
+    },
+    {
+      "blocker": "Independent restore, history/secret review, source-boundary acceptance, and rollback acceptance are absent.",
+      "owner": "archive rollback, secret-custody, security, and independent-review owners; exact signed identities NOT_OBSERVED"
+    },
+    {
+      "blocker": "No signed immutable archive release/tag or observation window is bound to exact settings, source, and owner identities.",
+      "owner": "archive release signer, observation, qualification, and owner authorities; exact signed identities NOT_OBSERVED"
+    }
+  ],
+  "unblocks": [
+    "Review of exact archive links, historical recovery instructions, provenance correction intake, limitations, rollback, and non-claims.",
+    "Archive-safety and documentation corrections that remain within the same exact no-runtime boundary.",
+    "No feature, runtime, package, schema, deployment, setting, activation, qualification, retirement, or authority action is unblocked."
+  ],
+  "work_items": [
+    {
+      "class": "implementation",
+      "status": "IMPLEMENTED_ARCHIVE_ONLY"
+    },
+    {
+      "class": "artifact",
+      "status": "UNSIGNED_HISTORICAL_REFERENCE"
+    },
+    {
+      "class": "deployment",
+      "status": "NOT_APPLICABLE"
+    },
+    {
+      "class": "activation",
+      "status": "BLOCKED"
+    },
+    {
+      "class": "authority",
+      "status": "NONE"
+    },
+    {
+      "class": "qualification",
+      "status": "NOT_OBSERVED"
+    },
+    {
+      "class": "observation",
+      "status": "REPOSITORY_LOCAL_AND_SCOPED_GITHUB_METADATA_ONLY"
+    }
+  ],
+  "authority_movement": {
+    "authorized": false,
+    "performed": false,
+    "effect": "NONE"
+  }
+}

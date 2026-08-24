@@ -76,8 +76,8 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
     def test_status_is_closed_and_no_effect(self) -> None:
         validate.validate_status()
 
-    def test_exact_phase00_boundary_is_preserved_preseal(self) -> None:
-        validate.validate_source_boundary(preseal=True)
+    def test_exact_phase00_boundary_is_preserved_after_seal(self) -> None:
+        validate.validate_source_boundary(preseal=False)
 
 
 if __name__ == "__main__":
