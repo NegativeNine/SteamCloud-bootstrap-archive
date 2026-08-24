@@ -6,6 +6,8 @@
   "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
   "source_tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
   "change_commits": [
+    "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca",
+    "9c307777d8555cf2ead5ecaef8faeb5b03ccf337",
     "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
   ],
   "commands": [
@@ -17,12 +19,12 @@
     {
       "command": "read-only GitHub release, deployment, secret-count, and variable-count metadata",
       "exit_code": 0,
-      "result": "OBSERVED: releases 0, deployments 0, repository Actions secret metadata count 0, variable metadata count 0; this is scoped GitHub metadata and not proof of provider or organization-wide absence"
+      "result": "OBSERVED: releases 0, deployments 0, repository Actions secret metadata count 0, variable metadata count 0; scoped metadata only, not provider, administrator, secret-custodian, or organization-wide absence evidence"
     },
     {
-      "command": "python3 phase-01/validate.py --preseal; python3 phase-01/test_validate.py",
+      "command": "python3 phase-01/validate.py --preseal",
       "exit_code": 0,
-      "result": "PASS; 25 local links/fragments, exact historical archive identities, archive-only issue boundary, exact Phase 00 preservation, and eight adversarial tests"
+      "result": "PASS; exact 26-destination inventory, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus gates, exact Phase 00 bytes, activation blocked, authority none"
     },
     {
       "command": "exact detached Phase 00 validation at 9554180db2b73b426a87128e10fbe12c097ee786",
@@ -32,70 +34,74 @@
     {
       "command": "npm test --prefix <exact historical sample temp directory>",
       "exit_code": 0,
-      "result": "PASS; exact sample commit 069c2448ee3c5e7c352d096494d15e8f120cf433 executed 20 Node tests"
+      "result": "OBSERVED PASS; exact sample commit 069c2448ee3c5e7c352d096494d15e8f120cf433 executed 20 Node tests under Node v22.18.0; not cross-toolchain qualification"
     },
     {
       "command": "npm run check --prefix <exact historical sample temp directory>",
       "exit_code": 0,
-      "result": "PASS; JavaScript syntax and historical repository validator"
+      "result": "OBSERVED PASS; JavaScript syntax and historical repository validator under Node v22.18.0; bounded observation only"
     },
     {
       "command": "cargo test --manifest-path <exact historical sample temp directory>/Cargo.toml --workspace --all-targets --offline",
       "exit_code": 101,
-      "result": "BLOCKED retained; local host lacks cc linker, so no Rust passing result is claimed"
+      "result": "BLOCKED; the historical tree has no Cargo.lock, uses moving stable and broad dependency constraints, selected eight latest-compatible packages, and the host lacks cc. No passing Rust result is claimed; status is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED."
     },
     {
       "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
       "exit_code": 0,
-      "result": "PASS after source manifest and closeout seal"
+      "result": "PASS after exact source manifest and closeout seal; 29 retained tests execute every declared corpus identity"
     }
   ],
   "command_evidence_classification": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE",
   "artifacts": [
     {
-      "path": "phase-01/artifact-manifest.v1.json",
-      "digest": "sha256:fddd138ec2aa89d4fd5cf09377baff685d5fd935cdaf6784f6dffb9d189a6d0b"
-    },
-    {
-      "path": "phase-01/status.v1.json",
-      "digest": "sha256:482865d203dbcef3d9fc988b27a119d701ca33a2bb11e086239adef7712fcce6"
-    },
-    {
-      "path": "phase-01/test-fault-corpus.v1.json",
-      "digest": "sha256:9cb97762631fc7e5ca9f6e273f1afc17aaa782db458629e2c0b5a22a4ae75946"
+      "path": ".github/ISSUE_TEMPLATE/archive-record.yml",
+      "digest": "sha256:efef147501c0d20c38b4599b3473b0d09e977a86a10b5f0a36f92d04f7ea928d"
     },
     {
       "path": "docs/archive/HISTORICAL_BUILD.md",
-      "digest": "sha256:3b4ab8bfbfd5797a558f8fd51201b4fd9c062e2fe6e0d95a007c133caf1300a1"
+      "digest": "sha256:cfb75d44e705674e59867f69791a52e2fe70ca1949aab7c5de96b04fef1b3038"
     },
     {
-      "path": ".github/ISSUE_TEMPLATE/archive-record.yml",
-      "digest": "sha256:efef147501c0d20c38b4599b3473b0d09e977a86a10b5f0a36f92d04f7ea928d"
+      "path": "phase-01/artifact-manifest.v1.json",
+      "digest": "sha256:525b3f60ec7bd3f41f77767df5dbc8c01f596b2f4d709313f5bd0a987e4611e0"
+    },
+    {
+      "path": "phase-01/historical-build-evidence.v1.json",
+      "digest": "sha256:f992bc8390335351d3379427ac3632da5cd961a2a04fabd28b65935a3f4833ca"
+    },
+    {
+      "path": "phase-01/status.v1.json",
+      "digest": "sha256:0fe278d879c7284242ce40803e1ff0ebacc10de0d8e8fd4bd2d1f60e16a9e25c"
+    },
+    {
+      "path": "phase-01/test-fault-corpus.v1.json",
+      "digest": "sha256:4bbf50386ab78adfdfd39daf99e3536a792bd3d086a05139851e3135c10af866"
     }
   ],
   "capability_status": "IMPLEMENTED_NOT_QUALIFIED",
   "known_limitations": [
     "The GitHub Archived setting remains observed false and this implementation-only phase does not authorize changing it.",
     "The default branch and open Phase 00 candidate are unprotected and no controlled-merge equivalent or signed provenance is evidenced.",
-    "The historical freeze tag and Phase 01 artifact manifest are unsigned and are not release or qualification evidence.",
+    "The historical freeze tag, source manifest, build evidence, and closeout are unsigned and are not release or qualification evidence.",
     "Repository-local content has no runtime dependency and no active consumer was observed, but no signed complete portfolio consumer inventory exists.",
-    "The local coordinator host passed the historical Node checks but lacks the cc linker required to complete the historical Rust check.",
-    "No independent reviewer accepted the exact source boundary, link checker, historical restore, or rollback.",
+    "Only exact historical source recovery is reproducible; Node execution is a bounded observation and Rust is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED with no passing result.",
+    "The remediated exact head still requires a fresh independent review; no signed accountable reviewer acceptance is observed.",
     "No signed secret-history review spans deleted history, forks, caches, provider state, or inaccessible scopes.",
     "No observation window binds an accepted archive release, restore, settings state, and accountable owner identities."
   ],
   "rollback": [
     "Preserve the current public archive, private SteamCloud implementation, freeze tag, repository settings, branches, deployments, traffic, DNS, secrets, and CurrentAuthority unchanged.",
     "Before merge, close the Phase 01 pull request and remove only phase01/historical-usability-20260824.",
-    "If separately merged, revert the Phase 01 seal then ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5 to exact Phase 00 head 9554180db2b73b426a87128e10fbe12c097ee786 and tree e0a9e141f14bdfd3b90131ff0ec55551393777a8.",
-    "Rerun the exact detached Phase 00 validators and compare its exact tree before accepting source restoration.",
+    "If separately merged, revert the current Phase 01 closeout seal first, then 1606b618d50ddcd3d3c8a2b95147596e06bcb7ca, then 9c307777d8555cf2ead5ecaef8faeb5b03ccf337, then ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5, newest-first.",
+    "The restored source must match exact Phase 00 head 9554180db2b73b426a87128e10fbe12c097ee786 and tree e0a9e141f14bdfd3b90131ff0ec55551393777a8 before the detached 31-test Phase 00 suite is rerun.",
     "No runtime drain, durable-data reconciliation, queue replay, deployment restoration, or authority selection is required because this phase performs none."
   ],
   "non_claims": [
     "No feature, runtime, schema, contract, package, profile, provider adapter, deployment configuration, active dependency, telemetry, data collection, write, effect, or authority role was added.",
-    "No repository setting, visibility, archive flag, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, credential, traffic, or authority was read beyond scoped metadata or changed.",
-    "Zero GitHub-visible releases, deployments, secret metadata rows, or variable rows do not prove absence in provider, organization, deleted-history, fork, cache, or inaccessible scopes.",
-    "The historical sample remains reference material and its exact identities or green Node tests do not make it a current protocol, package, runtime, or qualified capability.",
+    "No repository setting, visibility, archive flag, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, credential, traffic, or authority was changed.",
+    "Scoped GitHub metadata observations do not prove provider, administrator, organization-wide, deleted-history, fork, cache, or inaccessible-scope absence.",
+    "The historical sample remains reference material. Exact source identities and bounded Node observations do not make it a current protocol, package, runtime, reproducible Rust build, or qualified capability.",
     "The issue template is archive intake only and does not authorize an administrator, security, feature, deployment, product, or CurrentAuthority action.",
     "No merge, signed release, independent qualification, live observation, activation, retirement, or CurrentAuthority transition occurred."
   ],
@@ -113,7 +119,7 @@
       "owner": "SteamCloud product, portfolio dependency-inventory, package, documentation, and migration owners; exact signed identities NOT_OBSERVED"
     },
     {
-      "blocker": "Independent restore, history/secret review, source-boundary acceptance, and rollback acceptance are absent.",
+      "blocker": "Independent restore, history/secret review, exact-head source-boundary acceptance, and rollback acceptance are absent.",
       "owner": "archive rollback, secret-custody, security, and independent-review owners; exact signed identities NOT_OBSERVED"
     },
     {
@@ -122,43 +128,38 @@
     }
   ],
   "unblocks": [
-    "Review of exact archive links, historical recovery instructions, provenance correction intake, limitations, rollback, and non-claims.",
+    "Fresh technical review of exact archive links, historical source recovery, provenance correction intake, fail-closed limitations, and source rollback.",
     "Archive-safety and documentation corrections that remain within the same exact no-runtime boundary.",
     "No feature, runtime, package, schema, deployment, setting, activation, qualification, retirement, or authority action is unblocked."
   ],
   "work_items": [
-    {
-      "class": "implementation",
-      "status": "IMPLEMENTED_ARCHIVE_ONLY"
-    },
-    {
-      "class": "artifact",
-      "status": "UNSIGNED_HISTORICAL_REFERENCE"
-    },
-    {
-      "class": "deployment",
-      "status": "NOT_APPLICABLE"
-    },
-    {
-      "class": "activation",
-      "status": "BLOCKED"
-    },
-    {
-      "class": "authority",
-      "status": "NONE"
-    },
-    {
-      "class": "qualification",
-      "status": "NOT_OBSERVED"
-    },
-    {
-      "class": "observation",
-      "status": "REPOSITORY_LOCAL_AND_SCOPED_GITHUB_METADATA_ONLY"
-    }
+    { "class": "implementation", "status": "IMPLEMENTED_ARCHIVE_ONLY" },
+    { "class": "artifact", "status": "UNSIGNED_HISTORICAL_REFERENCE_NOT_ADMITTED" },
+    { "class": "deployment", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED" },
+    { "class": "activation", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED" },
+    { "class": "authority", "status": "NONE_NOT_AUTHORIZED_NOT_PERFORMED" },
+    { "class": "qualification", "status": "BLOCKED_NOT_ESTABLISHED" },
+    { "class": "observation", "status": "LOCAL_SOURCE_EVIDENCE_ONLY_FRESH_EXACT_HEAD_REVIEW_REQUIRED" }
   ],
   "authority_movement": {
     "authorized": false,
     "performed": false,
     "effect": "NONE"
+  },
+  "review_gate": {
+    "remediated_review_path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
+    "remediated_review_sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
+    "remediated_finding_ids": [
+      "ARCHIVE-P1-R01",
+      "ARCHIVE-P1-R02",
+      "ARCHIVE-P1-R03",
+      "ARCHIVE-P1-R04",
+      "ARCHIVE-P1-R05",
+      "ARCHIVE-P1-R06"
+    ],
+    "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
+    "signed_acceptance": "NOT_OBSERVED",
+    "qualification_effect": "NONE",
+    "authority_effect": "NONE"
   }
 }
