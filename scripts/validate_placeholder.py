@@ -94,6 +94,8 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "scripts/validate_placeholder.py",
     ROOT / "phase-00/README.md",
     ROOT / "phase-00/archive-baseline.v1.json",
+    ROOT / "phase-00/closeout.v1.json",
+    ROOT / "phase-00/repository-phase-closeout.schema.json",
     ROOT / "phase-00/rollback.v1.json",
     ROOT / "phase-00/status.v1.json",
     ROOT / "phase-00/test-fault-corpus.v1.json",

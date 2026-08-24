@@ -18,7 +18,7 @@ jobs:
       - run: python3 -m pip install --disable-pip-version-check PyYAML==6.0.3
       - run: python3 scripts/validate_placeholder.py
       - run: python3 scripts/test_validate_placeholder.py
-      - run: python3 phase-00/validate.py --preseal
+      - run: python3 phase-00/validate.py
       - run: python3 phase-00/test_validate.py
       - run: git diff --check HEAD^ HEAD
       - run: git fsck --full

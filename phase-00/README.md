@@ -40,8 +40,11 @@ blockers. No such action is performed here.
 python3 scripts/validate_placeholder.py
 python3 scripts/test_validate_placeholder.py
 python3 phase-00/validate.py
+python3 phase-00/test_validate.py
 git fsck --full
 gitleaks git --redact=100 --no-banner .
 ```
 
-See `closeout.v1.json` for the final exact branch identity after sealing.
+See `closeout.v1.json` for the exact implementation identity and remaining
+qualification blockers. The local closeout schema is binding-correct output;
+it does not amend the sealed prompt package's obsolete `.4` schema.

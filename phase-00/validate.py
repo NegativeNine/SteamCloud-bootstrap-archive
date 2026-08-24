@@ -184,6 +184,21 @@ def validate_packet(preseal: bool) -> None:
             fail("closeout change commits are not exact")
         for commit in commits:
             run("git", "cat-file", "-e", f"{commit}^{{commit}}")
+        classes = [item["class"] for item in closeout["work_items"]]
+        if set(classes) != CLASSES or len(classes) != len(CLASSES):
+            fail("closeout seven-class coverage incomplete or duplicated")
+        if closeout["canonical_capability_status"] != "UNKNOWN":
+            fail("closeout promotes an archive capability")
+        for artifact in closeout["artifacts"]:
+            path = artifact["path"]
+            if not path.startswith("phase-00/"):
+                continue
+            target = ROOT / path
+            if not target.is_file():
+                fail(f"closeout artifact missing: {path}")
+            observed = "sha256:" + hashlib.sha256(target.read_bytes()).hexdigest()
+            if observed != artifact["digest"]:
+                fail(f"closeout artifact digest drift: {path}")
 
 
 def main() -> int:

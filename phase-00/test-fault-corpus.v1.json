@@ -12,6 +12,10 @@
       "tests": 23
     },
     {
+      "command": "python3 phase-00/validate.py",
+      "result": "PASS"
+    },
+    {
       "command": "git fsck --full",
       "result": "PASS"
     },
