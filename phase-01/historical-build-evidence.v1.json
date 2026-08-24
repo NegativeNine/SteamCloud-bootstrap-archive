@@ -1,0 +1,45 @@
+{
+  "schema": "steamcloud.archive.phase-01-historical-build-evidence/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "phase": "01",
+  "sample_source": {
+    "commit": "069c2448ee3c5e7c352d096494d15e8f120cf433",
+    "tree": "dcc70bd212ff8d1499aa5f2141a429629bf066a5",
+    "git_archive_sha256": "e9667fd5da1f20aa933b0503ff2249fc7b6c42f66e94f4c671658085592a9197",
+    "content_manifest_sha256": "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e6aedc3e2b4",
+    "recovery_status": "REPRODUCIBLE_EXACT_SOURCE_BYTES_ONLY"
+  },
+  "node_observation": {
+    "status": "OBSERVED_PASS_NOT_TOOLCHAIN_REPRODUCIBILITY",
+    "node_version": "v22.18.0",
+    "dependency_count": 0,
+    "test_count": 20,
+    "test_exit_code": 0,
+    "check_exit_code": 0
+  },
+  "rust_observation": {
+    "status": "NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED",
+    "cargo_lock_present": false,
+    "root_cargo_toml_sha256": "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef11f79c71c6521",
+    "crate_cargo_toml_sha256": "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734",
+    "historical_toolchain_selector": "stable",
+    "historical_workflow_sha256": "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76",
+    "dependency_constraints": [
+      "async-trait=0.1",
+      "serde=1"
+    ],
+    "attempted_cargo_version": "cargo 1.97.1 (c980f4866 2026-06-30)",
+    "attempted_command": "cargo test --manifest-path <exact sample>/Cargo.toml --workspace --all-targets --offline",
+    "attempt_exit_code": 101,
+    "attempt_result": "CC_LINKER_NOT_FOUND_BEFORE_TEST_EXECUTION",
+    "target_triple": "UNKNOWN_NOT_RECORDED",
+    "environment_identity": "LOCAL_COORDINATOR_HOST_NOT_IMMUTABLE",
+    "passing_result_claimed": false
+  },
+  "scope": "REFERENCE_SOURCE_RECOVERY_AND_PARTIAL_EXECUTION_OBSERVATION_ONLY",
+  "publishable": false,
+  "qualified": false,
+  "activation": "BLOCKED",
+  "authority_effect": "NONE"
+}

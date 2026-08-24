@@ -38,9 +38,11 @@ and do not override that binding.
 
 Phase 01 keeps that archive usable without accepting new feature ownership. The
 [historical build note](docs/archive/HISTORICAL_BUILD.md) binds read-only recovery to an exact commit,
-tree, archive digest, and retained limitation. Hosted checks validate every local documentation link
-and heading fragment. The constrained issue form accepts only broken links, provenance corrections,
-and archive-safety reports; feature, runtime, package, deployment, and authority requests are refused.
+tree, archive digest, and retained limitation. Hosted checks validate a digest-bound inventory of
+inline Markdown, reference-definition, HTML, and heading-fragment destinations while ignoring code.
+The Rust sample is structurally unpinned and has no passing result claim. The closed issue form accepts
+only broken links, provenance corrections, and archive-safety reports; feature, runtime, package,
+deployment, and authority requests are refused.
 
 ## Pointers
 

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Strict offline validation for the historical-usability archive candidate."""
+"""Fail-closed offline validation for the Phase 01 historical archive candidate."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+from html.parser import HTMLParser
 import json
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
 import yaml
@@ -18,12 +19,25 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 PHASE = ROOT / "phase-01"
 ARCHITECTURE = "2026-08-23-final-phased-prompts.3"
+REPOSITORY = "NegativeNine/SteamCloud-bootstrap-archive"
 PHASE00_HEAD = "9554180db2b73b426a87128e10fbe12c097ee786"
 PHASE00_TREE = "e0a9e141f14bdfd3b90131ff0ec55551393777a8"
+PREVIOUS_IMPLEMENTATION = "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
+PREVIOUS_SEAL = "9c307777d8555cf2ead5ecaef8faeb5b03ccf337"
+BLOCKING_REVIEW_PATH = (
+    "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
+    "phase-01.independent-review.json"
+)
+BLOCKING_REVIEW_SHA256 = "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8"
 SAMPLE_HEAD = "069c2448ee3c5e7c352d096494d15e8f120cf433"
 SAMPLE_TREE = "dcc70bd212ff8d1499aa5f2141a429629bf066a5"
 SAMPLE_ARCHIVE_SHA256 = "e9667fd5da1f20aa933b0503ff2249fc7b6c42f66e94f4c671658085592a9197"
 SAMPLE_MANIFEST_SHA256 = "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e6aedc3e2b4"
+SAMPLE_ROOT_CARGO_SHA256 = "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef11f79c71c6521"
+SAMPLE_CRATE_CARGO_SHA256 = "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734"
+SAMPLE_WORKFLOW_SHA256 = "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76"
+EXPECTED_LINK_INVENTORY_SHA256 = "bc8f41b7675500fc8757163d63e791822da3df1c6b68d0614d8fb84595e332bb"
+
 WORK_CLASSES = [
     "implementation",
     "artifact",
@@ -33,16 +47,42 @@ WORK_CLASSES = [
     "qualification",
     "observation",
 ]
-MODIFIED_PATHS = {
-    ".github/workflows/ci.yml",
-    "CONTRIBUTING.md",
-    "README.md",
+STATUS_WORK_ITEMS = [
+    {"class": "implementation", "status": "IMPLEMENTED_ARCHIVE_ONLY"},
+    {"class": "artifact", "status": "UNSIGNED_HISTORICAL_REFERENCE"},
+    {"class": "deployment", "status": "NOT_APPLICABLE_NOT_PERFORMED"},
+    {"class": "activation", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED"},
+    {"class": "authority", "status": "NONE_NOT_AUTHORIZED_NOT_PERFORMED"},
+    {"class": "qualification", "status": "NOT_OBSERVED_NOT_ESTABLISHED"},
+    {"class": "observation", "status": "REPOSITORY_LOCAL_ONLY_FRESH_EXACT_HEAD_REVIEW_REQUIRED"},
+]
+CLOSEOUT_WORK_ITEMS = [
+    {"class": "implementation", "status": "IMPLEMENTED_ARCHIVE_ONLY"},
+    {"class": "artifact", "status": "UNSIGNED_HISTORICAL_REFERENCE_NOT_ADMITTED"},
+    {"class": "deployment", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED"},
+    {"class": "activation", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED"},
+    {"class": "authority", "status": "NONE_NOT_AUTHORIZED_NOT_PERFORMED"},
+    {"class": "qualification", "status": "BLOCKED_NOT_ESTABLISHED"},
+    {"class": "observation", "status": "LOCAL_SOURCE_EVIDENCE_ONLY_FRESH_EXACT_HEAD_REVIEW_REQUIRED"},
+]
+AUTHORITY_NONE = {"authorized": False, "performed": False, "effect": "NONE"}
+REVIEW_GATE = {
+    "remediated_review_path": BLOCKING_REVIEW_PATH,
+    "remediated_review_sha256": BLOCKING_REVIEW_SHA256,
+    "remediated_finding_ids": [f"ARCHIVE-P1-R0{index}" for index in range(1, 7)],
+    "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
+    "signed_acceptance": "NOT_OBSERVED",
+    "qualification_effect": "NONE",
+    "authority_effect": "NONE",
 }
+
+MODIFIED_PATHS = {".github/workflows/ci.yml", "CONTRIBUTING.md", "README.md"}
 CORE_ADDITIONS = {
     ".github/ISSUE_TEMPLATE/archive-record.yml",
     ".github/ISSUE_TEMPLATE/config.yml",
     "docs/archive/HISTORICAL_BUILD.md",
     "phase-01/README.md",
+    "phase-01/historical-build-evidence.v1.json",
     "phase-01/repository-phase-closeout.schema.json",
     "phase-01/status.v1.json",
     "phase-01/test-fault-corpus.v1.json",
@@ -54,24 +94,23 @@ SEAL_ADDITIONS = {
     "phase-01/closeout.v1.json",
     "phase-01/closeout.sha256",
 }
-FORBIDDEN_ADDITIONS = {
-    "Cargo.toml",
-    "Dockerfile",
-    "package.json",
-    "pyproject.toml",
-    "wrangler.json",
-    "wrangler.jsonc",
-    "wrangler.toml",
-    "src",
-    "schemas",
-    "operations",
-    "packs",
-    "profile",
-}
-MARKDOWN_LINK = re.compile(r"\[[^\]]+\]\(([^)]+)\)", re.DOTALL)
-HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*#*\s*$", re.MULTILINE)
+SOURCE_ENTRY_PATHS = MODIFIED_PATHS | CORE_ADDITIONS
+ALL_PHASE_PATHS = SOURCE_ENTRY_PATHS | SEAL_ADDITIONS
+FORBIDDEN_PREFIXES = (
+    "Cargo.toml", "Dockerfile", "package.json", "pyproject.toml", "wrangler.json",
+    "wrangler.jsonc", "wrangler.toml", "src/", "schemas/", "operations/", "packs/", "profile/",
+)
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 SHA1 = re.compile(r"^[0-9a-f]{40}$")
+HEADING = re.compile(r"^#{1,6}[ \t]+(.+?)[ \t]*#*[ \t]*$", re.MULTILINE)
+FENCE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})(?:[^\n]*)$")
+REFERENCE_DEFINITION = re.compile(
+    r"^[ \t]{0,3}\[([^\]\n]+)\]:[ \t]*(?:<([^>\n]*)>|([^\s]+))"
+    r"(?:[ \t]+(?:\"[^\"\n]*\"|'[^'\n]*'|\([^\)\n]*\)))?[ \t]*$", re.MULTILINE,
+)
+FULL_REFERENCE = re.compile(r"!?\[([^\]\n]+)\]\[([^\]\n]*)\]")
+INLINE_START = re.compile(r"!?\[[^\]\n]*\]\(")
+AUTOLINK = re.compile(r"<(https://[^<>\s]+)>")
 
 
 def fail(message: str) -> None:
@@ -79,18 +118,28 @@ def fail(message: str) -> None:
 
 
 def run(*args: str, input_bytes: bytes | None = None) -> bytes:
-    return subprocess.run(
-        args,
-        cwd=ROOT,
-        input=input_bytes,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    ).stdout
+    return subprocess.run(args, cwd=ROOT, input=input_bytes, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
 
 
 def sha256(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
+
+
+def assert_exact(actual: object, expected: object, path: str = "$") -> None:
+    if type(actual) is not type(expected):
+        fail(f"{path} type drift: expected {type(expected).__name__}, got {type(actual).__name__}")
+    if isinstance(expected, dict):
+        if set(actual) != set(expected):  # type: ignore[arg-type]
+            fail(f"{path} field drift: missing={sorted(set(expected) - set(actual))} extra={sorted(set(actual) - set(expected))}")  # type: ignore[arg-type]
+        for key, value in expected.items():
+            assert_exact(actual[key], value, f"{path}.{key}")  # type: ignore[index]
+    elif isinstance(expected, list):
+        if len(actual) != len(expected):  # type: ignore[arg-type]
+            fail(f"{path} length drift")
+        for index, value in enumerate(expected):
+            assert_exact(actual[index], value, f"{path}[{index}]")  # type: ignore[index]
+    elif actual != expected:
+        fail(f"{path} value drift: expected {expected!r}, got {actual!r}")
 
 
 def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -102,11 +151,55 @@ def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
     return result
 
 
+def reject_json_constant(value: str) -> object:
+    fail(f"non-finite JSON number: {value}")
+
+
 def load_json(path: Path) -> dict[str, object]:
-    value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+    raw = path.read_bytes()
+    if len(raw) > 1_048_576:
+        fail(f"JSON document exceeds fixed byte limit: {path}")
+    value = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_object, parse_constant=reject_json_constant)
     if not isinstance(value, dict):
         fail(f"JSON root must be an object: {path}")
     return value
+
+
+class StrictYamlLoader(yaml.SafeLoader):
+    """YAML 1.2 booleans plus duplicate mapping-key rejection."""
+
+
+StrictYamlLoader.yaml_implicit_resolvers = {key: list(value) for key, value in yaml.SafeLoader.yaml_implicit_resolvers.items()}
+for resolver_key, resolvers in list(StrictYamlLoader.yaml_implicit_resolvers.items()):
+    StrictYamlLoader.yaml_implicit_resolvers[resolver_key] = [item for item in resolvers if item[0] != "tag:yaml.org,2002:bool"]
+StrictYamlLoader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|false)$", re.IGNORECASE), list("tTfF"))
+
+
+def construct_unique_yaml_mapping(loader: StrictYamlLoader, node: yaml.MappingNode, deep: bool = False) -> dict[object, object]:
+    loader.flatten_mapping(node)
+    result: dict[object, object] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in result:
+            fail(f"duplicate YAML key: {key}")
+        result[key] = loader.construct_object(value_node, deep=deep)
+    return result
+
+
+StrictYamlLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_unique_yaml_mapping)
+
+
+def load_yaml_text(raw: str) -> dict[str, object]:
+    if len(raw.encode("utf-8")) > 262_144:
+        fail("YAML document exceeds fixed byte limit")
+    value = yaml.load(raw, Loader=StrictYamlLoader)
+    if not isinstance(value, dict):
+        fail("YAML root must be an object")
+    return value
+
+
+def load_yaml(path: Path) -> dict[str, object]:
+    return load_yaml_text(path.read_text(encoding="utf-8"))
 
 
 def tree_paths(treeish: str) -> set[str]:
@@ -115,45 +208,111 @@ def tree_paths(treeish: str) -> set[str]:
 
 def current_paths() -> set[str]:
     tracked = set(run("git", "ls-files").decode().splitlines())
-    untracked = set(
-        run("git", "ls-files", "--others", "--exclude-standard").decode().splitlines()
-    )
+    untracked = set(run("git", "ls-files", "--others", "--exclude-standard").decode().splitlines())
     return tracked | untracked
 
 
-def validate_source_boundary(preseal: bool) -> None:
+def candidate_head() -> str:
+    parents = run("git", "rev-list", "--parents", "-n", "1", "HEAD").decode().split()
+    if len(parents) == 2:
+        return parents[0]
+    if len(parents) == 3:
+        return parents[2]
+    fail("candidate checkout has unsupported commit parent cardinality")
+
+
+def candidate_source_commit() -> str:
+    return run("git", "rev-parse", f"{candidate_head()}^").decode().strip()
+
+
+def validate_source_path_set(actual: set[str], expected: set[str]) -> None:
+    if actual != expected:
+        fail(f"exact archive source boundary drift: missing={sorted(expected - actual)} extra={sorted(actual - expected)}")
+    phase_only = actual - tree_paths(PHASE00_HEAD)
+    for relative in phase_only:
+        if relative in FORBIDDEN_PREFIXES or relative.startswith(FORBIDDEN_PREFIXES):
+            fail(f"runtime/package path added: {relative}")
+
+
+def repository_file(relative: str, *, must_exist: bool = True) -> Path:
+    if not isinstance(relative, str) or not relative or "\\" in relative or "\0" in relative:
+        fail(f"unsafe repository-relative path: {relative!r}")
+    pure = PurePosixPath(relative)
+    if pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
+        fail(f"unsafe repository-relative path: {relative!r}")
+    if pure.as_posix() != relative:
+        fail(f"non-normalized repository-relative path: {relative!r}")
+    target = ROOT
+    for part in pure.parts:
+        target = target / part
+        if target.is_symlink():
+            fail(f"symlink not permitted in repository path: {relative}")
+    try:
+        target.resolve().relative_to(ROOT.resolve())
+    except ValueError:
+        fail(f"repository path escapes root: {relative}")
+    if must_exist and not target.is_file():
+        fail(f"repository file missing: {relative}")
+    return target
+
+
+def validate_source_boundary(_preseal: bool) -> None:
     if run("git", "rev-parse", f"{PHASE00_HEAD}^{{tree}}").decode().strip() != PHASE00_TREE:
         fail("Phase 00 source tree drift")
     base_paths = tree_paths(PHASE00_HEAD)
-    additions = CORE_ADDITIONS if preseal else CORE_ADDITIONS | SEAL_ADDITIONS
-    expected = base_paths | additions
-    actual = current_paths()
-    if actual != expected:
-        fail(
-            "exact archive source boundary drift: "
-            f"missing={sorted(expected - actual)} extra={sorted(actual - expected)}"
-        )
-
-    allowed_changes = MODIFIED_PATHS | additions
+    validate_source_path_set(current_paths(), base_paths | ALL_PHASE_PATHS)
     changed = set(run("git", "diff", "--name-only", PHASE00_HEAD).decode().splitlines())
     changed |= set(run("git", "ls-files", "--others", "--exclude-standard").decode().splitlines())
-    if not changed <= allowed_changes:
-        fail(f"Phase 00 path changed outside Phase 01 boundary: {sorted(changed - allowed_changes)}")
-
+    if changed != ALL_PHASE_PATHS:
+        fail(f"exact Phase 01 changed-path boundary drift: missing={sorted(ALL_PHASE_PATHS - changed)} extra={sorted(changed - ALL_PHASE_PATHS)}")
     for relative in sorted(base_paths - MODIFIED_PATHS):
-        path = ROOT / relative
-        if path.is_symlink():
-            fail(f"symlink not permitted in archive source boundary: {relative}")
-        expected_bytes = run("git", "show", f"{PHASE00_HEAD}:{relative}")
-        if path.read_bytes() != expected_bytes:
+        path = repository_file(relative)
+        if path.read_bytes() != run("git", "show", f"{PHASE00_HEAD}:{relative}"):
             fail(f"Phase 00-owned bytes changed: {relative}")
-    for relative in additions:
-        path = ROOT / relative
-        if path.is_symlink() or not path.is_file():
-            fail(f"Phase 01 path missing or symlinked: {relative}")
-    for forbidden in FORBIDDEN_ADDITIONS:
-        if forbidden in additions or any(item.startswith(f"{forbidden}/") for item in additions):
-            fail(f"runtime/package path added: {forbidden}")
+    for relative in ALL_PHASE_PATHS:
+        repository_file(relative)
+
+
+def mask_markdown_code(text: str) -> str:
+    output: list[str] = []
+    active_fence: tuple[str, int] | None = None
+    for line in text.splitlines(keepends=True):
+        body = line.rstrip("\r\n")
+        ending = line[len(body):]
+        match = FENCE.match(body)
+        if active_fence is not None:
+            if match and match.group(1)[0] == active_fence[0] and len(match.group(1)) >= active_fence[1]:
+                active_fence = None
+            output.append(" " * len(body) + ending)
+            continue
+        if match:
+            active_fence = (match.group(1)[0], len(match.group(1)))
+            output.append(" " * len(body) + ending)
+            continue
+        if body.startswith("    ") or body.startswith("\t"):
+            output.append(" " * len(body) + ending)
+            continue
+        chars = list(body)
+        index = 0
+        while index < len(body):
+            if body[index] != "`":
+                index += 1
+                continue
+            run_length = 1
+            while index + run_length < len(body) and body[index + run_length] == "`":
+                run_length += 1
+            delimiter = "`" * run_length
+            closing = body.find(delimiter, index + run_length)
+            if closing == -1:
+                index += run_length
+                continue
+            for masked in range(index, closing + run_length):
+                chars[masked] = " "
+            index = closing + run_length
+        output.append("".join(chars) + ending)
+    if active_fence is not None:
+        fail("unterminated fenced code block")
+    return "".join(output)
 
 
 def github_anchor(value: str) -> str:
@@ -164,7 +323,7 @@ def github_anchor(value: str) -> str:
 
 
 def heading_anchors(path: Path) -> set[str]:
-    text = path.read_text(encoding="utf-8")
+    text = mask_markdown_code(path.read_text(encoding="utf-8"))
     anchors: set[str] = set()
     counts: dict[str, int] = {}
     for heading in HEADING.findall(text):
@@ -173,6 +332,114 @@ def heading_anchors(path: Path) -> set[str]:
         counts[base] = count + 1
         anchors.add(base if count == 0 else f"{base}-{count}")
     return anchors
+
+
+def normalize_reference_label(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip()).casefold()
+
+
+def parse_inline_destination(value: str) -> str:
+    value = value.strip()
+    if value.startswith("<"):
+        end = value.find(">")
+        if end == -1:
+            fail("unterminated angle-bracket Markdown destination")
+        destination = value[1:end]
+        remainder = value[end + 1:].strip()
+    else:
+        depth = 0
+        escaped = False
+        end = len(value)
+        for index, char in enumerate(value):
+            if escaped:
+                escaped = False
+                continue
+            if char == "\\":
+                escaped = True
+            elif char == "(":
+                depth += 1
+            elif char == ")" and depth:
+                depth -= 1
+            elif char.isspace() and depth == 0:
+                end = index
+                break
+        destination = value[:end]
+        remainder = value[end:].strip()
+    if remainder and not ((remainder.startswith('"') and remainder.endswith('"')) or (remainder.startswith("'") and remainder.endswith("'")) or (remainder.startswith("(") and remainder.endswith(")"))):
+        fail(f"unsupported Markdown link title syntax: {remainder}")
+    return destination.replace("\\", "")
+
+
+class LocalHtmlDestinationCollector(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.destinations: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        seen: set[str] = set()
+        for key, value in attrs:
+            key = key.casefold()
+            if key in seen:
+                fail(f"duplicate HTML attribute: {tag}.{key}")
+            seen.add(key)
+            if key in {"href", "src"}:
+                if value is None:
+                    fail(f"empty HTML destination: {tag}.{key}")
+                self.destinations.append(value)
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(tag, attrs)
+
+
+def extract_link_destinations(source: Path, text: str) -> list[dict[str, str]]:
+    masked = mask_markdown_code(text)
+    records: list[dict[str, str]] = []
+    definitions: dict[str, str] = {}
+    definition_spans: list[tuple[int, int]] = []
+    for match in REFERENCE_DEFINITION.finditer(masked):
+        label = normalize_reference_label(match.group(1))
+        if label in definitions:
+            fail(f"duplicate Markdown reference label in {source}: {label}")
+        destination = match.group(2) if match.group(2) is not None else match.group(3)
+        definitions[label] = destination
+        definition_spans.append(match.span())
+        records.append({"syntax": "reference-definition", "destination": destination})
+    chars = list(masked)
+    for start, end in definition_spans:
+        for index in range(start, end):
+            if chars[index] not in "\r\n":
+                chars[index] = " "
+    masked = "".join(chars)
+    for match in FULL_REFERENCE.finditer(masked):
+        label = normalize_reference_label(match.group(2) or match.group(1))
+        if label not in definitions:
+            fail(f"undefined Markdown reference label in {source}: {label}")
+    for match in INLINE_START.finditer(masked):
+        open_index = match.end() - 1
+        depth = 1
+        escaped = False
+        index = open_index + 1
+        while index < len(masked) and depth:
+            char = masked[index]
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+            index += 1
+        if depth:
+            fail(f"unterminated inline Markdown link in {source}")
+        destination = parse_inline_destination(masked[open_index + 1:index - 1])
+        records.append({"syntax": "inline", "destination": destination})
+    collector = LocalHtmlDestinationCollector()
+    collector.feed(masked)
+    collector.close()
+    records.extend({"syntax": "html", "destination": destination} for destination in collector.destinations)
+    records.extend({"syntax": "autolink", "destination": match.group(1)} for match in AUTOLINK.finditer(masked))
+    return records
 
 
 def validate_link_destination(source: Path, destination: str) -> None:
@@ -187,26 +454,15 @@ def validate_link_destination(source: Path, destination: str) -> None:
     if parsed.netloc:
         fail(f"protocol-relative link in {source}: {destination}")
     raw_path = unquote(parsed.path)
-    if (
-        "\0" in raw_path
-        or "\\" in raw_path
-        or raw_path.startswith("/")
-        or parsed.query
-    ):
+    if "\0" in raw_path or "\\" in raw_path or raw_path.startswith("/") or parsed.query:
         fail(f"unsafe local link in {source}: {destination}")
-    parts = [part for part in raw_path.split("/") if part]
     encoded_parts = [part for part in parsed.path.split("/") if part]
-    if any(
-        unquote(part) in {".", ".."} and part not in {".", ".."}
-        for part in encoded_parts
-    ):
+    if any(unquote(part) in {".", ".."} and part not in {".", ".."} for part in encoded_parts):
         fail(f"encoded traversal in local link: {source}: {destination}")
-
+    parts = [part for part in raw_path.split("/") if part]
     target = source if raw_path == "" else source.parent.joinpath(*parts)
-    root = ROOT.resolve()
-    resolved = target.resolve()
     try:
-        resolved.relative_to(root)
+        target.resolve().relative_to(ROOT.resolve())
     except ValueError:
         fail(f"local link escapes repository: {destination}")
     if not target.exists() or target.is_symlink():
@@ -223,205 +479,380 @@ def validate_link_destination(source: Path, destination: str) -> None:
             fail(f"missing Markdown heading fragment: {source}: {destination}")
 
 
-def validate_links() -> int:
+def link_inventory() -> list[dict[str, str]]:
     markdown_paths = sorted(path for path in current_paths() if path.endswith(".md"))
     if len(markdown_paths) > 128:
         fail("Markdown file count exceeds fixed archive limit")
-    checked = 0
+    inventory: list[dict[str, str]] = []
     for relative in markdown_paths:
-        source = ROOT / relative
+        source = repository_file(relative)
         text = source.read_text(encoding="utf-8")
-        if len(text.encode()) > 1_048_576:
+        if len(text.encode("utf-8")) > 1_048_576:
             fail(f"Markdown file exceeds fixed byte limit: {relative}")
-        for destination in MARKDOWN_LINK.findall(text):
-            validate_link_destination(source, destination)
-            checked += 1
-    if checked == 0:
+        for record in extract_link_destinations(source, text):
+            validate_link_destination(source, record["destination"])
+            inventory.append({"source": relative, **record})
+    return sorted(inventory, key=lambda item: (item["source"], item["syntax"], item["destination"]))
+
+
+def validate_links() -> int:
+    inventory = link_inventory()
+    if not inventory:
         fail("link checker exercised no links")
-    return checked
+    digest = sha256(json.dumps(inventory, sort_keys=True, separators=(",", ":")).encode())
+    if digest != EXPECTED_LINK_INVENTORY_SHA256:
+        fail(f"exact link inventory drift: count={len(inventory)} sha256={digest}")
+    return len(inventory)
+
+
+EXPECTED_HISTORICAL_EVIDENCE = {
+    "schema": "steamcloud.archive.phase-01-historical-build-evidence/v1",
+    "architecture_binding": ARCHITECTURE, "repository": REPOSITORY, "phase": "01",
+    "sample_source": {"commit": SAMPLE_HEAD, "tree": SAMPLE_TREE, "git_archive_sha256": SAMPLE_ARCHIVE_SHA256, "content_manifest_sha256": SAMPLE_MANIFEST_SHA256, "recovery_status": "REPRODUCIBLE_EXACT_SOURCE_BYTES_ONLY"},
+    "node_observation": {"status": "OBSERVED_PASS_NOT_TOOLCHAIN_REPRODUCIBILITY", "node_version": "v22.18.0", "dependency_count": 0, "test_count": 20, "test_exit_code": 0, "check_exit_code": 0},
+    "rust_observation": {
+        "status": "NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED", "cargo_lock_present": False,
+        "root_cargo_toml_sha256": SAMPLE_ROOT_CARGO_SHA256, "crate_cargo_toml_sha256": SAMPLE_CRATE_CARGO_SHA256,
+        "historical_toolchain_selector": "stable", "historical_workflow_sha256": SAMPLE_WORKFLOW_SHA256,
+        "dependency_constraints": ["async-trait=0.1", "serde=1"],
+        "attempted_cargo_version": "cargo 1.97.1 (c980f4866 2026-06-30)",
+        "attempted_command": "cargo test --manifest-path <exact sample>/Cargo.toml --workspace --all-targets --offline",
+        "attempt_exit_code": 101, "attempt_result": "CC_LINKER_NOT_FOUND_BEFORE_TEST_EXECUTION",
+        "target_triple": "UNKNOWN_NOT_RECORDED", "environment_identity": "LOCAL_COORDINATOR_HOST_NOT_IMMUTABLE",
+        "passing_result_claimed": False,
+    },
+    "scope": "REFERENCE_SOURCE_RECOVERY_AND_PARTIAL_EXECUTION_OBSERVATION_ONLY",
+    "publishable": False, "qualified": False, "activation": "BLOCKED", "authority_effect": "NONE",
+}
+
+
+def git_object_exists(spec: str) -> bool:
+    return subprocess.run(["git", "cat-file", "-e", spec], cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
 
 
 def validate_historical_build() -> None:
     if run("git", "rev-parse", f"{SAMPLE_HEAD}^{{tree}}").decode().strip() != SAMPLE_TREE:
         fail("historical sample tree drift")
-    archive = run("git", "archive", "--format=tar", SAMPLE_HEAD)
-    if sha256(archive) != SAMPLE_ARCHIVE_SHA256:
+    if sha256(run("git", "archive", "--format=tar", SAMPLE_HEAD)) != SAMPLE_ARCHIVE_SHA256:
         fail("historical sample archive digest drift")
-    manifest = ROOT / "docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256"
-    if sha256(manifest.read_bytes()) != SAMPLE_MANIFEST_SHA256:
+    if sha256(repository_file("docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256").read_bytes()) != SAMPLE_MANIFEST_SHA256:
         fail("historical sample manifest digest drift")
-    note = (ROOT / "docs/archive/HISTORICAL_BUILD.md").read_text(encoding="utf-8")
-    for identity in (SAMPLE_HEAD, SAMPLE_TREE, SAMPLE_ARCHIVE_SHA256, SAMPLE_MANIFEST_SHA256):
-        if identity not in note:
-            fail(f"historical build note omits identity {identity}")
-    for command in ("git archive --format=tar", "npm test", "npm run check", "cargo test"):
-        if command not in note:
-            fail(f"historical build note omits command {command}")
-    if "could not complete the Rust command" not in re.sub(r"\s+", " ", note):
-        fail("historical build note hides retained Rust limitation")
+    if "Cargo.lock" in tree_paths(SAMPLE_HEAD) or git_object_exists(f"{SAMPLE_HEAD}:Cargo.lock"):
+        fail("historical sample unexpectedly acquired Cargo.lock")
+    historical_objects = {"Cargo.toml": SAMPLE_ROOT_CARGO_SHA256, "crates/steamcloud-agent/Cargo.toml": SAMPLE_CRATE_CARGO_SHA256, ".github/workflows/ci.yml": SAMPLE_WORKFLOW_SHA256}
+    for path, digest in historical_objects.items():
+        if sha256(run("git", "show", f"{SAMPLE_HEAD}:{path}")) != digest:
+            fail(f"historical build input drift: {path}")
+    assert_exact(load_json(PHASE / "historical-build-evidence.v1.json"), EXPECTED_HISTORICAL_EVIDENCE)
+    note = repository_file("docs/archive/HISTORICAL_BUILD.md").read_text(encoding="utf-8")
+    for value in (SAMPLE_HEAD, SAMPLE_TREE, SAMPLE_ARCHIVE_SHA256, SAMPLE_MANIFEST_SHA256, "no `Cargo.lock`", "`stable`", "NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED", "No passing Rust result is claimed"):
+        if value not in note:
+            fail(f"historical build note omits fail-closed evidence: {value}")
+
+
+EXPECTED_ISSUE_FORM = {
+    "name": "Archive record correction",
+    "description": "Report a broken historical link, provenance error, or archive-safety issue. Feature and runtime requests are not accepted.",
+    "title": "[archive] ", "labels": [], "assignees": [],
+    "body": [
+        {"type": "dropdown", "id": "record_type", "attributes": {"label": "Record type", "options": ["Broken documentation link", "Historical provenance correction", "Archive-safety issue"]}, "validations": {"required": True}},
+        {"type": "input", "id": "identity", "attributes": {"label": "Exact historical identity", "description": "Provide the commit, tree, path, or manifest line. Do not include a credential, token, production datum, or private history.", "placeholder": "commit/path or manifest identity"}, "validations": {"required": True}},
+        {"type": "textarea", "id": "evidence", "attributes": {"label": "Evidence and reproduction", "description": "Explain the correction and give bounded, read-only reproduction steps. Do not propose runtime or feature work."}, "validations": {"required": True}},
+        {"type": "checkboxes", "id": "attestations", "attributes": {"label": "Archive boundary", "options": [
+            {"label": "This report is limited to historical accuracy, documentation links, provenance, or archive safety.", "required": True},
+            {"label": "I have not included secrets, credentials, personal data, private source, or production data.", "required": True},
+            {"label": "I understand this archive does not accept feature, runtime, package, deployment, or authority requests.", "required": True},
+        ]}},
+    ],
+}
+EXPECTED_ISSUE_CONFIG = {"blank_issues_enabled": False, "contact_links": []}
 
 
 def validate_issue_form_document(form: dict[str, object], config: dict[str, object]) -> None:
-    if set(form) != {"name", "description", "title", "labels", "assignees", "body"}:
-        fail("issue form root field drift")
-    if form.get("labels") != [] or form.get("assignees") != []:
-        fail("issue form invents repository labels or assignees")
-    description = form.get("description")
-    if not isinstance(description, str) or "Feature and runtime requests are not accepted." not in description:
-        fail("issue form admits feature/runtime work")
-    body = form.get("body")
-    if not isinstance(body, list):
-        fail("issue form body missing")
-    ids = [item.get("id") for item in body if isinstance(item, dict)]
-    if ids != ["record_type", "identity", "evidence", "attestations"]:
-        fail("issue form exact field sequence drift")
-    serialized = json.dumps(form, sort_keys=True)
-    for phrase in ("Archive-safety issue", "Do not include a credential", "does not accept feature"):
-        if phrase not in serialized:
-            fail(f"issue form missing archive boundary phrase: {phrase}")
-    if config != {"blank_issues_enabled": False, "contact_links": []}:
-        fail("issue template configuration must disable blank issues and external contacts")
+    assert_exact(form, EXPECTED_ISSUE_FORM, "$.issue_form")
+    assert_exact(config, EXPECTED_ISSUE_CONFIG, "$.issue_config")
 
 
 def validate_issue_form() -> None:
-    form = yaml.safe_load((ROOT / ".github/ISSUE_TEMPLATE/archive-record.yml").read_text())
-    config = yaml.safe_load((ROOT / ".github/ISSUE_TEMPLATE/config.yml").read_text())
-    if not isinstance(form, dict) or not isinstance(config, dict):
-        fail("issue template YAML root must be an object")
-    validate_issue_form_document(form, config)
+    validate_issue_form_document(load_yaml(ROOT / ".github/ISSUE_TEMPLATE/archive-record.yml"), load_yaml(ROOT / ".github/ISSUE_TEMPLATE/config.yml"))
+
+
+EXPECTED_WORKFLOW_COMMANDS = [
+    None,
+    "python3 -m pip install --disable-pip-version-check PyYAML==6.0.3",
+    "phase00_worktree=\"$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)\"\ngit worktree add --detach \"$phase00_worktree\" 9554180db2b73b426a87128e10fbe12c097ee786\n(\n  cd \"$phase00_worktree\"\n  python3 scripts/validate_placeholder.py\n  python3 scripts/test_validate_placeholder.py\n  python3 phase-00/validate.py\n  python3 phase-00/test_validate.py\n)\ngit worktree remove --force \"$phase00_worktree\"\n",
+    "python3 phase-01/validate.py", "python3 phase-01/test_validate.py", "git diff --check HEAD^ HEAD", "git fsck --full",
+]
+
+
+def validate_workflow_document(workflow: dict[str, object], raw: str) -> None:
+    if set(workflow) != {"name", "on", "permissions", "jobs"}:
+        fail("workflow root field drift")
+    assert_exact(workflow["name"], "placeholder-archive-validation", "$.workflow.name")
+    assert_exact(workflow["on"], {"push": None, "pull_request": None}, "$.workflow.on")
+    assert_exact(workflow["permissions"], {"contents": "read"}, "$.workflow.permissions")
+    jobs = workflow["jobs"]
+    if not isinstance(jobs, dict) or set(jobs) != {"validate"}:
+        fail("archive must retain one validation-only job")
+    job = jobs["validate"]
+    if not isinstance(job, dict) or set(job) != {"runs-on", "steps"} or job["runs-on"] != "ubuntu-latest":
+        fail("workflow validation job shape drift")
+    steps = job["steps"]
+    if not isinstance(steps, list) or len(steps) != 7:
+        fail("workflow step boundary drift")
+    assert_exact(steps[0], {"uses": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683", "with": {"fetch-depth": 0, "persist-credentials": False}}, "$.workflow.jobs.validate.steps[0]")
+    for index, expected_command in enumerate(EXPECTED_WORKFLOW_COMMANDS[1:], start=1):
+        step = steps[index]
+        if not isinstance(step, dict) or set(step) not in ({"run"}, {"name", "run"}):
+            fail(f"workflow step {index} shape drift")
+        if step.get("run") != expected_command:
+            fail(f"workflow step {index} command drift")
+        if index == 2 and step.get("name") != "Verify the exact Phase 00 candidate":
+            fail("Phase 00 workflow step name drift")
+        if index != 2 and "name" in step:
+            fail(f"unexpected workflow step name at {index}")
+    folded = raw.casefold()
+    for forbidden in ("curl ", "wget ", "gh api", "secrets.", "contents: write", "id-token: write"):
+        if forbidden in folded:
+            fail(f"mutable or secret-bearing workflow token: {forbidden}")
 
 
 def validate_workflow() -> None:
-    workflow_path = ROOT / ".github/workflows/ci.yml"
-    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
-    if workflow.get("permissions") != {"contents": "read"}:
-        fail("workflow permissions must be exactly contents: read")
-    if set(workflow.get("jobs", {})) != {"validate"}:
-        fail("archive must retain one validation-only job")
-    text = workflow_path.read_text(encoding="utf-8").casefold()
-    for forbidden in ("curl ", "wget ", "gh api", "secrets.", "contents: write", "id-token: write"):
-        if forbidden in text:
-            fail(f"mutable or secret-bearing workflow token: {forbidden}")
-    for identity in (PHASE00_HEAD, "PyYAML==6.0.3", "phase-01/validate.py"):
-        if identity not in workflow_path.read_text(encoding="utf-8"):
-            fail(f"workflow omits exact validation identity {identity}")
+    path = ROOT / ".github/workflows/ci.yml"
+    raw = path.read_text(encoding="utf-8")
+    validate_workflow_document(load_yaml_text(raw), raw)
+
+
+EXPECTED_STATUS = {
+    "schema": "steamcloud.archive.phase-01-status/v1", "architecture_binding": ARCHITECTURE,
+    "repository": REPOSITORY, "phase": "01", "phase_disposition": "IMPLEMENTED_NOT_QUALIFIED",
+    "canonical_capability_status": "UNKNOWN", "archive_artifact_status": "REFERENCE",
+    "deployment": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED", "activation": "BLOCKED",
+    "qualification": "NOT_OBSERVED_NOT_ESTABLISHED", "accepts_feature_work": False,
+    "runtime_dependencies": [], "active_consumers_observed": [], "active_dependency_inventory_complete": False,
+    "data_collection": {"identity": "none", "classification": "none", "retention": "none", "residency": "none", "erasure": "not-applicable", "export": "not-applicable", "restore": "not-applicable"},
+    "limits": {"max_markdown_files": 128, "max_markdown_bytes_each": 1_048_576, "external_fetches": 0, "writes": 0, "effects": 0},
+    "work_items": STATUS_WORK_ITEMS, "authority_movement": AUTHORITY_NONE, "review_gate": REVIEW_GATE,
+}
+
+
+def validate_status_document(status: dict[str, object]) -> None:
+    assert_exact(status, EXPECTED_STATUS, "$.status")
 
 
 def validate_status() -> None:
-    status = load_json(PHASE / "status.v1.json")
-    if status.get("architecture_binding") != ARCHITECTURE:
-        fail("status architecture drift")
-    if status.get("phase_disposition") != "IMPLEMENTED_NOT_QUALIFIED":
-        fail("status qualification inflation")
-    if status.get("canonical_capability_status") != "UNKNOWN":
-        fail("archive claims runtime capability status")
-    if status.get("archive_artifact_status") != "REFERENCE":
-        fail("archive historical artifact status drift")
-    if status.get("activation") != "BLOCKED" or status.get("accepts_feature_work") is not False:
-        fail("archive activation or feature boundary drift")
-    if status.get("runtime_dependencies") != [] or status.get("active_consumers_observed") != []:
-        fail("archive invents active dependency or consumer")
-    if status.get("active_dependency_inventory_complete") is not False:
-        fail("archive overclaims dependency inventory completeness")
-    movement = status.get("authority_movement")
-    if movement != {"authorized": False, "performed": False, "effect": "NONE"}:
-        fail("archive authority movement")
-    items = status.get("work_items")
-    if not isinstance(items, list) or [item.get("class") for item in items] != WORK_CLASSES:
-        fail("status seven-class sequence drift")
-    lifecycle = status.get("data_collection")
-    if not isinstance(lifecycle, dict) or set(lifecycle.values()) != {"none", "not-applicable"}:
-        fail("archive data lifecycle drift")
-    limits = status.get("limits")
-    expected = {
-        "max_markdown_files": 128,
-        "max_markdown_bytes_each": 1_048_576,
-        "external_fetches": 0,
-        "writes": 0,
-        "effects": 0,
-    }
-    if limits != expected:
-        fail("archive fixed validation limits drift")
+    validate_status_document(load_json(PHASE / "status.v1.json"))
+
+
+POSITIVE_CORPUS = [
+    {"id": "ARCHIVE-P1-P01", "test": "test_current_link_inventory_is_exact", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P02", "test": "test_reference_style_local_link_is_checked", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P03", "test": "test_html_local_link_is_checked", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P04", "test": "test_code_spans_and_fences_are_ignored", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P05", "test": "test_historical_evidence_is_exact_and_fail_closed", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P06", "test": "test_issue_form_is_exact_archive_scope", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P07", "test": "test_exact_phase00_boundary_is_preserved", "expected": "PASS"},
+]
+NEGATIVE_CORPUS = [
+    {"id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N02", "test": "test_missing_reference_link_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N03", "test": "test_missing_html_link_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N04", "test": "test_missing_heading_fragment_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N05", "test": "test_unsafe_local_link_variants_are_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N06", "test": "test_symlink_link_target_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N07", "test": "test_duplicate_json_key_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N08", "test": "test_nonfinite_json_number_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N09", "test": "test_status_deployment_inflation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N10", "test": "test_status_activation_inflation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N11", "test": "test_status_authority_and_qualification_inflation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N12", "test": "test_manifest_signed_publishable_inflation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N13", "test": "test_manifest_source_identity_drift_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N14", "test": "test_manifest_absolute_and_traversal_paths_are_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N15", "test": "test_manifest_symlink_path_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N16", "test": "test_issue_form_feature_option_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N17", "test": "test_issue_form_optional_attestation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N18", "test": "test_runtime_or_package_path_addition_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N19", "test": "test_workflow_write_permission_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N20", "test": "test_duplicate_yaml_key_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N21", "test": "test_closeout_activation_authority_mutation_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N22", "test": "test_fault_corpus_label_drift_is_rejected", "expected": "REJECT"},
+]
+EXPECTED_CORPUS = {
+    "schema": "steamcloud.archive.phase-01-test-fault-corpus/v2", "architecture_binding": ARCHITECTURE,
+    "seed": "5eed0001", "runner": "python3 phase-01/test_validate.py",
+    "positive_cases": POSITIVE_CORPUS, "negative_cases": NEGATIVE_CORPUS,
+    "durable_state": {"writes": 0, "effects": 0, "idempotency": "pure-offline-validation-is-repeatable", "duplicates": "duplicate-json-yaml-manifest-and-html-keys-rejected", "crash": "not-applicable-no-durable-write", "lost_response": "not-applicable-no-external-call", "restore": "revert-phase01-commits-newest-first-to-exact-phase00-tree", "rollback": "source-only-newest-first"},
+    "qualification_non_claim": "Executable archive-boundary regressions only; not security, restore, deployment, runtime, qualification, or authority evidence.",
+}
+
+
+def validate_corpus_document(corpus: dict[str, object]) -> None:
+    assert_exact(corpus, EXPECTED_CORPUS, "$.fault_corpus")
+    ids = [item["id"] for item in POSITIVE_CORPUS + NEGATIVE_CORPUS]
+    tests = [item["test"] for item in POSITIVE_CORPUS + NEGATIVE_CORPUS]
+    if len(ids) != len(set(ids)) or len(tests) != len(set(tests)):
+        fail("fault corpus ids and executable test identities must be unique")
 
 
 def validate_corpus() -> None:
-    corpus = load_json(PHASE / "test-fault-corpus.v1.json")
-    if corpus.get("architecture_binding") != ARCHITECTURE:
-        fail("fault corpus architecture drift")
-    positive = corpus.get("positive_cases")
-    negative = corpus.get("negative_cases")
-    if not isinstance(positive, list) or len(positive) < 5:
-        fail("fault corpus positive coverage incomplete")
-    if not isinstance(negative, list) or len(negative) < 12:
-        fail("fault corpus negative coverage incomplete")
-    durable = corpus.get("durable_state")
-    if not isinstance(durable, dict) or durable.get("writes") != 0 or durable.get("effects") != 0:
-        fail("fault corpus invents durable archive state")
+    validate_corpus_document(load_json(PHASE / "test-fault-corpus.v1.json"))
+
+
+MANIFEST_ROOT_KEYS = {"schema", "architecture_binding", "repository", "phase", "source_head", "source_tree", "source_commit", "signed", "publishable", "entries", "non_claim"}
+
+
+def validate_manifest_document(manifest: dict[str, object], *, verify_files: bool = True) -> None:
+    if set(manifest) != MANIFEST_ROOT_KEYS:
+        fail("manifest root field drift")
+    constants = {
+        "schema": "steamcloud.archive.phase-01-artifact-manifest/v2", "architecture_binding": ARCHITECTURE,
+        "repository": REPOSITORY, "phase": "01", "source_head": PHASE00_HEAD, "signed": False,
+        "publishable": False,
+        "non_claim": "Unsigned repository-contained source manifest only; not release, deployment, qualification, observed-live, activation, or authority evidence.",
+    }
+    for key, expected in constants.items():
+        assert_exact(manifest[key], expected, f"$.manifest.{key}")
+    source_commit = manifest["source_commit"]
+    source_tree = manifest["source_tree"]
+    if type(source_commit) is not str or not SHA1.fullmatch(source_commit):
+        fail("manifest source commit malformed")
+    if type(source_tree) is not str or not SHA1.fullmatch(source_tree):
+        fail("manifest source tree malformed")
+    if source_commit != candidate_source_commit():
+        fail("manifest source commit is not exact candidate source parent")
+    if run("git", "rev-parse", f"{source_commit}^{{tree}}").decode().strip() != source_tree:
+        fail("manifest source tree does not match source commit")
+    entries = manifest["entries"]
+    if not isinstance(entries, list):
+        fail("manifest entries must be an array")
+    paths: set[str] = set()
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict) or set(entry) != {"path", "sha256"}:
+            fail(f"manifest entry {index} shape drift")
+        path = entry["path"]
+        digest = entry["sha256"]
+        if type(path) is not str or type(digest) is not str or not SHA256.fullmatch(digest):
+            fail(f"manifest entry {index} identity malformed")
+        target = repository_file(path, must_exist=verify_files)
+        if path in paths:
+            fail(f"duplicate manifest path: {path}")
+        paths.add(path)
+        if verify_files:
+            current_bytes = target.read_bytes()
+            source_bytes = run("git", "show", f"{source_commit}:{path}")
+            if current_bytes != source_bytes or sha256(current_bytes) != digest:
+                fail(f"manifest source digest drift: {path}")
+    if paths != SOURCE_ENTRY_PATHS:
+        fail(f"manifest exact source entry boundary drift: missing={sorted(SOURCE_ENTRY_PATHS - paths)} extra={sorted(paths - SOURCE_ENTRY_PATHS)}")
+    if [entry["path"] for entry in entries] != sorted(paths):
+        fail("manifest entries must be lexically ordered")
+
+
+CLOSEOUT_ROOT_KEYS = {"schema", "architecture_version", "repository", "phase", "source_head", "source_tree", "change_commits", "commands", "command_evidence_classification", "artifacts", "capability_status", "known_limitations", "rollback", "non_claims", "unresolved_blockers", "unblocks", "work_items", "authority_movement", "review_gate"}
+EXPECTED_COMMANDS = [
+    ("git fetch --prune origin", 0),
+    ("read-only GitHub release, deployment, secret-count, and variable-count metadata", 0),
+    ("python3 phase-01/validate.py --preseal", 0),
+    ("exact detached Phase 00 validation at " + PHASE00_HEAD, 0),
+    ("npm test --prefix <exact historical sample temp directory>", 0),
+    ("npm run check --prefix <exact historical sample temp directory>", 0),
+    ("cargo test --manifest-path <exact historical sample temp directory>/Cargo.toml --workspace --all-targets --offline", 101),
+    ("python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check", 0),
+]
+EXPECTED_ARTIFACT_PATHS = {"phase-01/artifact-manifest.v1.json", "phase-01/status.v1.json", "phase-01/test-fault-corpus.v1.json", "phase-01/historical-build-evidence.v1.json", "docs/archive/HISTORICAL_BUILD.md", ".github/ISSUE_TEMPLATE/archive-record.yml"}
+
+
+def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, object], *, verify_files: bool = True) -> None:
+    if set(closeout) != CLOSEOUT_ROOT_KEYS:
+        fail("closeout root field drift")
+    constants = {
+        "schema": "solarflare.repository-phase-closeout/v3", "architecture_version": ARCHITECTURE,
+        "repository": REPOSITORY, "phase": "01", "source_head": PHASE00_HEAD, "source_tree": PHASE00_TREE,
+        "command_evidence_classification": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE",
+        "capability_status": "IMPLEMENTED_NOT_QUALIFIED", "work_items": CLOSEOUT_WORK_ITEMS,
+        "authority_movement": AUTHORITY_NONE, "review_gate": REVIEW_GATE,
+    }
+    for key, expected in constants.items():
+        assert_exact(closeout[key], expected, f"$.closeout.{key}")
+    source_commit = manifest["source_commit"]
+    assert_exact(closeout["change_commits"], [source_commit, PREVIOUS_SEAL, PREVIOUS_IMPLEMENTATION], "$.closeout.change_commits")
+    commands = closeout["commands"]
+    if not isinstance(commands, list) or len(commands) != len(EXPECTED_COMMANDS):
+        fail("closeout command rows drift")
+    for index, (command, exit_code) in enumerate(EXPECTED_COMMANDS):
+        row = commands[index]
+        if not isinstance(row, dict) or set(row) != {"command", "exit_code", "result"}:
+            fail(f"closeout command row {index} shape drift")
+        assert_exact(row["command"], command, f"$.closeout.commands[{index}].command")
+        assert_exact(row["exit_code"], exit_code, f"$.closeout.commands[{index}].exit_code")
+        if type(row["result"]) is not str or not row["result"]:
+            fail(f"closeout command row {index} result malformed")
+    if "No passing Rust result is claimed" not in commands[6]["result"]:
+        fail("closeout inflates historical Rust execution")
+    artifacts = closeout["artifacts"]
+    if not isinstance(artifacts, list):
+        fail("closeout artifacts must be an array")
+    artifact_paths: set[str] = set()
+    for index, artifact in enumerate(artifacts):
+        if not isinstance(artifact, dict) or set(artifact) != {"path", "digest"}:
+            fail(f"closeout artifact row {index} shape drift")
+        path, digest = artifact["path"], artifact["digest"]
+        if type(path) is not str or type(digest) is not str or not digest.startswith("sha256:"):
+            fail(f"closeout artifact row {index} identity malformed")
+        expected_digest = digest.removeprefix("sha256:")
+        if not SHA256.fullmatch(expected_digest):
+            fail(f"closeout artifact row {index} digest malformed")
+        target = repository_file(path, must_exist=verify_files)
+        if path in artifact_paths:
+            fail(f"duplicate closeout artifact: {path}")
+        artifact_paths.add(path)
+        if verify_files and sha256(target.read_bytes()) != expected_digest:
+            fail(f"closeout artifact digest drift: {path}")
+    if artifact_paths != EXPECTED_ARTIFACT_PATHS:
+        fail("closeout exact artifact set drift")
+    if [artifact["path"] for artifact in artifacts] != sorted(artifact_paths):
+        fail("closeout artifacts must be lexically ordered")
+    for key in ("known_limitations", "rollback", "non_claims", "unblocks"):
+        value = closeout[key]
+        if not isinstance(value, list) or not value or any(type(item) is not str or not item for item in value):
+            fail(f"closeout {key} must be a nonempty string array")
+    rollback_text = " ".join(closeout["rollback"])
+    for identity in (source_commit, PREVIOUS_SEAL, PREVIOUS_IMPLEMENTATION, PHASE00_HEAD, PHASE00_TREE):
+        if identity not in rollback_text:
+            fail(f"closeout rollback omits exact identity: {identity}")
+    blockers = closeout["unresolved_blockers"]
+    if not isinstance(blockers, list) or len(blockers) != 5:
+        fail("closeout blocker cardinality drift")
+    for index, blocker in enumerate(blockers):
+        if not isinstance(blocker, dict) or set(blocker) != {"blocker", "owner"}:
+            fail(f"closeout blocker row {index} shape drift")
+        if any(type(blocker[key]) is not str or not blocker[key] for key in ("blocker", "owner")):
+            fail(f"closeout blocker row {index} malformed")
+
+
+def validate_schema_document(schema: dict[str, object]) -> None:
+    if set(schema) != {"$schema", "$id", "title", "type", "additionalProperties", "required", "properties"}:
+        fail("local closeout schema root drift")
+    if schema["type"] != "object" or schema["additionalProperties"] is not False:
+        fail("local closeout schema is not closed")
+    if schema["required"] != sorted(CLOSEOUT_ROOT_KEYS):
+        fail("local closeout schema required-field drift")
+    properties = schema["properties"]
+    if not isinstance(properties, dict) or set(properties) != CLOSEOUT_ROOT_KEYS:
+        fail("local closeout schema property drift")
 
 
 def validate_closeout(preseal: bool) -> None:
     if preseal:
         return
     manifest = load_json(PHASE / "artifact-manifest.v1.json")
-    if manifest.get("architecture_binding") != ARCHITECTURE:
-        fail("manifest architecture drift")
-    entries = manifest.get("entries")
-    if not isinstance(entries, list) or len(entries) < 10:
-        fail("manifest source boundary incomplete")
-    paths: set[str] = set()
-    for entry in entries:
-        if not isinstance(entry, dict) or set(entry) != {"path", "sha256"}:
-            fail("manifest entry shape drift")
-        path = entry.get("path")
-        expected = entry.get("sha256")
-        if not isinstance(path, str) or not isinstance(expected, str) or not SHA256.fullmatch(expected):
-            fail("manifest entry identity malformed")
-        if path in paths:
-            fail(f"duplicate manifest path: {path}")
-        paths.add(path)
-        target = ROOT / path
-        if not target.is_file() or target.is_symlink() or sha256(target.read_bytes()) != expected:
-            fail(f"manifest digest drift: {path}")
-    required_manifest = (MODIFIED_PATHS | CORE_ADDITIONS) - {"phase-01/test_validate.py"}
-    if not required_manifest <= paths:
-        fail(f"manifest missing Phase 01 source: {sorted(required_manifest - paths)}")
-
+    validate_manifest_document(manifest)
     closeout = load_json(PHASE / "closeout.v1.json")
-    schema = load_json(PHASE / "repository-phase-closeout.schema.json")
-    required = schema.get("required")
-    properties = schema.get("properties")
-    if not isinstance(required, list) or not isinstance(properties, dict):
-        fail("local closeout schema malformed")
-    if set(closeout) != set(required) or set(closeout) != set(properties):
-        fail("closeout does not match exact local schema root")
-    constants = {
-        key: rule["const"]
-        for key, rule in properties.items()
-        if isinstance(rule, dict) and "const" in rule
-    }
-    for key, expected in constants.items():
-        if closeout.get(key) != expected:
-            fail(f"closeout schema constant drift: {key}")
-    commits = closeout.get("change_commits")
-    if not isinstance(commits, list) or not commits or any(not isinstance(item, str) or not SHA1.fullmatch(item) for item in commits):
-        fail("closeout change commit identity malformed")
-    for commit in commits:
-        run("git", "cat-file", "-e", f"{commit}^{{commit}}")
-    work_items = closeout.get("work_items")
-    if not isinstance(work_items, list) or [item.get("class") for item in work_items] != WORK_CLASSES:
-        fail("closeout seven-class sequence drift")
-    for artifact in closeout.get("artifacts", []):
-        if not isinstance(artifact, dict):
-            fail("closeout artifact malformed")
-        path = artifact.get("path")
-        digest = artifact.get("digest")
-        if not isinstance(path, str) or not isinstance(digest, str) or not digest.startswith("sha256:"):
-            fail("closeout artifact identity malformed")
-        if sha256((ROOT / path).read_bytes()) != digest.removeprefix("sha256:"):
-            fail(f"closeout artifact digest drift: {path}")
+    validate_closeout_document(closeout, manifest)
+    validate_schema_document(load_json(PHASE / "repository-phase-closeout.schema.json"))
     sidecar = (PHASE / "closeout.sha256").read_text(encoding="utf-8").strip()
-    expected_sidecar = f"{sha256((PHASE / 'closeout.v1.json').read_bytes())}  phase-01/closeout.v1.json"
-    if sidecar != expected_sidecar:
+    expected = f"{sha256((PHASE / 'closeout.v1.json').read_bytes())}  phase-01/closeout.v1.json"
+    if sidecar != expected:
         fail("closeout sidecar digest drift")
 
 
@@ -437,16 +868,13 @@ def main() -> int:
     validate_status()
     validate_corpus()
     validate_closeout(args.preseal)
-    print(
-        f"PASS: {link_count} local links/fragments; exact historical archive; "
-        "archive-only issue intake; Phase 00 bytes preserved; activation BLOCKED; authority NONE"
-    )
+    print(f"PASS: exact {link_count}-destination Markdown/HTML inventory; exact historical source; Rust structurally unpinned/no pass claimed; archive-only issue intake; executable fault corpus; Phase 00 bytes preserved; deployment/activation BLOCKED; authority NONE")
     return 0
 
 
 if __name__ == "__main__":
     try:
         raise SystemExit(main())
-    except (AssertionError, KeyError, TypeError, ValueError, yaml.YAMLError, subprocess.CalledProcessError) as exc:
+    except (AssertionError, KeyError, OSError, RecursionError, TypeError, UnicodeError, ValueError, yaml.YAMLError, subprocess.CalledProcessError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         raise SystemExit(1)
