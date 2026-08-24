@@ -4,8 +4,8 @@
   "repository": "NegativeNine/SteamCloud-bootstrap-archive",
   "phase": "01",
   "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
-  "source_tree": "a09454b85dec130725e891a1f11d103f8c105037",
-  "source_commit": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b",
+  "source_tree": "a513fea6c8001706cbf0ddbee1ac76aae7d33095",
+  "source_commit": "4a6e32b87428571035680920145cc8d68c48a282",
   "signed": false,
   "publishable": false,
   "entries": [
@@ -27,7 +27,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "a5f0462f7a3925e0bbf38722100dee7cc76a8424dfbbf2b521bf652298f88616"
+      "sha256": "f1438b64dc1ec0b1797e6100ee2c1918221c43895e4029bb6019af3248c1dd81"
     },
     {
       "path": "docs/archive/HISTORICAL_BUILD.md",
@@ -35,7 +35,7 @@
     },
     {
       "path": "phase-01/README.md",
-      "sha256": "08d1528887033fd7837221dd2abf56d82ad942dc41bb7cd0816ab9a18fff6742"
+      "sha256": "63478d3d1991c2a83d5e0a0b4aff2307e6612c0e413693ca160a419524dd02dd"
     },
     {
       "path": "phase-01/historical-build-evidence.v1.json",
@@ -43,23 +43,23 @@
     },
     {
       "path": "phase-01/repository-phase-closeout.schema.json",
-      "sha256": "68b982f9f4fef10a5d76c836ea36684f49852f0750fbbe8cf17f4be412b716f3"
+      "sha256": "1c0f218516c557120c85c3583c6d1bb95e6bd88a4f20c506ff0a976aa88b8397"
     },
     {
       "path": "phase-01/status.v1.json",
-      "sha256": "ca49bfe1879448687b4419b357d524e4c48bbea27f5c57189f4f9016933d0614"
+      "sha256": "347e25da0a0550278a4ee2bc0cb783995457227f4c519c0c8a7121eb6854cc6a"
     },
     {
       "path": "phase-01/test-fault-corpus.v1.json",
-      "sha256": "bbf497a0b066723bf19becca54b42cbffbd215b82297b2455b19101ba1380c72"
+      "sha256": "37d26477242a2dc1fc1b64c6ccdb2545e0012e2748b729a22ae2a9997a510f47"
     },
     {
       "path": "phase-01/test_validate.py",
-      "sha256": "cde43c38bd0770247aa6d259f729d22ad4a1ba2ec6227dedb271250275442e0b"
+      "sha256": "d0eabedcd1ca3eb3a35b7f415e45e31cc9358c35de8b90e631c75dd8716270ec"
     },
     {
       "path": "phase-01/validate.py",
-      "sha256": "311e8809cea0e33dd2c47d4cebd148b24bc6d60f476bc95472f6bea04b461eae"
+      "sha256": "4eb170361ada3c59300359e5a72eb614b25d450de0ba0e960e76819d8c759199"
     }
   ],
   "non_claim": "Unsigned repository-contained source manifest only; not release, deployment, qualification, observed-live, activation, or authority evidence."
