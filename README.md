@@ -42,7 +42,9 @@ tree, archive digest, and retained limitation. Hosted checks use a pinned Common
 to validate a digest-bound occurrence inventory of active links, images, reference uses, autolinks,
 HTML destinations, and heading fragments while ignoring code and inactive raw-HTML-block Markdown.
 Nested precedence, exact block line spans, occurrence ordinals, quoted titles, and malformed syntax are
-covered under fixed depth and size limits.
+covered under fixed depth and size limits. Parser-position-backed reference-definition auditing retains
+definition order and exact source spans through blockquote, nested-list, wide-list, combined-container,
+multiline, tab, and CRLF forms, and rejects cross-container case-equivalent duplicates.
 The Rust sample is structurally unpinned and has no passing result claim. The closed issue form accepts
 only broken links, provenance corrections, and archive-safety reports; feature, runtime, package,
 deployment, and authority requests are refused.

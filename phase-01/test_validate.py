@@ -180,6 +180,97 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
             ],
         )
 
+    def test_container_reference_existing_matrix_and_source_spans(self) -> None:
+        fixtures = (
+            ("[x][r]\n\n[r]: docs/migration/CLOSEOUT.md\n", 3, 1),
+            ("> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md\n", 3, 3),
+            ("> > [x][r]\n> >\n> > [r]: docs/migration/CLOSEOUT.md\n", 3, 5),
+            ("- [x][r]\n\n  [r]: docs/migration/CLOSEOUT.md\n", 3, 3),
+            ("123. [x][r]\n\n     [r]: docs/migration/CLOSEOUT.md\n", 3, 6),
+            ("- outer\n  - [x][r]\n\n    [r]: docs/migration/CLOSEOUT.md\n", 4, 5),
+            ("- > [x][r]\n  >\n  > [r]: docs/migration/CLOSEOUT.md\n", 3, 5),
+            ("- [x][r]\n\n\t[r]: docs/migration/CLOSEOUT.md\n", 3, 2),
+        )
+        for text, line, column in fixtures:
+            with self.subTest(text=text):
+                records = self.validate_extracted(text)
+                definitions = validate.extract_reference_definitions(
+                    validate.ROOT / "README.md", text
+                )
+                self.assertEqual(
+                    self.semantic(records),
+                    [{"syntax": "link", "destination": "docs/migration/CLOSEOUT.md"}],
+                )
+                self.assertEqual(len(definitions), 1)
+                self.assertEqual(definitions[0]["occurrence"], 1)
+                self.assertEqual(definitions[0]["line_start"], line)
+                self.assertEqual(definitions[0]["line_end"], line)
+                self.assertEqual(definitions[0]["column_start"], column)
+                self.assertLess(definitions[0]["offset_start"], definitions[0]["offset_end"])
+
+    def test_container_reference_multiline_titles_and_escapes_are_valid(self) -> None:
+        fixtures = (
+            '> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md "literal ) title"\n',
+            "> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md 'literal ( title'\n",
+            "> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md\n>   \"line two ) title\"\n",
+            r"> [x][a\]b]" + "\n>\n> " + r"[a\]b]: <docs/migration/CLOSEOUT.md> (escaped \) title)" + "\n",
+            "> [x][foo bar]\n>\n> [foo\n> bar]: docs/migration/CLOSEOUT.md\n",
+            "- [x][foo bar]\n\n  [foo\n  bar]:\n   docs/migration/CLOSEOUT.md\n",
+            "> [x][r]\r\n>\r\n> [r]: docs/migration/CLOSEOUT.md\r\n",
+        )
+        for text in fixtures:
+            with self.subTest(text=text):
+                records = self.validate_extracted(text)
+                definitions = validate.extract_reference_definitions(
+                    validate.ROOT / "README.md", text
+                )
+                self.assertEqual(len(records), 1)
+                self.assertEqual(records[0]["destination"], "docs/migration/CLOSEOUT.md")
+                self.assertEqual(len(definitions), 1)
+        multiline = validate.extract_reference_definitions(
+            validate.ROOT / "README.md", fixtures[2]
+        )[0]
+        self.assertEqual((multiline["line_start"], multiline["line_end"]), (3, 4))
+        self.assertEqual(multiline["title"], "line two ) title")
+        multiline_label = validate.extract_reference_definitions(
+            validate.ROOT / "README.md", fixtures[4]
+        )[0]
+        self.assertEqual((multiline_label["line_start"], multiline_label["line_end"]), (3, 4))
+        self.assertEqual(multiline_label["normalized_label"], "FOO BAR")
+        multiline_destination = validate.extract_reference_definitions(
+            validate.ROOT / "README.md", fixtures[5]
+        )[0]
+        self.assertEqual(
+            (multiline_destination["line_start"], multiline_destination["line_end"]),
+            (3, 5),
+        )
+        crlf = validate.extract_reference_definitions(
+            validate.ROOT / "README.md", fixtures[6]
+        )[0]
+        self.assertEqual(
+            (crlf["line_start"], crlf["line_end"], crlf["column_start"]),
+            (3, 3, 3),
+        )
+
+    def test_reference_definition_order_and_multiplicity_are_exact(self) -> None:
+        text = (
+            "> [one][a] and [two][b]\n>\n"
+            "> [a]: docs/migration/CLOSEOUT.md\n"
+            "> [b]: docs/archive/HISTORICAL_BUILD.md\n"
+        )
+        records = self.validate_extracted(text)
+        definitions = validate.extract_reference_definitions(
+            validate.ROOT / "README.md", text
+        )
+        self.assertEqual([row["occurrence"] for row in definitions], [1, 2])
+        self.assertEqual([row["normalized_label"] for row in definitions], ["A", "B"])
+        self.assertEqual([row["line_start"] for row in definitions], [3, 4])
+        self.assertEqual(
+            [row["destination"] for row in definitions],
+            ["docs/migration/CLOSEOUT.md", "docs/archive/HISTORICAL_BUILD.md"],
+        )
+        self.assertEqual(len(records), 2)
+
     def test_duplicate_destinations_preserve_occurrence_and_line_identity(self) -> None:
         records = self.validate_extracted(
             "[one](docs/migration/CLOSEOUT.md)\n\n"
@@ -463,6 +554,19 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
         self.assertIsNotNone(caught.exception.line)
         self.assertIsNotNone(caught.exception.column)
 
+    def assert_reference_code(
+        self,
+        text: str,
+        code: str,
+        line: int,
+        column: int,
+    ) -> None:
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_reference_definitions(validate.ROOT / "README.md", text)
+        self.assertEqual(caught.exception.code, code)
+        self.assertEqual(caught.exception.line, line)
+        self.assertEqual(caught.exception.column, column)
+
     def test_unterminated_angle_destinations_are_typed_rejections(self) -> None:
         variants = (
             "[x](<docs/migration/CLOSEOUT.md)\n",
@@ -544,6 +648,121 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
         for text, code in cases:
             with self.subTest(text=text):
                 self.assert_markdown_code(text, code)
+
+    def test_r10_exact_container_unterminated_angle_fixtures_are_typed(self) -> None:
+        fixtures = (
+            ("> [x][r]\n>\n> [r]: <docs/migration/CLOSEOUT.md\n", 3, 8),
+            ("> > [x][r]\n> >\n> > [r]: <docs/migration/CLOSEOUT.md\n", 3, 10),
+            ("123. [x][r]\n\n     [r]: <docs/migration/CLOSEOUT.md\n", 3, 11),
+            ("- outer\n  - [x][r]\n\n    [r]: <docs/migration/CLOSEOUT.md\n", 4, 10),
+            ("[x][r]\n\n[r]: <docs/migration/CLOSEOUT.md\n", 3, 6),
+            ("> [x][r]\r\n>\r\n> [r]: <docs/migration/CLOSEOUT.md\r\n", 3, 8),
+            ("- [x][r]\n\n\t[r]: <docs/migration/CLOSEOUT.md\n", 3, 7),
+        )
+        for text, line, column in fixtures:
+            with self.subTest(text=text):
+                self.assert_reference_code(
+                    text,
+                    "MARKDOWN_UNTERMINATED_ANGLE_DESTINATION",
+                    line,
+                    column,
+                )
+
+    def test_r10_exact_container_unterminated_title_fixtures_are_typed(self) -> None:
+        fixtures = (
+            ("> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md \"title\n", 3, 35),
+            (
+                "- > [x][r]\n  >\n  > [r]: docs/migration/CLOSEOUT.md \"title\n",
+                3,
+                37,
+            ),
+        )
+        for text, line, column in fixtures:
+            with self.subTest(text=text):
+                self.assert_reference_code(
+                    text,
+                    "MARKDOWN_UNTERMINATED_QUOTED_TITLE",
+                    line,
+                    column,
+                )
+
+    def test_r10_exact_container_duplicate_fixtures_are_typed(self) -> None:
+        fixtures = (
+            (
+                "> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md\n"
+                "> [R]: docs/migration/DOES_NOT_EXIST.md\n",
+                4,
+                3,
+            ),
+            (
+                "123. [x][r]\n\n     [r]: docs/migration/CLOSEOUT.md\n"
+                "     [R]: docs/migration/DOES_NOT_EXIST.md\n",
+                4,
+                6,
+            ),
+            (
+                "- outer\n  - [x][r]\n\n    [r]: docs/migration/CLOSEOUT.md\n"
+                "    [R]: docs/migration/DOES_NOT_EXIST.md\n",
+                5,
+                5,
+            ),
+            (
+                "- [x][r]\n\n  [r]: docs/migration/CLOSEOUT.md\n"
+                "  [R]: docs/migration/DOES_NOT_EXIST.md\n",
+                4,
+                3,
+            ),
+        )
+        for text, line, column in fixtures:
+            with self.subTest(text=text):
+                self.assert_reference_code(
+                    text,
+                    "MARKDOWN_DUPLICATE_REFERENCE_DEFINITION",
+                    line,
+                    column,
+                )
+
+    def test_container_reference_missing_and_unsafe_destinations_are_rejected(self) -> None:
+        fixtures = (
+            "> [x][r]\n>\n> [r]: docs/migration/DOES_NOT_EXIST.md\n",
+            "> [x][r]\n>\n> [r]: ../outside.md\n",
+            "> > [x][r]\n> >\n> > [r]: %2e%2e/outside.md\n",
+            "123. [x][r]\n\n     [r]: /etc/passwd\n",
+            "- outer\n  - [x][r]\n\n    [r]: http://example.com/archive\n",
+            "- > [x][r]\n  >\n  > [r]: docs/migration/CLOSEOUT.md?activate=true\n",
+            "> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md#missing-heading\n",
+        )
+        for text in fixtures:
+            with self.subTest(text=text):
+                with self.assertRaises(AssertionError):
+                    self.validate_extracted(text)
+
+    def test_container_reference_malformed_depth_and_size_forms_are_typed(self) -> None:
+        fixtures = (
+            ("> [x][r]\n>\n> [r]: <docs/<migration/CLOSEOUT.md>\n", "MARKDOWN_MALFORMED_ANGLE_DESTINATION"),
+            ("> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md bare\n", "MARKDOWN_MALFORMED_REFERENCE_TITLE"),
+            ("> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md (title ( nested))\n", "MARKDOWN_MALFORMED_REFERENCE_TITLE"),
+            ("> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md (title\n", "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE"),
+            ("> [x][r]\n>\n> [r]: " + "(" * 33 + "x" + ")" * 33 + "\n", "MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED"),
+            ("> [x][r]\n>\n> [r]: " + "a" * (validate.MAX_LINK_DESTINATION_CHARS + 1) + "\n", "MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED"),
+        )
+        for text, code in fixtures:
+            with self.subTest(code=code):
+                with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+                    validate.extract_reference_definitions(
+                        validate.ROOT / "README.md", text
+                    )
+                self.assertEqual(caught.exception.code, code)
+
+    def test_cross_container_duplicate_definition_is_typed_rejection(self) -> None:
+        text = (
+            "> [x][r]\n>\n> [r]: docs/migration/CLOSEOUT.md\n\n"
+            "123. [y][R]\n\n     [R]: docs/archive/HISTORICAL_BUILD.md\n"
+        )
+        with self.assertRaises(validate.MarkdownSyntaxError) as caught:
+            validate.extract_reference_definitions(validate.ROOT / "README.md", text)
+        self.assertEqual(caught.exception.code, "MARKDOWN_DUPLICATE_REFERENCE_DEFINITION")
+        self.assertEqual((caught.exception.line, caught.exception.column), (7, 6))
 
     def test_duplicate_reference_definitions_are_typed_rejection(self) -> None:
         self.assert_markdown_code(

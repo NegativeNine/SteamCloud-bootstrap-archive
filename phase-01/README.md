@@ -8,7 +8,11 @@ fenced code, inline code, and inactive Markdown inside raw HTML blocks are not t
 occurrence retains its containing CommonMark block line span and document-local ordinal, so repeated
 destinations are never deduplicated. A separate bounded syntax audit gives stable typed failures for
 malformed angle destinations, titles, tails, multiline forms, and depth or size limits. Quoted titles
-may contain unmatched literal parentheses. The exact 26-destination repository inventory and its
+may contain unmatched literal parentheses. Reference-definition auditing runs inside the pinned parser
+rule and maps parser positions to exact original offsets across blockquotes, nested blockquotes, wide
+and nested lists, list-plus-blockquote combinations, multiline forms, tabs, and CRLF input. Definition
+order and source spans are retained, and case-equivalent duplicates are rejected across containers.
+The exact 26-destination repository inventory and its
 location identities are digest-bound by the validator. It records exact read-only recovery for the
 historical v1 source and supplies a closed issue form for link, provenance, and archive-safety
 corrections.
@@ -34,7 +38,7 @@ The exact historical source archive is reproducible. The retained Node checks ar
 observations. The Rust build is explicitly `NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED`; no passing Rust
 result is claimed because the historical tree has no lockfile or pinned toolchain/environment.
 
-The executable fault corpus maps each exact positive and negative case to one retained test method.
+The executable fault corpus maps 24 positive and 58 negative cases to 82 retained test methods.
 Machine status, closeout, artifact paths, issue intake, and YAML/JSON parsing are closed and reject
 unknown fields, claim inflation, duplicate keys, non-finite JSON, traversal, and symlinks.
 Closeout command results, limitations, blockers, non-claims, and unblocks are exact structural

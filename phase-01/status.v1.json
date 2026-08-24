@@ -92,6 +92,13 @@
         "finding_ids": [
           "ARCHIVE-P1-R09"
         ]
+      },
+      {
+        "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.commonmark-container-final-head-independent-review.json",
+        "sha256": "4a67512b056c1afbac15fd3d7af73877c2a7968cd1f15e26042bda066301c0cf",
+        "finding_ids": [
+          "ARCHIVE-P1-R10"
+        ]
       }
     ],
     "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",

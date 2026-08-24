@@ -15,6 +15,8 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlsplit
 
 from markdown_it import MarkdownIt
+from markdown_it.common.utils import isStrSpace
+from markdown_it.rules_block.reference import reference as commonmark_reference_rule
 import yaml
 
 
@@ -36,6 +38,10 @@ PREVIOUS_RESIDUAL_REMEDIATION = "be729cb07276c01d614e56b4848a218b88f1a4a5"
 PREVIOUS_RESIDUAL_REMEDIATION_TREE = "7b7442a24d54c2627dc1abce276c55bd534e860c"
 PREVIOUS_RESIDUAL_REMEDIATION_SEAL = "d32437abc20b16884a76587aa145b1bea152cdc5"
 PREVIOUS_RESIDUAL_REMEDIATION_SEAL_TREE = "669d240fd205e78f5dceac117ce2cc6219da8540"
+PREVIOUS_COMMONMARK_REMEDIATION = "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b"
+PREVIOUS_COMMONMARK_REMEDIATION_TREE = "a09454b85dec130725e891a1f11d103f8c105037"
+PREVIOUS_COMMONMARK_REMEDIATION_SEAL = "f68dba1c5b0b016db4321db6e84fdcdb827c93c2"
+PREVIOUS_COMMONMARK_REMEDIATION_SEAL_TREE = "455c5b2c2f027809e370e75b7f6ea3e21ea47a4b"
 BLOCKING_REVIEW_PATH = (
     "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
     "phase-01.independent-review.json"
@@ -51,6 +57,11 @@ R09_REVIEW_PATH = (
     "phase-01.residual-remediation-exact-head-independent-review.json"
 )
 R09_REVIEW_SHA256 = "6915198c342339184cb10b049f03beb7f26170f1f9b692f4fd906e8cc24fac91"
+R10_REVIEW_PATH = (
+    "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/"
+    "phase-01.commonmark-container-final-head-independent-review.json"
+)
+R10_REVIEW_SHA256 = "4a67512b056c1afbac15fd3d7af73877c2a7968cd1f15e26042bda066301c0cf"
 SAMPLE_HEAD = "069c2448ee3c5e7c352d096494d15e8f120cf433"
 SAMPLE_TREE = "dcc70bd212ff8d1499aa5f2141a429629bf066a5"
 SAMPLE_ARCHIVE_SHA256 = "e9667fd5da1f20aa933b0503ff2249fc7b6c42f66e94f4c671658085592a9197"
@@ -58,8 +69,8 @@ SAMPLE_MANIFEST_SHA256 = "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e
 SAMPLE_ROOT_CARGO_SHA256 = "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef11f79c71c6521"
 SAMPLE_CRATE_CARGO_SHA256 = "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734"
 SAMPLE_WORKFLOW_SHA256 = "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76"
-EXPECTED_LINK_INVENTORY_SHA256 = "a076b5cc476791ba0213f216a16731605ee9c2e427f223e23dc77cd20844f537"
-EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "449f6f17b239e3b098c6ab29b900a9947da0ba86c94219d125842e9e7f50996e"
+EXPECTED_LINK_INVENTORY_SHA256 = "34b794da400e491353c5c48a33676f1f65db836f2bf57681970944bd432f53d4"
+EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "7550d1873b7ce664970772f4a2d430c250095113b9e3fb1c94156a18cb3472fc"
 
 WORK_CLASSES = [
     "implementation",
@@ -105,6 +116,11 @@ REVIEW_GATE = {
             "path": R09_REVIEW_PATH,
             "sha256": R09_REVIEW_SHA256,
             "finding_ids": ["ARCHIVE-P1-R09"],
+        },
+        {
+            "path": R10_REVIEW_PATH,
+            "sha256": R10_REVIEW_SHA256,
+            "finding_ids": ["ARCHIVE-P1-R10"],
         },
     ],
     "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
@@ -429,9 +445,10 @@ def markdown_error(
     offset: int,
     base_line: int,
 ) -> MarkdownSyntaxError:
-    line = base_line + text.count("\n", 0, offset)
-    last_newline = text.rfind("\n", 0, offset)
-    column = offset + 1 if last_newline == -1 else offset - last_newline
+    line_breaks = list(re.finditer(r"\r\n?|\n", text[:offset]))
+    line = base_line + len(line_breaks)
+    line_start = line_breaks[-1].end() if line_breaks else 0
+    column = offset - line_start + 1
     return MarkdownSyntaxError(code, source, offset, line=line, column=column)
 
 
@@ -705,94 +722,391 @@ def audit_inline_syntax(source: Path, text: str, base_line: int) -> None:
         index += 1
 
 
-def audit_reference_definitions(source: Path, text: str, tokens: list[object]) -> None:
-    """Reject ambiguous or malformed single-line reference definitions deterministically."""
+def normalized_source_boundary_map(text: str) -> tuple[str, list[int]]:
+    """Mirror markdown-it core normalization and retain normalized-to-raw boundaries."""
 
-    excluded_lines: set[int] = set()
-    for token in tokens:
-        token_type = getattr(token, "type", "")
-        token_map = getattr(token, "map", None)
-        if token_type in {"fence", "code_block", "html_block"} and token_map:
-            excluded_lines.update(range(token_map[0], token_map[1]))
-    definitions: set[str] = set()
-    offset = 0
-    for line_index, line_with_ending in enumerate(text.splitlines(keepends=True)):
-        line = line_with_ending.rstrip("\r\n")
-        if line_index in excluded_lines:
-            offset += len(line_with_ending)
-            continue
-        prefix = re.match(r"^[ \t]{0,3}\[", line)
-        if not prefix:
-            offset += len(line_with_ending)
-            continue
-        label_open = prefix.end() - 1
-        label_end = label_open + 1
-        while label_end < len(line):
-            if line[label_end] == "\\" and not is_markdown_escaped(line, label_end):
-                label_end += 2
-                continue
-            if line[label_end] == "]" and not is_markdown_escaped(line, label_end):
-                break
-            label_end += 1
-        if label_end >= len(line) or label_end + 1 >= len(line) or line[label_end + 1] != ":":
-            offset += len(line_with_ending)
-            continue
-        if label_end - label_open > MAX_LINK_LABEL_CHARS:
-            raise markdown_error("MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED", source, text, offset + label_open, 1)
-        label = normalize_reference_label(line[label_open + 1 : label_end])
-        if label in definitions:
-            raise markdown_error("MARKDOWN_DUPLICATE_REFERENCE_DEFINITION", source, text, offset + label_open, 1)
-        definitions.add(label)
-        cursor = label_end + 2
-        while cursor < len(line) and line[cursor] in " \t":
-            cursor += 1
-        if cursor >= len(line):
-            raise markdown_error("MARKDOWN_MISSING_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
-        if line[cursor] == "<":
-            angle_open = cursor
-            cursor += 1
-            while cursor < len(line) and not (line[cursor] == ">" and not is_markdown_escaped(line, cursor)):
-                if line[cursor] == "<" and not is_markdown_escaped(line, cursor):
-                    raise markdown_error("MARKDOWN_MALFORMED_ANGLE_DESTINATION", source, text, offset + cursor, 1)
-                cursor += 1
-            if cursor >= len(line):
-                raise markdown_error("MARKDOWN_UNTERMINATED_ANGLE_DESTINATION", source, text, offset + angle_open, 1)
-            cursor += 1
+    normalized: list[str] = []
+    boundaries = [0]
+    cursor = 0
+    while cursor < len(text):
+        char = text[cursor]
+        if char == "\r":
+            cursor += 2 if cursor + 1 < len(text) and text[cursor + 1] == "\n" else 1
+            normalized.append("\n")
         else:
-            start = cursor
-            while cursor < len(line) and line[cursor] not in " \t":
-                if line[cursor] == "<" and not is_markdown_escaped(line, cursor):
-                    raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
-                cursor += 1
-            if cursor == start:
-                raise markdown_error("MARKDOWN_MISSING_REFERENCE_DESTINATION", source, text, offset + cursor, 1)
-        while cursor < len(line) and line[cursor] in " \t":
             cursor += 1
-        if cursor < len(line):
-            delimiter = line[cursor]
-            if delimiter not in {'"', "'", "("}:
-                raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_TITLE", source, text, offset + cursor, 1)
-            closing = ")" if delimiter == "(" else delimiter
-            title_open = cursor
-            cursor += 1
-            while cursor < len(line):
-                if line[cursor] == "\\" and not is_markdown_escaped(line, cursor):
-                    cursor += 2
-                    continue
-                if line[cursor] == closing and not is_markdown_escaped(line, cursor):
-                    cursor += 1
-                    break
-                cursor += 1
+            normalized.append("\ufffd" if char == "\0" else char)
+        boundaries.append(cursor)
+    return "".join(normalized), boundaries
+
+
+def mapped_parser_lines(
+    state: object,
+    begin: int,
+    end: int,
+    indent: int,
+    normalized_to_raw: list[int],
+) -> tuple[str, list[int]]:
+    """Mirror StateBlock.getLines while retaining an output-to-source offset map."""
+
+    output: list[str] = []
+    source_map: list[int] = []
+    for line in range(begin, end):
+        line_indent = 0
+        line_start = first = state.bMarks[line]  # type: ignore[attr-defined]
+        last = state.eMarks[line] + (1 if line + 1 < end else 0)  # type: ignore[attr-defined]
+        while first < last and line_indent < indent:
+            char = state.src[first]  # type: ignore[attr-defined]
+            if isStrSpace(char):
+                if char == "\t":
+                    line_indent += 4 - (line_indent + state.bsCount[line]) % 4  # type: ignore[attr-defined]
+                else:
+                    line_indent += 1
+            elif first - line_start < state.tShift[line]:  # type: ignore[attr-defined]
+                line_indent += 1
             else:
-                code = (
-                    "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE"
-                    if delimiter == "("
-                    else "MARKDOWN_UNTERMINATED_QUOTED_TITLE"
-                )
-                raise markdown_error(code, source, text, offset + title_open, 1)
-            if line[cursor:].strip():
-                raise markdown_error("MARKDOWN_MALFORMED_REFERENCE_TAIL", source, text, offset + cursor, 1)
-        offset += len(line_with_ending)
+                break
+            first += 1
+        if line_indent > indent:
+            virtual = " " * (line_indent - indent)
+            output.append(virtual)
+            source_map.extend([normalized_to_raw[first]] * len(virtual))
+        segment = state.src[first:last]  # type: ignore[attr-defined]
+        output.append(segment)
+        source_map.extend(normalized_to_raw[index] for index in range(first, last))
+    logical = "".join(output)
+    left = 0
+    right = len(logical)
+    while left < right and logical[left].isspace():
+        left += 1
+    while right > left and logical[right - 1].isspace():
+        right -= 1
+    return logical[left:right], source_map[left:right]
+
+
+def reference_candidate_context(
+    state: object,
+    start_line: int,
+    normalized_to_raw: list[int],
+) -> dict[str, object] | None:
+    """Return a parser-state-backed definition candidate and its physical source start."""
+
+    if state.is_code_block(start_line):  # type: ignore[attr-defined]
+        return None
+    normalized_start_offset = state.bMarks[start_line] + state.tShift[start_line]  # type: ignore[attr-defined]
+    line_end = state.eMarks[start_line]  # type: ignore[attr-defined]
+    if normalized_start_offset >= line_end or state.src[normalized_start_offset] != "[":  # type: ignore[attr-defined]
+        return None
+    start_offset = normalized_to_raw[normalized_start_offset]
+
+    next_line = start_line + 1
+    old_parent_type = state.parentType  # type: ignore[attr-defined]
+    state.parentType = "reference"  # type: ignore[attr-defined]
+    try:
+        terminator_rules = state.md.block.ruler.getRules("reference")  # type: ignore[attr-defined]
+        while next_line < state.lineMax and not state.isEmpty(next_line):  # type: ignore[attr-defined]
+            if state.sCount[next_line] - state.blkIndent > 3:  # type: ignore[attr-defined]
+                next_line += 1
+                continue
+            if state.sCount[next_line] < 0:  # type: ignore[attr-defined]
+                next_line += 1
+                continue
+            if any(rule(state, next_line, state.lineMax, True) for rule in terminator_rules):  # type: ignore[attr-defined]
+                break
+            next_line += 1
+    finally:
+        state.parentType = old_parent_type  # type: ignore[attr-defined]
+
+    logical, source_map = mapped_parser_lines(
+        state,
+        start_line,
+        next_line,
+        state.blkIndent,  # type: ignore[attr-defined]
+        normalized_to_raw,
+    )
+    if not source_map or source_map[0] != start_offset:
+        fail("parser-backed reference source map start drift")
+    cursor = 1
+    while cursor < len(logical):
+        if logical[cursor] == "\\" and not is_markdown_escaped(logical, cursor):
+            cursor += 2
+            continue
+        if logical[cursor] == "]" and not is_markdown_escaped(logical, cursor):
+            if cursor + 1 < len(logical) and logical[cursor + 1] == ":":
+                break
+            return None
+        cursor += 1
+    else:
+        return None
+    return {
+        "text": logical,
+        "source_map": source_map,
+        "start_line": start_line,
+        "candidate_offset": start_offset,
+        "paragraph_end_line": next_line,
+    }
+
+
+def analyze_reference_candidate(
+    source: Path,
+    raw_text: str,
+    state: object,
+    context: dict[str, object],
+) -> dict[str, str]:
+    """Apply bounded definition policy using the pinned parser's destination/title helpers."""
+
+    candidate = context["text"]
+    candidate_offset = context["candidate_offset"]
+    source_map = context["source_map"]
+    if (
+        not isinstance(candidate, str)
+        or not isinstance(candidate_offset, int)
+        or not isinstance(source_map, list)
+        or len(source_map) != len(candidate)
+    ):
+        fail("reference candidate context type drift")
+
+    def reject(code: str, logical_offset: int = 0) -> None:
+        physical_offset = (
+            source_map[logical_offset]
+            if 0 <= logical_offset < len(source_map)
+            else candidate_offset
+        )
+        raise markdown_error(code, source, raw_text, physical_offset, 1)
+
+    maximum = len(candidate)
+    label_end: int | None = None
+    cursor = 1
+    while cursor < maximum:
+        char = candidate[cursor]
+        if char == "\\":
+            cursor += 2
+            continue
+        if char == "[":
+            reject("MARKDOWN_MALFORMED_REFERENCE_LABEL", cursor)
+        if char == "]":
+            label_end = cursor
+            break
+        cursor += 1
+    if label_end is None:
+        reject("MARKDOWN_UNTERMINATED_REFERENCE_LABEL")
+    if label_end > MAX_LINK_LABEL_CHARS:
+        reject("MARKDOWN_LINK_LABEL_LIMIT_EXCEEDED")
+    if label_end + 1 >= maximum or candidate[label_end + 1] != ":":
+        reject("MARKDOWN_MALFORMED_REFERENCE_LABEL", label_end)
+    raw_label = candidate[1:label_end]
+    if not normalize_reference_label(raw_label):
+        reject("MARKDOWN_EMPTY_REFERENCE_LABEL")
+
+    cursor = label_end + 2
+    while cursor < maximum and candidate[cursor].isspace():
+        cursor += 1
+    if cursor >= maximum:
+        reject("MARKDOWN_MISSING_REFERENCE_DESTINATION", label_end + 1)
+    destination_start = cursor
+
+    if candidate[cursor] == "<":
+        scan = cursor + 1
+        while scan < maximum:
+            if scan - destination_start > MAX_LINK_DESTINATION_CHARS:
+                reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", destination_start)
+            char = candidate[scan]
+            if char == "\\":
+                scan += 2
+                continue
+            if char == "<":
+                reject("MARKDOWN_MALFORMED_ANGLE_DESTINATION", scan)
+            if char == ">":
+                break
+            if char in "\r\n":
+                reject("MARKDOWN_UNTERMINATED_ANGLE_DESTINATION", destination_start)
+            scan += 1
+        else:
+            reject("MARKDOWN_UNTERMINATED_ANGLE_DESTINATION", destination_start)
+    else:
+        scan = cursor
+        depth = 0
+        while scan < maximum:
+            if scan - destination_start > MAX_LINK_DESTINATION_CHARS:
+                reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", destination_start)
+            char = candidate[scan]
+            if char == "\\" and scan + 1 < maximum:
+                scan += 2
+                continue
+            if char.isspace() or ord(char) < 0x20 or ord(char) == 0x7F:
+                break
+            if char == "(":
+                depth += 1
+                if depth > MAX_LINK_PAREN_DEPTH:
+                    reject("MARKDOWN_LINK_PAREN_DEPTH_EXCEEDED", scan)
+            elif char == ")":
+                if depth == 0:
+                    break
+                depth -= 1
+            scan += 1
+        if depth:
+            reject("MARKDOWN_MALFORMED_REFERENCE_DESTINATION", destination_start)
+
+    destination_result = state.md.helpers.parseLinkDestination(candidate, cursor, maximum)  # type: ignore[attr-defined]
+    if not destination_result.ok:
+        reject("MARKDOWN_MALFORMED_REFERENCE_DESTINATION", destination_start)
+    if destination_result.pos - destination_start > MAX_LINK_DESTINATION_CHARS:
+        reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", destination_start)
+    href = state.md.normalizeLink(destination_result.str)  # type: ignore[attr-defined]
+    if not state.md.validateLink(href):  # type: ignore[attr-defined]
+        reject("MARKDOWN_UNSUPPORTED_REFERENCE_DESTINATION", destination_start)
+
+    destination_end = destination_result.pos
+    cursor = destination_end
+    while cursor < maximum and candidate[cursor].isspace():
+        cursor += 1
+    separator = candidate[destination_end:cursor]
+    title = ""
+    title_result = state.md.helpers.parseLinkTitle(candidate, cursor, maximum)  # type: ignore[attr-defined]
+    if cursor < maximum and separator and candidate[cursor] in {'"', "'", "("}:
+        if title_result.ok:
+            title = title_result.str
+            cursor = title_result.pos
+            if cursor - destination_start > MAX_LINK_DESTINATION_CHARS:
+                reject("MARKDOWN_LINK_DESTINATION_LIMIT_EXCEEDED", destination_start)
+        elif "\n" not in separator and "\r" not in separator:
+            code = (
+                "MARKDOWN_UNTERMINATED_PARENTHESIZED_TITLE"
+                if candidate[cursor] == "("
+                else "MARKDOWN_UNTERMINATED_QUOTED_TITLE"
+            )
+            if candidate[cursor] == "(" and "(" in candidate[cursor + 1 :]:
+                code = "MARKDOWN_MALFORMED_REFERENCE_TITLE"
+            reject(code, cursor)
+        else:
+            cursor = destination_end
+    else:
+        cursor = destination_end
+
+    while cursor < maximum and candidate[cursor] in " \t":
+        cursor += 1
+    if cursor < maximum and candidate[cursor] not in "\r\n" and title:
+        title = ""
+        cursor = destination_end
+        while cursor < maximum and candidate[cursor] in " \t":
+            cursor += 1
+    if cursor < maximum and candidate[cursor] not in "\r\n":
+        code = (
+            "MARKDOWN_MALFORMED_REFERENCE_TITLE"
+            if candidate[cursor] not in {'"', "'", "("}
+            else "MARKDOWN_MALFORMED_REFERENCE_TAIL"
+        )
+        reject(code, cursor)
+    return {"label": raw_label, "destination": href, "title": title}
+
+
+def parse_commonmark_document(
+    source: Path,
+    text: str,
+) -> tuple[list[object], list[dict[str, object]]]:
+    """Parse once with an audited reference rule and exact definition source maps."""
+
+    validate_markdown_parser_identity()
+    mask_markdown_code(text)
+    parser = MarkdownIt(
+        "commonmark",
+        {
+            "html": True,
+            "inline_definitions": True,
+            "maxNesting": MAX_LINK_BRACKET_DEPTH * 2,
+        },
+    )
+    definitions: list[dict[str, object]] = []
+    seen_labels: set[str] = set()
+    normalized_text, normalized_to_raw = normalized_source_boundary_map(text)
+    line_starts = [0] + [match.end() for match in re.finditer(r"\r\n?|\n", text)]
+
+    def audited_reference_rule(
+        state: object,
+        start_line: int,
+        end_line: int,
+        silent: bool,
+    ) -> bool:
+        if silent:
+            return commonmark_reference_rule(state, start_line, end_line, True)
+        if state.src != normalized_text:  # type: ignore[attr-defined]
+            fail("markdown-it normalization identity drift")
+        context = reference_candidate_context(state, start_line, normalized_to_raw)
+        if context is None:
+            return commonmark_reference_rule(state, start_line, end_line, False)
+        analyzed = analyze_reference_candidate(source, text, state, context)
+        token_count = len(state.tokens)  # type: ignore[attr-defined]
+        if not commonmark_reference_rule(state, start_line, end_line, False):
+            raise markdown_error(
+                "MARKDOWN_REFERENCE_PARSER_DIVERGENCE",
+                source,
+                text,
+                int(context["candidate_offset"]),
+                1,
+            )
+        new_definition_tokens = [
+            token
+            for token in state.tokens[token_count:]  # type: ignore[attr-defined]
+            if token.type == "definition"
+        ]
+        if len(new_definition_tokens) != 1:
+            fail("CommonMark reference rule did not emit exactly one definition token")
+        token = new_definition_tokens[0]
+        if token.map is None or not isinstance(token.meta, dict):
+            fail("CommonMark definition token lacks source map or metadata")
+        normalized_label = token.meta.get("id")
+        if not isinstance(normalized_label, str):
+            fail("CommonMark definition token lacks normalized label")
+        candidate_offset = int(context["candidate_offset"])
+        if normalized_label in seen_labels:
+            raise markdown_error(
+                "MARKDOWN_DUPLICATE_REFERENCE_DEFINITION",
+                source,
+                text,
+                candidate_offset,
+                1,
+            )
+        seen_labels.add(normalized_label)
+        if (
+            token.meta.get("label") != analyzed["label"]
+            or token.meta.get("url") != analyzed["destination"]
+            or token.meta.get("title") != analyzed["title"]
+        ):
+            fail("audited reference definition diverges from CommonMark token")
+        last_line = token.map[1] - 1
+        physical_line_start = line_starts[token.map[0]]
+        last_physical_line_start = line_starts[last_line]
+        end_offset = normalized_to_raw[state.eMarks[last_line]]  # type: ignore[attr-defined]
+        definitions.append(
+            {
+                "occurrence": len(definitions) + 1,
+                "line_start": token.map[0] + 1,
+                "line_end": token.map[1],
+                "column_start": candidate_offset - physical_line_start + 1,
+                "column_end": end_offset - last_physical_line_start + 1,
+                "offset_start": candidate_offset,
+                "offset_end": end_offset,
+                "label": analyzed["label"],
+                "normalized_label": normalized_label,
+                "destination": analyzed["destination"],
+                "title": analyzed["title"],
+            }
+        )
+        return True
+
+    parser.block.ruler.at("reference", audited_reference_rule)
+    environment: dict[str, object] = {}
+    tokens = parser.parse(text, environment)
+    definition_tokens = [token for token in tokens if token.type == "definition"]
+    if len(definition_tokens) != len(definitions):
+        fail("CommonMark definition token inventory cardinality drift")
+    if environment.get("duplicate_refs"):
+        fail("CommonMark duplicate reference escaped audited definition rejection")
+    return tokens, definitions
+
+
+def extract_reference_definitions(source: Path, text: str) -> list[dict[str, object]]:
+    return parse_commonmark_document(source, text)[1]
 
 
 class LocalHtmlDestinationCollector(HTMLParser):
@@ -819,16 +1133,7 @@ class LocalHtmlDestinationCollector(HTMLParser):
 def extract_link_destinations(source: Path, text: str) -> list[dict[str, object]]:
     """Return every active CommonMark/HTML destination as an occurrence, never a set."""
 
-    validate_markdown_parser_identity()
-    # Retain the earlier deterministic rejection of unterminated fenced blocks.
-    mask_markdown_code(text)
-    parser = MarkdownIt(
-        "commonmark",
-        {"html": True, "maxNesting": MAX_LINK_BRACKET_DEPTH * 2},
-    )
-    environment: dict[str, object] = {}
-    tokens = parser.parse(text, environment)
-    audit_reference_definitions(source, text, tokens)
+    tokens, _definitions = parse_commonmark_document(source, text)
 
     records: list[dict[str, object]] = []
 
@@ -1119,6 +1424,9 @@ POSITIVE_CORPUS = [
     {"id": "ARCHIVE-P1-P19", "test": "test_raw_html_blocks_do_not_activate_markdown_syntax", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P20", "test": "test_inline_raw_html_special_forms_do_not_hide_or_invent_links", "expected": "PASS"},
     {"id": "ARCHIVE-P1-P21", "test": "test_parser_dependency_identity_is_exact", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P22", "test": "test_container_reference_existing_matrix_and_source_spans", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P23", "test": "test_container_reference_multiline_titles_and_escapes_are_valid", "expected": "PASS"},
+    {"id": "ARCHIVE-P1-P24", "test": "test_reference_definition_order_and_multiplicity_are_exact", "expected": "PASS"},
 ]
 NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT"},
@@ -1173,6 +1481,12 @@ NEGATIVE_CORPUS = [
     {"id": "ARCHIVE-P1-N50", "test": "test_duplicate_reference_definitions_are_typed_rejection", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N51", "test": "test_nested_active_traversal_and_query_vectors_are_rejected", "expected": "REJECT"},
     {"id": "ARCHIVE-P1-N52", "test": "test_inline_html_wrapping_missing_markdown_is_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N53", "test": "test_r10_exact_container_unterminated_angle_fixtures_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N54", "test": "test_r10_exact_container_unterminated_title_fixtures_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N55", "test": "test_r10_exact_container_duplicate_fixtures_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N56", "test": "test_container_reference_missing_and_unsafe_destinations_are_rejected", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N57", "test": "test_container_reference_malformed_depth_and_size_forms_are_typed", "expected": "REJECT"},
+    {"id": "ARCHIVE-P1-N58", "test": "test_cross_container_duplicate_definition_is_typed_rejection", "expected": "REJECT"},
 ]
 EXPECTED_CORPUS = {
     "schema": "steamcloud.archive.phase-01-test-fault-corpus/v2", "architecture_binding": ARCHITECTURE,
@@ -1262,7 +1576,7 @@ EXPECTED_COMMAND_ROWS = [
     {
         "command": "python3 phase-01/validate.py --preseal",
         "exit_code": 0,
-        "result": "PASS; exact 26-occurrence pinned CommonMark inventory with nested precedence, line identities, typed malformed-syntax rejection, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus/narrative gates, exact Phase 00 bytes, activation blocked, authority none",
+        "result": "PASS; exact 26-occurrence pinned CommonMark inventory plus parser-position-backed container definition order, source spans, duplicates, and typed malformed-syntax rejection; exact source recovery; Rust unpinned/no pass claimed; closed issue/status/corpus/narrative gates; exact Phase 00 bytes; activation blocked; authority none",
     },
     {
         "command": "exact detached Phase 00 validation at " + PHASE00_HEAD,
@@ -1287,7 +1601,7 @@ EXPECTED_COMMAND_ROWS = [
     {
         "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
         "exit_code": 0,
-        "result": "PASS after exact source manifest and closeout seal; 73 retained tests execute every declared corpus identity",
+        "result": "PASS after exact source manifest and closeout seal; 82 retained tests execute all 24 positive and 58 negative corpus identities",
     },
 ]
 
@@ -1297,7 +1611,7 @@ EXPECTED_KNOWN_LIMITATIONS = [
     "The historical freeze tag, source manifest, build evidence, and closeout are unsigned and are not release or qualification evidence.",
     "Repository-local content has no runtime dependency and no active consumer was observed, but no signed complete portfolio consumer inventory exists.",
     "Only exact historical source recovery is reproducible; Node execution is a bounded observation and Rust is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED with no passing result.",
-    "The residual findings are source-remediated, but the new exact head still requires a fresh independent review and no signed accountable reviewer acceptance is observed.",
+    "Findings ARCHIVE-P1-R01 through ARCHIVE-P1-R10 are source-remediated, but the new exact head still requires a fresh independent review and no signed accountable reviewer acceptance is observed.",
     "No signed secret-history review spans deleted history, forks, caches, provider state, or inaccessible scopes.",
     "No observation window binds an accepted archive release, restore, settings state, and accountable owner identities.",
 ]
@@ -1355,35 +1669,45 @@ def expected_rollback(source_commit: str, source_tree: str) -> dict[str, object]
             {
                 "ordinal": 2,
                 "identity": source_commit,
-                "expected_tree_after": PREVIOUS_RESIDUAL_REMEDIATION_SEAL_TREE,
+                "expected_tree_after": PREVIOUS_COMMONMARK_REMEDIATION_SEAL_TREE,
             },
             {
                 "ordinal": 3,
+                "identity": PREVIOUS_COMMONMARK_REMEDIATION_SEAL,
+                "expected_tree_after": PREVIOUS_COMMONMARK_REMEDIATION_TREE,
+            },
+            {
+                "ordinal": 4,
+                "identity": PREVIOUS_COMMONMARK_REMEDIATION,
+                "expected_tree_after": PREVIOUS_RESIDUAL_REMEDIATION_SEAL_TREE,
+            },
+            {
+                "ordinal": 5,
                 "identity": PREVIOUS_RESIDUAL_REMEDIATION_SEAL,
                 "expected_tree_after": PREVIOUS_RESIDUAL_REMEDIATION_TREE,
             },
             {
-                "ordinal": 4,
+                "ordinal": 6,
                 "identity": PREVIOUS_RESIDUAL_REMEDIATION,
                 "expected_tree_after": PREVIOUS_REMEDIATION_SEAL_TREE,
             },
             {
-                "ordinal": 5,
+                "ordinal": 7,
                 "identity": PREVIOUS_REMEDIATION_SEAL,
                 "expected_tree_after": PREVIOUS_REMEDIATION_TREE,
             },
             {
-                "ordinal": 6,
+                "ordinal": 8,
                 "identity": PREVIOUS_REMEDIATION,
                 "expected_tree_after": PREVIOUS_SEAL_TREE,
             },
             {
-                "ordinal": 7,
+                "ordinal": 9,
                 "identity": PREVIOUS_SEAL,
                 "expected_tree_after": PREVIOUS_IMPLEMENTATION_TREE,
             },
             {
-                "ordinal": 8,
+                "ordinal": 10,
                 "identity": PREVIOUS_IMPLEMENTATION,
                 "expected_tree_after": PHASE00_TREE,
             },
@@ -1414,14 +1738,16 @@ def validate_closeout_document(closeout: dict[str, object], manifest: dict[str, 
     source_tree = manifest["source_tree"]
     if type(source_commit) is not str or type(source_tree) is not str:
         fail("closeout manifest source identity malformed")
-    if run("git", "rev-parse", f"{source_commit}^").decode().strip() != PREVIOUS_RESIDUAL_REMEDIATION_SEAL:
-        fail("R09 source commit does not descend from exact reviewed head")
+    if run("git", "rev-parse", f"{source_commit}^").decode().strip() != PREVIOUS_COMMONMARK_REMEDIATION_SEAL:
+        fail("R10 source commit does not descend from exact reviewed head")
     if run("git", "rev-parse", f"{candidate_head()}^").decode().strip() != source_commit:
         fail("current candidate seal does not have exact source parent")
     assert_exact(
         closeout["change_commits"],
         [
             source_commit,
+            PREVIOUS_COMMONMARK_REMEDIATION_SEAL,
+            PREVIOUS_COMMONMARK_REMEDIATION,
             PREVIOUS_RESIDUAL_REMEDIATION_SEAL,
             PREVIOUS_RESIDUAL_REMEDIATION,
             PREVIOUS_REMEDIATION_SEAL,

@@ -24,7 +24,10 @@
     { "id": "ARCHIVE-P1-P18", "test": "test_autolink_inline_html_and_markdown_boundaries_are_exact", "expected": "PASS" },
     { "id": "ARCHIVE-P1-P19", "test": "test_raw_html_blocks_do_not_activate_markdown_syntax", "expected": "PASS" },
     { "id": "ARCHIVE-P1-P20", "test": "test_inline_raw_html_special_forms_do_not_hide_or_invent_links", "expected": "PASS" },
-    { "id": "ARCHIVE-P1-P21", "test": "test_parser_dependency_identity_is_exact", "expected": "PASS" }
+    { "id": "ARCHIVE-P1-P21", "test": "test_parser_dependency_identity_is_exact", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P22", "test": "test_container_reference_existing_matrix_and_source_spans", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P23", "test": "test_container_reference_multiline_titles_and_escapes_are_valid", "expected": "PASS" },
+    { "id": "ARCHIVE-P1-P24", "test": "test_reference_definition_order_and_multiplicity_are_exact", "expected": "PASS" }
   ],
   "negative_cases": [
     { "id": "ARCHIVE-P1-N01", "test": "test_missing_inline_link_is_rejected", "expected": "REJECT" },
@@ -78,7 +81,13 @@
     { "id": "ARCHIVE-P1-N49", "test": "test_reference_definition_malformed_forms_are_typed", "expected": "REJECT" },
     { "id": "ARCHIVE-P1-N50", "test": "test_duplicate_reference_definitions_are_typed_rejection", "expected": "REJECT" },
     { "id": "ARCHIVE-P1-N51", "test": "test_nested_active_traversal_and_query_vectors_are_rejected", "expected": "REJECT" },
-    { "id": "ARCHIVE-P1-N52", "test": "test_inline_html_wrapping_missing_markdown_is_rejected", "expected": "REJECT" }
+    { "id": "ARCHIVE-P1-N52", "test": "test_inline_html_wrapping_missing_markdown_is_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N53", "test": "test_r10_exact_container_unterminated_angle_fixtures_are_typed", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N54", "test": "test_r10_exact_container_unterminated_title_fixtures_are_typed", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N55", "test": "test_r10_exact_container_duplicate_fixtures_are_typed", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N56", "test": "test_container_reference_missing_and_unsafe_destinations_are_rejected", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N57", "test": "test_container_reference_malformed_depth_and_size_forms_are_typed", "expected": "REJECT" },
+    { "id": "ARCHIVE-P1-N58", "test": "test_cross_container_duplicate_definition_is_typed_rejection", "expected": "REJECT" }
   ],
   "durable_state": {
     "writes": 0,

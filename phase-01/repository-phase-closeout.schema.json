@@ -34,11 +34,13 @@
     "source_tree": { "const": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" },
     "change_commits": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 9,
+      "maxItems": 9,
       "uniqueItems": true,
       "prefixItems": [
         { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        { "const": "f68dba1c5b0b016db4321db6e84fdcdb827c93c2" },
+        { "const": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b" },
         { "const": "d32437abc20b16884a76587aa145b1bea152cdc5" },
         { "const": "be729cb07276c01d614e56b4848a218b88f1a4a5" },
         { "const": "39b1bcefed30d0a7247fbbc259b192686657344f" },
@@ -94,8 +96,8 @@
         "strategy": { "const": "GIT_REVERT_SOURCE_ONLY_NEWEST_FIRST" },
         "revert_order": {
           "type": "array",
-          "minItems": 8,
-          "maxItems": 8,
+          "minItems": 10,
+          "maxItems": 10,
           "prefixItems": [
             {
               "type": "object",
@@ -116,15 +118,17 @@
               "properties": {
                 "ordinal": { "const": 2 },
                 "identity": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-                "expected_tree_after": { "const": "669d240fd205e78f5dceac117ce2cc6219da8540" }
+                "expected_tree_after": { "const": "455c5b2c2f027809e370e75b7f6ea3e21ea47a4b" }
               }
             },
-            { "const": { "ordinal": 3, "identity": "d32437abc20b16884a76587aa145b1bea152cdc5", "expected_tree_after": "7b7442a24d54c2627dc1abce276c55bd534e860c" } },
-            { "const": { "ordinal": 4, "identity": "be729cb07276c01d614e56b4848a218b88f1a4a5", "expected_tree_after": "735dfc52254e8a8727aa7427dbd2b6e43e3b7318" } },
-            { "const": { "ordinal": 5, "identity": "39b1bcefed30d0a7247fbbc259b192686657344f", "expected_tree_after": "c44252c8868a6422dcc12d7925a5be459c11c6a6" } },
-            { "const": { "ordinal": 6, "identity": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca", "expected_tree_after": "f4a23b0eef2562be2991c766e0246e757d052877" } },
-            { "const": { "ordinal": 7, "identity": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337", "expected_tree_after": "b801be4af80b65aeeae49e1628ec70a3dc557917" } },
-            { "const": { "ordinal": 8, "identity": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5", "expected_tree_after": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" } }
+            { "const": { "ordinal": 3, "identity": "f68dba1c5b0b016db4321db6e84fdcdb827c93c2", "expected_tree_after": "a09454b85dec130725e891a1f11d103f8c105037" } },
+            { "const": { "ordinal": 4, "identity": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b", "expected_tree_after": "669d240fd205e78f5dceac117ce2cc6219da8540" } },
+            { "const": { "ordinal": 5, "identity": "d32437abc20b16884a76587aa145b1bea152cdc5", "expected_tree_after": "7b7442a24d54c2627dc1abce276c55bd534e860c" } },
+            { "const": { "ordinal": 6, "identity": "be729cb07276c01d614e56b4848a218b88f1a4a5", "expected_tree_after": "735dfc52254e8a8727aa7427dbd2b6e43e3b7318" } },
+            { "const": { "ordinal": 7, "identity": "39b1bcefed30d0a7247fbbc259b192686657344f", "expected_tree_after": "c44252c8868a6422dcc12d7925a5be459c11c6a6" } },
+            { "const": { "ordinal": 8, "identity": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca", "expected_tree_after": "f4a23b0eef2562be2991c766e0246e757d052877" } },
+            { "const": { "ordinal": 9, "identity": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337", "expected_tree_after": "b801be4af80b65aeeae49e1628ec70a3dc557917" } },
+            { "const": { "ordinal": 10, "identity": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5", "expected_tree_after": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" } }
           ],
           "items": false
         },
@@ -207,6 +211,13 @@
             "sha256": "6915198c342339184cb10b049f03beb7f26170f1f9b692f4fd906e8cc24fac91",
             "finding_ids": [
               "ARCHIVE-P1-R09"
+            ]
+          },
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.commonmark-container-final-head-independent-review.json",
+            "sha256": "4a67512b056c1afbac15fd3d7af73877c2a7968cd1f15e26042bda066301c0cf",
+            "finding_ids": [
+              "ARCHIVE-P1-R10"
             ]
           }
         ],
