@@ -1,0 +1,38 @@
+{
+  "schema": "steamcloud.archive.phase-01-test-fault-corpus/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "seed": "5eed0001",
+  "positive_cases": [
+    "all-local-markdown-links-resolve",
+    "all-local-heading-fragments-resolve",
+    "historical-commit-tree-and-archive-digest-match",
+    "issue-form-limits-reports-to-archive-boundary",
+    "phase00-exact-detached-validation"
+  ],
+  "negative_cases": [
+    "missing-link-target",
+    "missing-heading-fragment",
+    "relative-path-traversal",
+    "absolute-local-path",
+    "backslash-path",
+    "encoded-traversal",
+    "NUL-path",
+    "symlink-target",
+    "duplicate-json-key",
+    "feature-request-admission",
+    "runtime-or-package-path-addition",
+    "workflow-write-permission",
+    "authority-or-activation-inflation"
+  ],
+  "durable_state": {
+    "writes": 0,
+    "effects": 0,
+    "idempotency": "pure-offline-validation-is-repeatable",
+    "duplicates": "duplicate-json-keys-and-duplicate-manifest-paths-rejected",
+    "crash": "not-applicable-no-durable-write",
+    "lost_response": "not-applicable-no-external-call",
+    "restore": "revert-additive-phase-files-to-exact-phase00-tree",
+    "rollback": "source-only-newest-first"
+  },
+  "qualification_non_claim": "The corpus checks archive source boundaries only; it is not security, restore, deployment, runtime, or authority qualification."
+}

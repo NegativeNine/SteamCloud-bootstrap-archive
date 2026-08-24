@@ -1,0 +1,65 @@
+{
+  "schema": "steamcloud.archive.phase-01-status/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "phase": "01",
+  "phase_disposition": "IMPLEMENTED_NOT_QUALIFIED",
+  "canonical_capability_status": "UNKNOWN",
+  "archive_artifact_status": "REFERENCE",
+  "activation": "BLOCKED",
+  "accepts_feature_work": false,
+  "runtime_dependencies": [],
+  "active_consumers_observed": [],
+  "active_dependency_inventory_complete": false,
+  "data_collection": {
+    "identity": "none",
+    "classification": "none",
+    "retention": "none",
+    "residency": "none",
+    "erasure": "not-applicable",
+    "export": "not-applicable",
+    "restore": "not-applicable"
+  },
+  "limits": {
+    "max_markdown_files": 128,
+    "max_markdown_bytes_each": 1048576,
+    "external_fetches": 0,
+    "writes": 0,
+    "effects": 0
+  },
+  "work_items": [
+    {
+      "class": "implementation",
+      "status": "IMPLEMENTED_ARCHIVE_ONLY"
+    },
+    {
+      "class": "artifact",
+      "status": "UNSIGNED_HISTORICAL_REFERENCE"
+    },
+    {
+      "class": "deployment",
+      "status": "NOT_APPLICABLE"
+    },
+    {
+      "class": "activation",
+      "status": "BLOCKED"
+    },
+    {
+      "class": "authority",
+      "status": "NONE"
+    },
+    {
+      "class": "qualification",
+      "status": "NOT_OBSERVED"
+    },
+    {
+      "class": "observation",
+      "status": "REPOSITORY_LOCAL_ONLY"
+    }
+  ],
+  "authority_movement": {
+    "authorized": false,
+    "performed": false,
+    "effect": "NONE"
+  }
+}

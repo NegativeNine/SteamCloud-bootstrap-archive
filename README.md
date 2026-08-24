@@ -36,6 +36,12 @@ target guidance only. The current binding and exact Phase 00 non-claims are in
 [`phase-00/`](phase-00/README.md); older migration records remain provenance
 and do not override that binding.
 
+Phase 01 keeps that archive usable without accepting new feature ownership. The
+[historical build note](docs/archive/HISTORICAL_BUILD.md) binds read-only recovery to an exact commit,
+tree, archive digest, and retained limitation. Hosted checks validate every local documentation link
+and heading fragment. The constrained issue form accepts only broken links, provenance corrections,
+and archive-safety reports; feature, runtime, package, deployment, and authority requests are refused.
+
 ## Pointers
 
 - [Administrator handoff](docs/migration/ADMINISTRATOR_HANDOFF.md) (unexecuted)
@@ -43,3 +49,5 @@ and do not override that binding.
 - [Closeout](docs/migration/CLOSEOUT.md)
 - [Documentation authority map](docs/architecture/AUTHORITY_AND_BOUNDARIES.md)
 - [Validation commands](docs/migration/ACCEPTANCE.md)
+- [Historical sample recovery](docs/archive/HISTORICAL_BUILD.md) (reference only)
+- [Phase 01 archive-usability closeout](phase-01/README.md)

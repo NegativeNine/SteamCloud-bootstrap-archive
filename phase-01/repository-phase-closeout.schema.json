@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.solarflare.dev/steamcloud-archive-phase-01-closeout.schema.json",
+  "title": "SteamCloud archive Phase 01 closeout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "architecture_version",
+    "repository",
+    "phase",
+    "source_head",
+    "source_tree",
+    "change_commits",
+    "commands",
+    "command_evidence_classification",
+    "artifacts",
+    "capability_status",
+    "known_limitations",
+    "rollback",
+    "non_claims",
+    "unresolved_blockers",
+    "unblocks",
+    "work_items",
+    "authority_movement"
+  ],
+  "properties": {
+    "schema": { "const": "solarflare.repository-phase-closeout/v3" },
+    "architecture_version": { "const": "2026-08-23-final-phased-prompts.3" },
+    "repository": { "const": "NegativeNine/SteamCloud-bootstrap-archive" },
+    "phase": { "const": "01" },
+    "source_head": { "const": "9554180db2b73b426a87128e10fbe12c097ee786" },
+    "source_tree": { "const": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" },
+    "change_commits": { "type": "array", "items": { "type": "string", "pattern": "^[0-9a-f]{40}$" }, "minItems": 1 },
+    "commands": { "type": "array", "minItems": 1 },
+    "command_evidence_classification": { "const": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE" },
+    "artifacts": { "type": "array", "minItems": 1 },
+    "capability_status": { "const": "IMPLEMENTED_NOT_QUALIFIED" },
+    "known_limitations": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "rollback": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "non_claims": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "unresolved_blockers": { "type": "array", "minItems": 1 },
+    "unblocks": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "work_items": { "type": "array", "minItems": 7, "maxItems": 7 },
+    "authority_movement": {
+      "const": { "authorized": false, "performed": false, "effect": "NONE" }
+    }
+  }
+}

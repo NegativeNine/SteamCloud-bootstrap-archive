@@ -1,0 +1,42 @@
+name: Archive record correction
+description: Report a broken historical link, provenance error, or archive-safety issue. Feature and runtime requests are not accepted.
+title: "[archive] "
+labels: []
+assignees: []
+body:
+  - type: dropdown
+    id: record_type
+    attributes:
+      label: Record type
+      options:
+        - Broken documentation link
+        - Historical provenance correction
+        - Archive-safety issue
+    validations:
+      required: true
+  - type: input
+    id: identity
+    attributes:
+      label: Exact historical identity
+      description: Provide the commit, tree, path, or manifest line. Do not include a credential, token, production datum, or private history.
+      placeholder: commit/path or manifest identity
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and reproduction
+      description: Explain the correction and give bounded, read-only reproduction steps. Do not propose runtime or feature work.
+    validations:
+      required: true
+  - type: checkboxes
+    id: attestations
+    attributes:
+      label: Archive boundary
+      options:
+        - label: This report is limited to historical accuracy, documentation links, provenance, or archive safety.
+          required: true
+        - label: I have not included secrets, credentials, personal data, private source, or production data.
+          required: true
+        - label: I understand this archive does not accept feature, runtime, package, deployment, or authority requests.
+          required: true
