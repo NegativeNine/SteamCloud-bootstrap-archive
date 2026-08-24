@@ -6,6 +6,8 @@
   "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
   "source_tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
   "change_commits": [
+    "be729cb07276c01d614e56b4848a218b88f1a4a5",
+    "39b1bcefed30d0a7247fbbc259b192686657344f",
     "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca",
     "9c307777d8555cf2ead5ecaef8faeb5b03ccf337",
     "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
@@ -24,7 +26,7 @@
     {
       "command": "python3 phase-01/validate.py --preseal",
       "exit_code": 0,
-      "result": "PASS; exact 26-destination inventory, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus gates, exact Phase 00 bytes, activation blocked, authority none"
+      "result": "PASS; exact 26-destination inventory with balanced and escaped bracket parsing, exact source recovery, Rust unpinned/no pass claimed, closed issue/status/corpus/narrative gates, exact Phase 00 bytes, activation blocked, authority none"
     },
     {
       "command": "exact detached Phase 00 validation at 9554180db2b73b426a87128e10fbe12c097ee786",
@@ -49,7 +51,7 @@
     {
       "command": "python3 phase-01/validate.py; python3 phase-01/test_validate.py; git diff --check",
       "exit_code": 0,
-      "result": "PASS after exact source manifest and closeout seal; 29 retained tests execute every declared corpus identity"
+      "result": "PASS after exact source manifest and closeout seal; 49 retained tests execute every declared corpus identity"
     }
   ],
   "command_evidence_classification": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE",
@@ -64,7 +66,7 @@
     },
     {
       "path": "phase-01/artifact-manifest.v1.json",
-      "digest": "sha256:525b3f60ec7bd3f41f77767df5dbc8c01f596b2f4d709313f5bd0a987e4611e0"
+      "digest": "sha256:ac28f8dbacfb6bd9fa576260073caed6f1d61034c54da7a5b3446bf2260cd0c6"
     },
     {
       "path": "phase-01/historical-build-evidence.v1.json",
@@ -72,11 +74,11 @@
     },
     {
       "path": "phase-01/status.v1.json",
-      "digest": "sha256:0fe278d879c7284242ce40803e1ff0ebacc10de0d8e8fd4bd2d1f60e16a9e25c"
+      "digest": "sha256:767dd2a59ef37e24130a9138975e0e8b8f7c55031c9c8f3af6a786c0d4f0e2cc"
     },
     {
       "path": "phase-01/test-fault-corpus.v1.json",
-      "digest": "sha256:4bbf50386ab78adfdfd39daf99e3536a792bd3d086a05139851e3135c10af866"
+      "digest": "sha256:383b46cf0f5ce12128443d2cc4de2bb1763e310527c4c6a257ca2b430f5494b4"
     }
   ],
   "capability_status": "IMPLEMENTED_NOT_QUALIFIED",
@@ -86,17 +88,54 @@
     "The historical freeze tag, source manifest, build evidence, and closeout are unsigned and are not release or qualification evidence.",
     "Repository-local content has no runtime dependency and no active consumer was observed, but no signed complete portfolio consumer inventory exists.",
     "Only exact historical source recovery is reproducible; Node execution is a bounded observation and Rust is NOT_REPRODUCIBLE_STRUCTURALLY_UNPINNED with no passing result.",
-    "The remediated exact head still requires a fresh independent review; no signed accountable reviewer acceptance is observed.",
+    "The residual findings are source-remediated, but the new exact head still requires a fresh independent review and no signed accountable reviewer acceptance is observed.",
     "No signed secret-history review spans deleted history, forks, caches, provider state, or inaccessible scopes.",
     "No observation window binds an accepted archive release, restore, settings state, and accountable owner identities."
   ],
-  "rollback": [
-    "Preserve the current public archive, private SteamCloud implementation, freeze tag, repository settings, branches, deployments, traffic, DNS, secrets, and CurrentAuthority unchanged.",
-    "Before merge, close the Phase 01 pull request and remove only phase01/historical-usability-20260824.",
-    "If separately merged, revert the current Phase 01 closeout seal first, then 1606b618d50ddcd3d3c8a2b95147596e06bcb7ca, then 9c307777d8555cf2ead5ecaef8faeb5b03ccf337, then ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5, newest-first.",
-    "The restored source must match exact Phase 00 head 9554180db2b73b426a87128e10fbe12c097ee786 and tree e0a9e141f14bdfd3b90131ff0ec55551393777a8 before the detached 31-test Phase 00 suite is rerun.",
-    "No runtime drain, durable-data reconciliation, queue replay, deployment restoration, or authority selection is required because this phase performs none."
-  ],
+  "rollback": {
+    "strategy": "GIT_REVERT_SOURCE_ONLY_NEWEST_FIRST",
+    "revert_order": [
+      {
+        "ordinal": 1,
+        "identity": "CURRENT_CANDIDATE_HEAD",
+        "resolution": "VALIDATOR_RESOLVES_EXACT_CURRENT_CANDIDATE_COMMIT",
+        "required_parent": "be729cb07276c01d614e56b4848a218b88f1a4a5",
+        "expected_tree_after": "7b7442a24d54c2627dc1abce276c55bd534e860c"
+      },
+      {
+        "ordinal": 2,
+        "identity": "be729cb07276c01d614e56b4848a218b88f1a4a5",
+        "expected_tree_after": "735dfc52254e8a8727aa7427dbd2b6e43e3b7318"
+      },
+      {
+        "ordinal": 3,
+        "identity": "39b1bcefed30d0a7247fbbc259b192686657344f",
+        "expected_tree_after": "c44252c8868a6422dcc12d7925a5be459c11c6a6"
+      },
+      {
+        "ordinal": 4,
+        "identity": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca",
+        "expected_tree_after": "f4a23b0eef2562be2991c766e0246e757d052877"
+      },
+      {
+        "ordinal": 5,
+        "identity": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337",
+        "expected_tree_after": "b801be4af80b65aeeae49e1628ec70a3dc557917"
+      },
+      {
+        "ordinal": 6,
+        "identity": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5",
+        "expected_tree_after": "e0a9e141f14bdfd3b90131ff0ec55551393777a8"
+      }
+    ],
+    "target": {
+      "head": "9554180db2b73b426a87128e10fbe12c097ee786",
+      "tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
+      "phase01_path_count": 0,
+      "required_validation": "ORIGINAL_23_PLUS_PHASE00_8_TESTS"
+    },
+    "external_reconciliation": "NONE_NO_RUNTIME_DEPLOYMENT_DURABLE_STATE_OR_AUTHORITY_EFFECT"
+  },
   "non_claims": [
     "No feature, runtime, schema, contract, package, profile, provider adapter, deployment configuration, active dependency, telemetry, data collection, write, effect, or authority role was added.",
     "No repository setting, visibility, archive flag, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, credential, traffic, or authority was changed.",
@@ -119,7 +158,7 @@
       "owner": "SteamCloud product, portfolio dependency-inventory, package, documentation, and migration owners; exact signed identities NOT_OBSERVED"
     },
     {
-      "blocker": "Independent restore, history/secret review, exact-head source-boundary acceptance, and rollback acceptance are absent.",
+      "blocker": "Independent restore, history/secret review, new exact-head source-boundary acceptance, and rollback acceptance are absent.",
       "owner": "archive rollback, secret-custody, security, and independent-review owners; exact signed identities NOT_OBSERVED"
     },
     {
@@ -128,7 +167,7 @@
     }
   ],
   "unblocks": [
-    "Fresh technical review of exact archive links, historical source recovery, provenance correction intake, fail-closed limitations, and source rollback.",
+    "Fresh technical review of exact archive links, historical source recovery, provenance correction intake, fail-closed limitations, and exact source rollback.",
     "Archive-safety and documentation corrections that remain within the same exact no-runtime boundary.",
     "No feature, runtime, package, schema, deployment, setting, activation, qualification, retirement, or authority action is unblocked."
   ],
@@ -147,15 +186,27 @@
     "effect": "NONE"
   },
   "review_gate": {
-    "remediated_review_path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
-    "remediated_review_sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
-    "remediated_finding_ids": [
-      "ARCHIVE-P1-R01",
-      "ARCHIVE-P1-R02",
-      "ARCHIVE-P1-R03",
-      "ARCHIVE-P1-R04",
-      "ARCHIVE-P1-R05",
-      "ARCHIVE-P1-R06"
+    "remediation_chain": [
+      {
+        "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
+        "sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
+        "finding_ids": [
+          "ARCHIVE-P1-R01",
+          "ARCHIVE-P1-R02",
+          "ARCHIVE-P1-R03",
+          "ARCHIVE-P1-R04",
+          "ARCHIVE-P1-R05",
+          "ARCHIVE-P1-R06"
+        ]
+      },
+      {
+        "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.remediated-final-head-independent-review.json",
+        "sha256": "65ef9897ea328295bab7c96137c396586b7d39b3d15f96ebd1ec386d9f3db0b6",
+        "finding_ids": [
+          "ARCHIVE-P1-R07",
+          "ARCHIVE-P1-R08"
+        ]
+      }
     ],
     "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
     "signed_acceptance": "NOT_OBSERVED",
