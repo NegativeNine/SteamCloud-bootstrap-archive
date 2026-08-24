@@ -4,8 +4,8 @@
   "repository": "NegativeNine/SteamCloud-bootstrap-archive",
   "phase": "01",
   "source_head": "9554180db2b73b426a87128e10fbe12c097ee786",
-  "source_tree": "7b7442a24d54c2627dc1abce276c55bd534e860c",
-  "source_commit": "be729cb07276c01d614e56b4848a218b88f1a4a5",
+  "source_tree": "a09454b85dec130725e891a1f11d103f8c105037",
+  "source_commit": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b",
   "signed": false,
   "publishable": false,
   "entries": [
@@ -19,15 +19,15 @@
     },
     {
       "path": ".github/workflows/ci.yml",
-      "sha256": "18167b21734522d61a99628a32267abcbad30a9a0dbd79b479a0f461aa714d2e"
+      "sha256": "824276da5cb416a5ca673e4ab1b4a334169edc1773871b1014465bfb9e88983b"
     },
     {
       "path": "CONTRIBUTING.md",
-      "sha256": "9c0593e0522f40260603d19d19292f0457cd93e6f3ff54e2e85276e381fad594"
+      "sha256": "62ffa3c677943e5f2e9fb0d1dfa04679a4b245e0a8c667adf703b3177a7b4eef"
     },
     {
       "path": "README.md",
-      "sha256": "ac2fd4e3b244f2afc04412bec8959c0ffbe31a5547786c82b061c37f97176318"
+      "sha256": "a5f0462f7a3925e0bbf38722100dee7cc76a8424dfbbf2b521bf652298f88616"
     },
     {
       "path": "docs/archive/HISTORICAL_BUILD.md",
@@ -35,7 +35,7 @@
     },
     {
       "path": "phase-01/README.md",
-      "sha256": "49c06b5a845acfca14a75f2ea16f546adc8e4c1568c86a99dd6b656e8e3bf2c5"
+      "sha256": "08d1528887033fd7837221dd2abf56d82ad942dc41bb7cd0816ab9a18fff6742"
     },
     {
       "path": "phase-01/historical-build-evidence.v1.json",
@@ -43,23 +43,23 @@
     },
     {
       "path": "phase-01/repository-phase-closeout.schema.json",
-      "sha256": "aba90be151f30aadac020c4eaac7dea8395370c60271917119a78e1bad7b9088"
+      "sha256": "68b982f9f4fef10a5d76c836ea36684f49852f0750fbbe8cf17f4be412b716f3"
     },
     {
       "path": "phase-01/status.v1.json",
-      "sha256": "767dd2a59ef37e24130a9138975e0e8b8f7c55031c9c8f3af6a786c0d4f0e2cc"
+      "sha256": "ca49bfe1879448687b4419b357d524e4c48bbea27f5c57189f4f9016933d0614"
     },
     {
       "path": "phase-01/test-fault-corpus.v1.json",
-      "sha256": "383b46cf0f5ce12128443d2cc4de2bb1763e310527c4c6a257ca2b430f5494b4"
+      "sha256": "bbf497a0b066723bf19becca54b42cbffbd215b82297b2455b19101ba1380c72"
     },
     {
       "path": "phase-01/test_validate.py",
-      "sha256": "29572608f919c6fae9cd503a4c6a727e14eb634af7c6883684c4659a50c77823"
+      "sha256": "cde43c38bd0770247aa6d259f729d22ad4a1ba2ec6227dedb271250275442e0b"
     },
     {
       "path": "phase-01/validate.py",
-      "sha256": "f017d46ad166999482a63d87215e05b88e0df1c758e92b2b4f004485fc47b313"
+      "sha256": "311e8809cea0e33dd2c47d4cebd148b24bc6d60f476bc95472f6bea04b461eae"
     }
   ],
   "non_claim": "Unsigned repository-contained source manifest only; not release, deployment, qualification, observed-live, activation, or authority evidence."
