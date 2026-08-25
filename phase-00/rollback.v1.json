@@ -1,0 +1,33 @@
+{
+  "schema": "steamcloud.archive.phase-00-rollback/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "phase_mutation_scope": "candidate source branch only",
+  "incumbent": {
+    "statement": "NegativeNine/SteamCloud remains the reported private operational repository",
+    "exact_deployment": "NOT_OBSERVED",
+    "authority_generation": "NOT_OBSERVED",
+    "changed_by_phase": false
+  },
+  "rollback_target": {
+    "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+    "branch": "main",
+    "commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
+    "archive_sha256": "19ffd9a8d342e877d3c56baf190963a16e9339f490f467fd422f9c920ecfb843"
+  },
+  "order": [
+    "close or reject the unmerged Phase 00 candidate without changing main",
+    "verify main still resolves to f395c6c922124c716d216d80fee42dba7d3547d2",
+    "clean-clone the exact main commit and verify the archive SHA-256",
+    "run archive validation and git fsck in the clean clone",
+    "preserve NegativeNine/SteamCloud and every external incumbent unchanged"
+  ],
+  "in_flight_reconciliation": {
+    "durable_writes": "none introduced",
+    "effects": "none introduced",
+    "deployments": "none introduced",
+    "prepared_work": "only the unmerged Git branch/PR; reject by exact branch identity",
+    "data_or_erasure_state": "none owned or changed"
+  },
+  "independent_restore": "NOT_EXECUTED",
+  "rollback_executed": false
+}

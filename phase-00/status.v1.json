@@ -1,0 +1,89 @@
+{
+  "schema": "steamcloud.archive.phase-00-status/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "phase_disposition": "IMPLEMENTED_NOT_QUALIFIED",
+  "activation": "BLOCKED",
+  "authority_movement": "NONE",
+  "canonical_capability_status": "UNKNOWN",
+  "work_items": [
+    {
+      "class": "implementation",
+      "status": "IMPLEMENTED",
+      "evidence": ["README.md", "phase-00/README.md", ".github/workflows/ci.yml"]
+    },
+    {
+      "class": "artifact",
+      "status": "EVIDENCED",
+      "evidence": ["phase-00/archive-baseline.v1.json", "phase-00/test-fault-corpus.v1.json"]
+    },
+    {
+      "class": "deployment",
+      "status": "NOT_APPLICABLE",
+      "evidence": ["archive repository owns no deployment"]
+    },
+    {
+      "class": "activation",
+      "status": "BLOCKED",
+      "evidence": ["archive repository cannot activate a capability"]
+    },
+    {
+      "class": "authority",
+      "status": "BLOCKED",
+      "evidence": ["no signed authority identity; incumbent preserved"]
+    },
+    {
+      "class": "qualification",
+      "status": "BLOCKED",
+      "evidence": ["no independent signed restore or history-review acceptance"]
+    },
+    {
+      "class": "observation",
+      "status": "EVIDENCED",
+      "evidence": ["phase-00/archive-baseline.v1.json"]
+    }
+  ],
+  "completeness_vector": {
+    "implementation": true,
+    "artifact": true,
+    "deployment": false,
+    "profile": false,
+    "limits": false,
+    "authority_generation": false,
+    "test_fault_corpus": true,
+    "independent_review": false,
+    "observation_window": false,
+    "rollback_identity": true
+  },
+  "blockers": [
+    {
+      "id": "ARCHIVE:SIGNED-OWNER-AUTHORIZATION",
+      "owner": "NOT_OBSERVED",
+      "requires": "signed accountable source, release, administrator, rollback, and independent-review identities"
+    },
+    {
+      "id": "ARCHIVE:CONTROLLED-MERGE",
+      "owner": "repository governance owner; exact identity NOT_OBSERVED",
+      "requires": "protected main or an evidenced equivalent controlled-merge policy"
+    },
+    {
+      "id": "ARCHIVE:INDEPENDENT-RESTORE",
+      "owner": "rollback owner; exact identity NOT_OBSERVED",
+      "requires": "independently executed clean restore from the exact archive digest with signed result"
+    },
+    {
+      "id": "ARCHIVE:INDEPENDENT-SECRET-HISTORY-REVIEW",
+      "owner": "secret custodian and independent reviewer; exact identities NOT_OBSERVED",
+      "requires": "signed review spanning all authorized storage and deleted-history scopes"
+    },
+    {
+      "id": "ARCHIVE:GITHUB-ARCHIVED-SETTING",
+      "owner": "repository administrator; exact identity NOT_OBSERVED",
+      "requires": "separately authorized administrator decision; observed value remains false"
+    },
+    {
+      "id": "ARCHIVE:SIGNED-FREEZE-TAG",
+      "owner": "release signer; exact identity NOT_OBSERVED",
+      "requires": "signed immutable archive release/tag bound to artifact digest; existing annotated tag is unsigned"
+    }
+  ]
+}

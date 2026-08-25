@@ -11,12 +11,24 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: python3 -m pip install --disable-pip-version-check PyYAML==6.0.3
-      - run: python3 scripts/validate_placeholder.py
-      - run: python3 scripts/test_validate_placeholder.py
+      - run: python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3
+      - name: Verify the exact Phase 00 candidate
+        run: |
+          phase00_worktree="$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)"
+          git worktree add --detach "$phase00_worktree" 9554180db2b73b426a87128e10fbe12c097ee786
+          (
+            cd "$phase00_worktree"
+            python3 scripts/validate_placeholder.py
+            python3 scripts/test_validate_placeholder.py
+            python3 phase-00/validate.py
+            python3 phase-00/test_validate.py
+          )
+          git worktree remove --force "$phase00_worktree"
+      - run: python3 phase-01/validate.py
+      - run: python3 phase-01/test_validate.py
       - run: git diff --check HEAD^ HEAD
       - run: git fsck --full

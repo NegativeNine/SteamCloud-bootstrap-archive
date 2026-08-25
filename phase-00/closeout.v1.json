@@ -1,0 +1,279 @@
+{
+  "schema": "solarflare.repository-phase-closeout/v3",
+  "architecture_version": "2026-08-23-final-phased-prompts.3",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "phase": "00",
+  "generated_at": "2026-08-24T02:07:02Z",
+  "source_head": "f395c6c922124c716d216d80fee42dba7d3547d2",
+  "source_refresh": {
+    "branch": "main",
+    "observed_at": "2026-08-24T02:00:15Z",
+    "expires_at": "2026-08-25T02:00:15Z",
+    "method": "GitHub REST API via authenticated gh CLI and fresh clean clone",
+    "signature_verified": false,
+    "default_branch_protected": false,
+    "rulesets_disposition": "OBSERVED"
+  },
+  "change_commits": [
+    "764f984ab7a431fe68744e63386f1a99db952ad8"
+  ],
+  "versions": {
+    "archive_baseline": "steamcloud.archive.phase-00-baseline/v1",
+    "status": "steamcloud.archive.phase-00-status/v1",
+    "rollback": "steamcloud.archive.phase-00-rollback/v1",
+    "test_fault_corpus": "steamcloud.archive.phase-00-test-fault-corpus/v1",
+    "closeout": "solarflare.repository-phase-closeout/v3",
+    "normative_protocol": null
+  },
+  "commands": [
+    {
+      "command": "python3 scripts/validate_placeholder.py",
+      "exit_code": 0,
+      "result_digest": "sha256:2ce38a3e9e974824b979a66695c996a12ae8d452021ba3c9ecc276e67c69234e"
+    },
+    {
+      "command": "python3 scripts/test_validate_placeholder.py",
+      "exit_code": 0,
+      "result_digest": "sha256:dcddfcffbb9c56fadd9613f494bd3a7f1ea538835b9605e00e1e46cdf062b8a5"
+    },
+    {
+      "command": "python3 phase-00/validate.py",
+      "exit_code": 0,
+      "result_digest": "sha256:c44e5c66dcc527b56499edcbd7267dabb1d23cec896ab78113fa0ab31ecde240"
+    },
+    {
+      "command": "python3 phase-00/test_validate.py",
+      "exit_code": 0,
+      "result_digest": "sha256:972dcae2662a4afc785b2692e2d2714e674f2070b826fc0fd2653221c77311a9"
+    },
+    {
+      "command": "git fsck --full",
+      "exit_code": 0,
+      "result_digest": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "git archive --format=tar f395c6c922124c716d216d80fee42dba7d3547d2",
+      "digest": "sha256:19ffd9a8d342e877d3c56baf190963a16e9339f490f467fd422f9c920ecfb843",
+      "kind": "exact-base-source-archive"
+    },
+    {
+      "path": "phase-00/archive-baseline.v1.json",
+      "digest": "sha256:8da88a7e4ad36214c147fab6c1774b816558c1569310fca10b78b57bea8b8c6d",
+      "kind": "repository-observation"
+    },
+    {
+      "path": "phase-00/status.v1.json",
+      "digest": "sha256:bb055bce02475f127e4d032d52bf2e51ff05ae8cde0fee464c97ff3bc3e7cdcd",
+      "kind": "machine-status"
+    },
+    {
+      "path": "phase-00/rollback.v1.json",
+      "digest": "sha256:4759bba27526890644fd3b364fe1303c3a31640185e80d3df7f38c8d0d0913ca",
+      "kind": "rollback-record"
+    },
+    {
+      "path": "phase-00/test-fault-corpus.v1.json",
+      "digest": "sha256:fcb28492375100399041987a9316c70b8fa51107be34faed66e1d92cac5f401b",
+      "kind": "test-fault-corpus"
+    },
+    {
+      "path": "phase-00/repository-phase-closeout.schema.json",
+      "digest": "sha256:ed5f5f78748de22c6f1c0327f4bd3ff14ab8b65e37e92ac8b14d9a978ad7d9a2",
+      "kind": "binding-correct-local-closeout-schema"
+    }
+  ],
+  "identities": {
+    "implementation": {
+      "disposition": "EVIDENCED",
+      "identity": "764f984ab7a431fe68744e63386f1a99db952ad8",
+      "evidence": ["phase-00/closeout.v1.json"],
+      "reason": "Exact substantive Phase 00 implementation commit in the candidate branch."
+    },
+    "artifact": {
+      "disposition": "EVIDENCED",
+      "identity": "sha256:19ffd9a8d342e877d3c56baf190963a16e9339f490f467fd422f9c920ecfb843",
+      "evidence": ["phase-00/archive-baseline.v1.json"],
+      "reason": "The exact refreshed base is reproducible as a Git archive; it is not a signed release."
+    },
+    "signed_release": {
+      "disposition": "NOT_OBSERVED",
+      "identity": null,
+      "evidence": ["phase-00/archive-baseline.v1.json"],
+      "reason": "The existing annotated freeze tag is unsigned and no signed release or signer set was observed."
+    },
+    "deployment": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": ["phase-00/archive-baseline.v1.json"],
+      "reason": "This archive owns no deployment; no claim is made about external provider state."
+    },
+    "profile": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": [],
+      "reason": "This archive owns no execution profile."
+    },
+    "limits": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": [],
+      "reason": "This archive owns no runtime resource or cost limits."
+    },
+    "jurisdiction": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": [],
+      "reason": "This candidate collects and deploys no runtime data."
+    },
+    "authority_generation": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": ["phase-00/rollback.v1.json"],
+      "reason": "The archive owns no capability authority and performs no authority movement."
+    },
+    "source_cut": {
+      "disposition": "NOT_APPLICABLE",
+      "identity": null,
+      "evidence": [],
+      "reason": "The archive has no production source cut."
+    },
+    "test_fault_corpus": {
+      "disposition": "EVIDENCED",
+      "identity": "sha256:fcb28492375100399041987a9316c70b8fa51107be34faed66e1d92cac5f401b",
+      "evidence": ["phase-00/test-fault-corpus.v1.json"],
+      "reason": "Exact commands, counts, positive cases, negative cases, and bounded-scan non-claims are recorded."
+    },
+    "independent_review": {
+      "disposition": "NOT_OBSERVED",
+      "identity": null,
+      "evidence": [],
+      "reason": "No exact independent reviewer or signed acceptance record was observed."
+    },
+    "qualification": {
+      "disposition": "NOT_OBSERVED",
+      "identity": null,
+      "evidence": [],
+      "reason": "Implementation tests do not qualify repository immutability, restore, or secret-history completeness."
+    },
+    "observation_window": {
+      "disposition": "NOT_OBSERVED",
+      "identity": null,
+      "evidence": [],
+      "reason": "No signed archive-integrity observation window is bound to an accepted release."
+    },
+    "rollback": {
+      "disposition": "EVIDENCED",
+      "identity": "f395c6c922124c716d216d80fee42dba7d3547d2",
+      "evidence": ["phase-00/rollback.v1.json"],
+      "reason": "The exact unchanged default-branch target and its source archive digest are retrievable; independent restore acceptance remains absent."
+    }
+  },
+  "work_items": [
+    {"class": "implementation", "status": "EVIDENCED", "description": "Archive notice, final status vocabulary, and immutable validation boundary implemented."},
+    {"class": "artifact", "status": "EVIDENCED", "description": "Exact base archive, existing tag identity, checksums, and machine packet recorded."},
+    {"class": "deployment", "status": "NOT_APPLICABLE", "description": "Archive owns no deployment and candidate creates none."},
+    {"class": "activation", "status": "NOT_APPLICABLE", "description": "Archive cannot activate a product or runtime capability."},
+    {"class": "authority", "status": "NOT_APPLICABLE", "description": "Archive owns no authority; incumbent remains untouched."},
+    {"class": "qualification", "status": "BLOCKED", "description": "Independent signed restore, history review, governance, and observation evidence absent."},
+    {"class": "observation", "status": "EVIDENCED", "description": "GitHub repository, branch, tag, settings, workflow, and visible inventory refreshed with expiry."}
+  ],
+  "phase_disposition": "IMPLEMENTED_NOT_QUALIFIED",
+  "canonical_capability_status": "UNKNOWN",
+  "completeness_vector": {
+    "implementation": true,
+    "artifact": true,
+    "deployment": false,
+    "profile": false,
+    "limits": false,
+    "authority_generation": false,
+    "test_fault_corpus": true,
+    "independent_review": false,
+    "observation_window": false,
+    "rollback_identity": true
+  },
+  "known_limitations": [
+    "The GitHub Archived setting is observed false and was not changed.",
+    "The default branch is unprotected and no controlled-merge equivalent is evidenced.",
+    "The freeze tag is annotated but unsigned and is not a signed release.",
+    "The bounded source and Gitleaks scans do not establish a complete secret inventory.",
+    "No independent reviewer accepted a clean restore or history review.",
+    "The sealed common closeout schema still pins obsolete architecture final-draft.4 and cannot validate this final binding without correction."
+  ],
+  "rollback": {
+    "path": "phase-00/rollback.v1.json",
+    "target_commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
+    "archive_digest": "sha256:19ffd9a8d342e877d3c56baf190963a16e9339f490f467fd422f9c920ecfb843",
+    "independently_retrieved": false,
+    "authority_effect": "NONE"
+  },
+  "non_claims": [
+    "No repository setting, visibility, branch protection, ruleset, release, tag, deployment, environment, provider, DNS, secret, or authority was changed.",
+    "No secret value was requested, read, copied, emitted, rotated, or recorded.",
+    "Zero GitHub-visible objects do not prove absence in provider, organization, runtime, deleted-history, fork, cache, or inaccessible scopes.",
+    "A green archive validator and bounded secret scan are not qualification or observed-live evidence.",
+    "The existing freeze tag is not promoted to a signed release.",
+    "The reported private SteamCloud incumbent is preserved; its exact deployment and authority generation are not claimed.",
+    "No CurrentAuthority, administrator, provider, deployment, rollback-owner, secret-custodian, or independent-reviewer identity is claimed."
+  ],
+  "unresolved_blockers": [
+    {
+      "id": "ARCHIVE:CONTROLLED-MERGE",
+      "class": "governance",
+      "blocker": "Default branch is unprotected and no equivalent controlled-merge evidence is present.",
+      "owner": "repository source-governance owner; exact accountable identity NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:SIGNED-OWNER-AUTHORIZATION",
+      "class": "governance",
+      "blocker": "Exact source, release, administrator, rollback, secret-custodian, and reviewer identities are absent.",
+      "owner": "portfolio governance owner; exact accountable identity NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:INDEPENDENT-RESTORE",
+      "class": "qualification",
+      "blocker": "No independently executed and signed clean restore of the exact archive is admitted.",
+      "owner": "rollback owner and independent reviewer; exact identities NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:INDEPENDENT-SECRET-HISTORY-REVIEW",
+      "class": "qualification",
+      "blocker": "No signed review spans every authorized storage and deleted-history scope.",
+      "owner": "secret custodian and independent reviewer; exact identities NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:GITHUB-ARCHIVED-SETTING",
+      "class": "administrator",
+      "blocker": "GitHub archived=false; a separate signed administrator decision is required to change it.",
+      "owner": "repository administrator; exact accountable identity NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:SIGNED-FREEZE-TAG",
+      "class": "artifact",
+      "blocker": "The existing annotated tag is unsigned and no signed archive release is admitted.",
+      "owner": "release signer; exact accountable identity NOT_OBSERVED",
+      "hard": true
+    },
+    {
+      "id": "ARCHIVE:SEALED-CLOSEOUT-SCHEMA",
+      "class": "schema",
+      "blocker": "The sealed package closeout schema pins obsolete final-draft.4; the local v3 schema encodes the binding output without amending the sealed input.",
+      "owner": "prompt-package governance owner; exact accountable identity NOT_OBSERVED",
+      "hard": false
+    }
+  ],
+  "unblocks": [
+    "Phase 01 historical-usability preparation after controlled merge; no activation or authority work is unblocked."
+  ],
+  "authority_movement": {
+    "authorized": false,
+    "performed": false,
+    "effect": "NONE"
+  }
+}

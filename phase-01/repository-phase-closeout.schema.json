@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.solarflare.dev/steamcloud-archive-phase-01-closeout.schema.json",
+  "title": "SteamCloud archive Phase 01 closeout",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "architecture_version",
+    "artifacts",
+    "authority_movement",
+    "capability_status",
+    "change_commits",
+    "command_evidence_classification",
+    "commands",
+    "known_limitations",
+    "non_claims",
+    "phase",
+    "repository",
+    "review_gate",
+    "rollback",
+    "schema",
+    "source_head",
+    "source_tree",
+    "unblocks",
+    "unresolved_blockers",
+    "work_items"
+  ],
+  "properties": {
+    "schema": { "const": "solarflare.repository-phase-closeout/v3" },
+    "architecture_version": { "const": "2026-08-23-final-phased-prompts.3" },
+    "repository": { "const": "NegativeNine/SteamCloud-bootstrap-archive" },
+    "phase": { "const": "01" },
+    "source_head": { "const": "9554180db2b73b426a87128e10fbe12c097ee786" },
+    "source_tree": { "const": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" },
+    "change_commits": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "prefixItems": [
+        { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        { "const": "f68dba1c5b0b016db4321db6e84fdcdb827c93c2" },
+        { "const": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b" },
+        { "const": "d32437abc20b16884a76587aa145b1bea152cdc5" },
+        { "const": "be729cb07276c01d614e56b4848a218b88f1a4a5" },
+        { "const": "39b1bcefed30d0a7247fbbc259b192686657344f" },
+        { "const": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca" },
+        { "const": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337" },
+        { "const": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5" }
+      ],
+      "items": false
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "exit_code", "result"],
+        "properties": {
+          "command": { "type": "string", "minLength": 1 },
+          "exit_code": { "type": "integer", "minimum": 0 },
+          "result": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "command_evidence_classification": {
+      "const": "NARRATIVE_ONLY_NOT_INDEPENDENT_EXECUTION_EVIDENCE"
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["digest", "path"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "capability_status": { "const": "IMPLEMENTED_NOT_QUALIFIED" },
+    "known_limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["external_reconciliation", "revert_order", "strategy", "target"],
+      "properties": {
+        "strategy": { "const": "GIT_REVERT_SOURCE_ONLY_NEWEST_FIRST" },
+        "revert_order": {
+          "type": "array",
+          "minItems": 10,
+          "maxItems": 10,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["expected_tree_after", "identity", "ordinal", "required_parent", "resolution"],
+              "properties": {
+                "ordinal": { "const": 1 },
+                "identity": { "const": "CURRENT_CANDIDATE_HEAD" },
+                "resolution": { "const": "VALIDATOR_RESOLVES_EXACT_CURRENT_CANDIDATE_COMMIT" },
+                "required_parent": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+                "expected_tree_after": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["expected_tree_after", "identity", "ordinal"],
+              "properties": {
+                "ordinal": { "const": 2 },
+                "identity": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+                "expected_tree_after": { "const": "455c5b2c2f027809e370e75b7f6ea3e21ea47a4b" }
+              }
+            },
+            { "const": { "ordinal": 3, "identity": "f68dba1c5b0b016db4321db6e84fdcdb827c93c2", "expected_tree_after": "a09454b85dec130725e891a1f11d103f8c105037" } },
+            { "const": { "ordinal": 4, "identity": "9859982e4e6c8ff677e7e7cc8289dd042b6e4e9b", "expected_tree_after": "669d240fd205e78f5dceac117ce2cc6219da8540" } },
+            { "const": { "ordinal": 5, "identity": "d32437abc20b16884a76587aa145b1bea152cdc5", "expected_tree_after": "7b7442a24d54c2627dc1abce276c55bd534e860c" } },
+            { "const": { "ordinal": 6, "identity": "be729cb07276c01d614e56b4848a218b88f1a4a5", "expected_tree_after": "735dfc52254e8a8727aa7427dbd2b6e43e3b7318" } },
+            { "const": { "ordinal": 7, "identity": "39b1bcefed30d0a7247fbbc259b192686657344f", "expected_tree_after": "c44252c8868a6422dcc12d7925a5be459c11c6a6" } },
+            { "const": { "ordinal": 8, "identity": "1606b618d50ddcd3d3c8a2b95147596e06bcb7ca", "expected_tree_after": "f4a23b0eef2562be2991c766e0246e757d052877" } },
+            { "const": { "ordinal": 9, "identity": "9c307777d8555cf2ead5ecaef8faeb5b03ccf337", "expected_tree_after": "b801be4af80b65aeeae49e1628ec70a3dc557917" } },
+            { "const": { "ordinal": 10, "identity": "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5", "expected_tree_after": "e0a9e141f14bdfd3b90131ff0ec55551393777a8" } }
+          ],
+          "items": false
+        },
+        "target": {
+          "const": {
+            "head": "9554180db2b73b426a87128e10fbe12c097ee786",
+            "tree": "e0a9e141f14bdfd3b90131ff0ec55551393777a8",
+            "phase01_path_count": 0,
+            "required_validation": "ORIGINAL_23_PLUS_PHASE00_8_TESTS"
+          }
+        },
+        "external_reconciliation": {
+          "const": "NONE_NO_RUNTIME_DEPLOYMENT_DURABLE_STATE_OR_AUTHORITY_EFFECT"
+        }
+      }
+    },
+    "non_claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "unresolved_blockers": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["blocker", "owner"],
+        "properties": {
+          "blocker": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "unblocks": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "work_items": {
+      "const": [
+        { "class": "implementation", "status": "IMPLEMENTED_ARCHIVE_ONLY" },
+        { "class": "artifact", "status": "UNSIGNED_HISTORICAL_REFERENCE_NOT_ADMITTED" },
+        { "class": "deployment", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED" },
+        { "class": "activation", "status": "BLOCKED_NOT_AUTHORIZED_NOT_PERFORMED" },
+        { "class": "authority", "status": "NONE_NOT_AUTHORIZED_NOT_PERFORMED" },
+        { "class": "qualification", "status": "BLOCKED_NOT_ESTABLISHED" },
+        { "class": "observation", "status": "LOCAL_SOURCE_EVIDENCE_ONLY_FRESH_EXACT_HEAD_REVIEW_REQUIRED" }
+      ]
+    },
+    "authority_movement": {
+      "const": { "authorized": false, "performed": false, "effect": "NONE" }
+    },
+    "review_gate": {
+      "const": {
+        "remediation_chain": [
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.independent-review.json",
+            "sha256": "ce1a9936b879c7d5e1e59ab723b727afb2d683afed7dff1a336129ff0b2e46f8",
+            "finding_ids": [
+              "ARCHIVE-P1-R01",
+              "ARCHIVE-P1-R02",
+              "ARCHIVE-P1-R03",
+              "ARCHIVE-P1-R04",
+              "ARCHIVE-P1-R05",
+              "ARCHIVE-P1-R06"
+            ]
+          },
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.remediated-final-head-independent-review.json",
+            "sha256": "65ef9897ea328295bab7c96137c396586b7d39b3d15f96ebd1ec386d9f3db0b6",
+            "finding_ids": [
+              "ARCHIVE-P1-R07",
+              "ARCHIVE-P1-R08"
+            ]
+          },
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.residual-remediation-exact-head-independent-review.json",
+            "sha256": "6915198c342339184cb10b049f03beb7f26170f1f9b692f4fd906e8cc24fac91",
+            "finding_ids": [
+              "ARCHIVE-P1-R09"
+            ]
+          },
+          {
+            "path": "coordinator-dag-execution-2026-08-24/reviews/steamcloud-bootstrap-archive/phase-01.commonmark-container-final-head-independent-review.json",
+            "sha256": "4a67512b056c1afbac15fd3d7af73877c2a7968cd1f15e26042bda066301c0cf",
+            "finding_ids": [
+              "ARCHIVE-P1-R10"
+            ]
+          }
+        ],
+        "fresh_exact_head_review": "REQUIRED_NOT_YET_OBSERVED",
+        "signed_acceptance": "NOT_OBSERVED",
+        "qualification_effect": "NONE",
+        "authority_effect": "NONE"
+      }
+    }
+  }
+}

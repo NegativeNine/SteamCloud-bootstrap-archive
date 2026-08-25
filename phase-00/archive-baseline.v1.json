@@ -1,0 +1,61 @@
+{
+  "schema": "steamcloud.archive.phase-00-baseline/v1",
+  "architecture_binding": "2026-08-23-final-phased-prompts.3",
+  "repository": {
+    "id": 1338764433,
+    "identity": "NegativeNine/SteamCloud-bootstrap-archive",
+    "visibility": "public",
+    "default_branch": "main",
+    "refreshed_head": "f395c6c922124c716d216d80fee42dba7d3547d2",
+    "head_commit_signature_verified": false,
+    "default_branch_protected": false,
+    "active_rulesets_observed": 0,
+    "github_archived_setting": false,
+    "checked_at": "2026-08-24T02:00:15Z",
+    "expires_at": "2026-08-25T02:00:15Z",
+    "expiry_rule": "expires at the timestamp or immediately on remote default-branch drift"
+  },
+  "source_archive": {
+    "command": "git archive --format=tar f395c6c922124c716d216d80fee42dba7d3547d2",
+    "sha256": "19ffd9a8d342e877d3c56baf190963a16e9339f490f467fd422f9c920ecfb843"
+  },
+  "freeze_tag": {
+    "name": "placeholder-disposition-freeze-2026-08-19",
+    "tag_object": "2e11ce92883d6f37e651198c46634a061b314524",
+    "target_commit": "4ebc5dabada6fa5ef95e54545d5fb8882bb213a9",
+    "kind": "annotated_tag",
+    "signature": "NOT_OBSERVED",
+    "signed_release": false,
+    "new_tag_created_by_phase": false
+  },
+  "github_visible_inventory": {
+    "branches": 1,
+    "tags": 1,
+    "releases": 0,
+    "deployments": 0,
+    "environments": 0,
+    "actions_secret_identifiers": 0,
+    "actions_variables": 0,
+    "actions_artifacts": 0,
+    "webhooks": 0,
+    "deploy_keys": 0,
+    "scope_non_claim": "Empty GitHub-visible collections do not prove absence in provider, organization, account, runtime, deleted-history, fork, cache, or inaccessible scopes. No secret value was requested or read."
+  },
+  "workflow_boundary": {
+    "files": [".github/workflows/ci.yml"],
+    "deployment_jobs": [],
+    "release_jobs": [],
+    "publish_jobs": [],
+    "workflow_permission": "contents: read",
+    "candidate_checkout_reference": "actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683"
+  },
+  "secret_scan": {
+    "tool": "gitleaks",
+    "version": "8.21.2",
+    "scope": "all 13 commits reachable from all refs in the refreshed clone",
+    "command": "gitleaks git --redact=100 --no-banner --exit-code 0 --report-format json .",
+    "finding_count": 0,
+    "result": "PASS_BOUNDED_SCAN",
+    "complete_secret_inventory": false
+  }
+}

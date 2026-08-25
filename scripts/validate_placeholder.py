@@ -39,6 +39,30 @@ STATUS_VOCABULARY = {
     "TARGET",
 }
 
+FINAL_STATUS_VOCABULARY = {
+    "SPECIFIED",
+    "REFERENCE",
+    "IMPLEMENTED",
+    "SHADOW",
+    "CANARY",
+    "QUALIFIED",
+    "CURRENT_AUTHORITY",
+    "OBSERVED_LIVE",
+    "RETIRED",
+    "UNKNOWN",
+}
+
+CURRENT_README_STATUSES = {
+    "REFERENCE",
+    "IMPLEMENTED",
+    "SHADOW",
+    "CANARY",
+    "QUALIFIED",
+    "CURRENT_AUTHORITY",
+    "OBSERVED_LIVE",
+    "UNKNOWN",
+}
+
 GOVERNING_DOCUMENTS = [
     ROOT / "README.md",
     ROOT / "docs/architecture/AUTHORITY_AND_BOUNDARIES.md",
@@ -68,6 +92,15 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "docs/roadmap/PHASE_LEDGER.json",
     ROOT / "scripts/test_validate_placeholder.py",
     ROOT / "scripts/validate_placeholder.py",
+    ROOT / "phase-00/README.md",
+    ROOT / "phase-00/archive-baseline.v1.json",
+    ROOT / "phase-00/closeout.v1.json",
+    ROOT / "phase-00/repository-phase-closeout.schema.json",
+    ROOT / "phase-00/rollback.v1.json",
+    ROOT / "phase-00/status.v1.json",
+    ROOT / "phase-00/test-fault-corpus.v1.json",
+    ROOT / "phase-00/test_validate.py",
+    ROOT / "phase-00/validate.py",
 ]
 
 FORBIDDEN_PATHS = [
@@ -861,7 +894,7 @@ def validate_yaml() -> None:
 
 
 def validate_markdown_links_and_statuses() -> None:
-    markdown = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
+    markdown = [ROOT / "README.md", ROOT / "CONTRIBUTING.md", ROOT / "phase-00/README.md"]
     markdown.extend(sorted((ROOT / "docs").rglob("*.md")))
     broken: list[str] = []
     for source in markdown:
@@ -894,9 +927,20 @@ def validate_markdown_links_and_statuses() -> None:
 
     for path in GOVERNING_DOCUMENTS:
         text = path.read_text(encoding="utf-8")
-        missing = sorted(status for status in STATUS_VOCABULARY if status not in text)
+        vocabulary = CURRENT_README_STATUSES if path == ROOT / "README.md" else STATUS_VOCABULARY
+        missing = sorted(status for status in vocabulary if status not in text)
         if missing:
             fail(f"{path.relative_to(ROOT)} omits status vocabulary: {missing}")
+
+    phase_text = (ROOT / "phase-00/README.md").read_text(encoding="utf-8")
+    phase_missing = sorted(
+        status for status in {"IMPLEMENTED", "UNKNOWN", "OBSERVED_LIVE"} if status not in phase_text
+    )
+    if phase_missing:
+        fail(f"phase-00/README.md omits final status vocabulary: {phase_missing}")
+    inherited = sorted(status for status in STATUS_VOCABULARY if status in phase_text)
+    if inherited:
+        fail(f"phase-00/README.md uses inherited draft status vocabulary: {inherited}")
 
 
 def validate_bootstrap_report() -> None:
