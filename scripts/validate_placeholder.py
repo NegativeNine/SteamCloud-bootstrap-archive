@@ -76,9 +76,16 @@ GOVERNING_DOCUMENTS = [
 ]
 
 REQUIRED_FILES = GOVERNING_DOCUMENTS + [
+    ROOT / ".github/ISSUE_TEMPLATE/archive-record.yml",
+    ROOT / ".github/ISSUE_TEMPLATE/config.yml",
     ROOT / ".github/workflows/ci.yml",
     ROOT / ".gitignore",
     ROOT / "CONTRIBUTING.md",
+    ROOT / "docs/ARCHIVE-NOTICE.md",
+    ROOT / "docs/PROVENANCE.md",
+    ROOT / "docs/SOURCE-MANIFEST.md",
+    ROOT / "docs/STATUS.md",
+    ROOT / "docs/archive/HISTORICAL_BUILD.md",
     ROOT / "docs/archive/placeholder/README.md",
     ARCHIVED_MANIFEST,
     ROOT / "docs/migration/BOOTSTRAP_REPORT.md",
@@ -90,6 +97,8 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "docs/migration/REPOSITORY_INVENTORY.json",
     ROOT / "docs/migration/SIBLING_DEPENDENCIES.json",
     ROOT / "docs/roadmap/PHASE_LEDGER.json",
+    ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.json",
+    ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.md",
     ROOT / "scripts/test_validate_placeholder.py",
     ROOT / "scripts/validate_placeholder.py",
     ROOT / "phase-00/README.md",
@@ -101,6 +110,16 @@ REQUIRED_FILES = GOVERNING_DOCUMENTS + [
     ROOT / "phase-00/test-fault-corpus.v1.json",
     ROOT / "phase-00/test_validate.py",
     ROOT / "phase-00/validate.py",
+    ROOT / "phase-01/README.md",
+    ROOT / "phase-01/artifact-manifest.v1.json",
+    ROOT / "phase-01/closeout.sha256",
+    ROOT / "phase-01/closeout.v1.json",
+    ROOT / "phase-01/historical-build-evidence.v1.json",
+    ROOT / "phase-01/repository-phase-closeout.schema.json",
+    ROOT / "phase-01/status.v1.json",
+    ROOT / "phase-01/test-fault-corpus.v1.json",
+    ROOT / "phase-01/test_validate.py",
+    ROOT / "phase-01/validate.py",
 ]
 
 FORBIDDEN_PATHS = [
@@ -200,9 +219,55 @@ def load_json(path: Path) -> dict[str, object]:
     return value
 
 
+def validate_d0_inventory(inventory: dict[str, object]) -> None:
+    if inventory.get("schema") != "solarflare.documentation-d0/v1-candidate":
+        fail("D0 inventory schema identity drift")
+    if inventory.get("repository") != "NegativeNine/SteamCloud-bootstrap-archive":
+        fail("D0 inventory repository identity drift")
+    if inventory.get("documentation_profile") != "HISTORICAL_NON_AUTHORITATIVE_ARCHIVE":
+        fail("D0 inventory must classify the archive as historical and non-authoritative")
+    if inventory.get("work_order_disposition") != "KEEP_HISTORICAL_ARCHIVE":
+        fail("D0 inventory disposition drift")
+
+    scope = inventory.get("inventory_scope")
+    if not isinstance(scope, dict):
+        fail("D0 inventory scope missing")
+    if scope.get("baseline_commit") != "f395c6c922124c716d216d80fee42dba7d3547d2":
+        fail("D0 inventory baseline drift")
+    if scope.get("tree_complete") is not True or scope.get("tree_truncated") is not False:
+        fail("D0 inventory must remain an exact, untruncated baseline observation")
+
+    classification = inventory.get("archive_classification")
+    expected_classification = {
+        "archive_status": "HISTORICAL_NON_AUTHORITATIVE",
+        "architecture_material": "HISTORICAL_SEED_NON_NORMATIVE",
+        "schema_material": "HISTORICAL_SEED_NON_NORMATIVE",
+        "authority_change_permitted": False,
+        "current_authority_effect": "NONE",
+        "blocked_claims": [
+            "G1_G5_PROTOCOL_FREEZE",
+            "CONSUMER_SCHEMA_FREEZE",
+            "PRODUCTION_EFFECT_DISPATCH",
+            "CURRENT_AUTHORITY_MOVEMENT",
+            "BLUE_MULTIWRITER_ACTIVATION",
+            "DESTRUCTIVE_ERASURE_COMPLETED",
+            "PROTOCOL_1_0_COMMITMENT",
+            "PRODUCT_MIGRATION_WITHOUT_AUTHORITY_ROUTING",
+        ],
+    }
+    if classification != expected_classification:
+        fail("D0 archive classification drift")
+
+    disclaimer = inventory.get("authority_disclaimer")
+    if not isinstance(disclaimer, str) or "does not provide" not in disclaimer:
+        fail("D0 authority disclaimer missing")
+
+
 def validate_json() -> None:
     paths = sorted((ROOT / "docs").rglob("*.json"))
-    parsed = {path.name: load_json(path) for path in paths}
+    d0_path = ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.json"
+    validate_d0_inventory(load_json(d0_path))
+    parsed = {path.name: load_json(path) for path in paths if path != d0_path}
     if set(parsed) != {
         "CLOSEOUT.json",
         "COORDINATION.json",

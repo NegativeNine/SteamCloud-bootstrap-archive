@@ -28,7 +28,10 @@ Use the commands in
 [Acceptance and validation gates](docs/migration/ACCEPTANCE.md) before review.
 That currently means `python3 scripts/validate_placeholder.py` and
 `python3 scripts/test_validate_placeholder.py` after pinned PyYAML 6.0.3,
-markdown-it-py 3.0.0, and mdurl 0.1.2 validation dependencies are available,
-followed by
-`python3 phase-01/validate.py` and `python3 phase-01/test_validate.py` on the
-Phase 01 candidate.
+markdown-it-py 3.0.0, and mdurl 0.1.2 validation dependencies are available.
+Run `python3 phase-00/validate.py` and `python3 phase-00/test_validate.py` on
+the exact Phase 00 commit, and `python3 phase-01/validate.py` plus
+`python3 phase-01/test_validate.py` on exact historical Phase 01 commit
+`4ec31555d6b94d5f2a51638c37be11575d3a1740`, using detached worktrees as the
+hosted workflow does. Those phase validators seal historical boundaries; they
+must not be repurposed as current architecture or schema authority.

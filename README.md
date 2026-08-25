@@ -23,7 +23,7 @@ work (restore-tested backup evidence, secret-history review, protected
 
 | Status | This repository |
 |---|---|
-| `IMPLEMENTED` | Archive documentation and archive-only validation on the Phase 00 candidate branch. |
+| `IMPLEMENTED` | Archive documentation and archive-only validation; Phase 00/01 records are retained as historical evidence. |
 | `REFERENCE` | Historical v1 sample recoverable by exact Git identity. |
 | `SHADOW` / `CANARY` / `QUALIFIED` | None. |
 | `CURRENT_AUTHORITY` | None is claimed by this repository. |
@@ -31,10 +31,15 @@ work (restore-tested backup evidence, secret-history review, protected
 | `UNKNOWN` | Sibling deployment, provider, secret, DNS, qualification, and authority state. |
 | Phase disposition | `IMPLEMENTED_NOT_QUALIFIED`; activation remains disabled. |
 
-Sibling deployed state is `UNKNOWN`. Architecture package v2.0 is historical
-target guidance only. The current binding and exact Phase 00 non-claims are in
-[`phase-00/`](phase-00/README.md); older migration records remain provenance
-and do not override that binding.
+Sibling deployed state is `UNKNOWN`. Architecture package v2.0 and every schema
+or architecture binding retained here are historical seed/reference material,
+not normative contracts. The exact Phase 00 non-claims remain in
+[`phase-00/`](phase-00/README.md); Phase 00/01 and older migration records are
+historical provenance and do not establish current architecture authority.
+`authority_change_permitted` is false. Nothing here freezes G1-G5 or consumer
+schemas, enables production effect dispatch or blue multiwriter operation,
+moves `CurrentAuthority`, proves destructive erasure, promises protocol 1.0,
+or authorizes a product migration without authority routing.
 
 Phase 01 keeps that archive usable without accepting new feature ownership. The
 [historical build note](docs/archive/HISTORICAL_BUILD.md) binds read-only recovery to an exact commit,
@@ -52,6 +57,7 @@ deployment, and authority requests are refused.
 ## Pointers
 
 - [Administrator handoff](docs/migration/ADMINISTRATOR_HANDOFF.md) (unexecuted)
+- [Current archive classification](docs/STATUS.md)
 - [Disposition freeze](docs/migration/FREEZE.json)
 - [Closeout](docs/migration/CLOSEOUT.md)
 - [Documentation authority map](docs/architecture/AUTHORITY_AND_BOUNDARIES.md)
