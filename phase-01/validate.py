@@ -26,6 +26,7 @@ ARCHITECTURE = "2026-08-23-final-phased-prompts.3"
 REPOSITORY = "NegativeNine/SteamCloud-bootstrap-archive"
 PHASE00_HEAD = "9554180db2b73b426a87128e10fbe12c097ee786"
 PHASE00_TREE = "e0a9e141f14bdfd3b90131ff0ec55551393777a8"
+PHASE01_CANDIDATE_HEAD = "4ec31555d6b94d5f2a51638c37be11575d3a1740"
 PREVIOUS_IMPLEMENTATION = "ea40b838a474d0b7e4ea4d4b77a8c5d066ea8cc5"
 PREVIOUS_IMPLEMENTATION_TREE = "b801be4af80b65aeeae49e1628ec70a3dc557917"
 PREVIOUS_SEAL = "9c307777d8555cf2ead5ecaef8faeb5b03ccf337"
@@ -69,7 +70,7 @@ SAMPLE_MANIFEST_SHA256 = "5aed9828ef4b8069eea0eb53ccf04a58373208ad66fd8d0d191f3e
 SAMPLE_ROOT_CARGO_SHA256 = "7ee324692ee2e6ae7b844289759f6680716ed200db62b2c97ef11f79c71c6521"
 SAMPLE_CRATE_CARGO_SHA256 = "519b4ad939cea2cc618d6b4fa7826b863ff96e6456916e16537a381d5c877734"
 SAMPLE_WORKFLOW_SHA256 = "d2a52a12b15b01aa4af1ece3a59d5e549ddc37c0e93c204ba8cda1eed41edf76"
-EXPECTED_LINK_INVENTORY_SHA256 = "34b794da400e491353c5c48a33676f1f65db836f2bf57681970944bd432f53d4"
+EXPECTED_LINK_INVENTORY_SHA256 = "baa51740046c5d7c1c606efd48200a91748c9bfebf5f9e22cabb1fe18a46ee50"
 EXPECTED_CLOSEOUT_SCHEMA_CANONICAL_SHA256 = "7550d1873b7ce664970772f4a2d430c250095113b9e3fb1c94156a18cb3472fc"
 
 WORK_CLASSES = [
@@ -149,6 +150,19 @@ SEAL_ADDITIONS = {
 }
 SOURCE_ENTRY_PATHS = MODIFIED_PATHS | CORE_ADDITIONS
 ALL_PHASE_PATHS = SOURCE_ENTRY_PATHS | SEAL_ADDITIONS
+POST_PHASE_ADDITIONS = {
+    "docs/ARCHIVE-NOTICE.md",
+    "docs/PROVENANCE.md",
+    "docs/SOURCE-MANIFEST.md",
+    "docs/STATUS.md",
+    "docs/refactoring/D0-DOCUMENT-INVENTORY.json",
+    "docs/refactoring/D0-DOCUMENT-INVENTORY.md",
+}
+POST_PHASE_MODIFIED_PATHS = {
+    "scripts/test_validate_placeholder.py",
+    "scripts/validate_placeholder.py",
+}
+CURRENT_ALLOWED_CHANGED_PATHS = ALL_PHASE_PATHS | POST_PHASE_ADDITIONS | POST_PHASE_MODIFIED_PATHS
 FORBIDDEN_PREFIXES = (
     "Cargo.toml", "Dockerfile", "package.json", "pyproject.toml", "wrangler.json",
     "wrangler.jsonc", "wrangler.toml", "src/", "schemas/", "operations/", "packs/", "profile/",
@@ -287,12 +301,10 @@ def current_paths() -> set[str]:
 
 
 def candidate_head() -> str:
-    parents = run("git", "rev-list", "--parents", "-n", "1", "HEAD").decode().split()
-    if len(parents) == 2:
-        return parents[0]
-    if len(parents) == 3:
-        return parents[2]
-    fail("candidate checkout has unsupported commit parent cardinality")
+    """Return the sealed historical Phase 01 candidate, independent of later docs."""
+    if run("git", "rev-parse", PHASE01_CANDIDATE_HEAD).decode().strip() != PHASE01_CANDIDATE_HEAD:
+        fail("sealed Phase 01 candidate is unavailable")
+    return PHASE01_CANDIDATE_HEAD
 
 
 def candidate_source_commit() -> str:
@@ -334,16 +346,16 @@ def validate_source_boundary(_preseal: bool) -> None:
     if run("git", "rev-parse", f"{PHASE00_HEAD}^{{tree}}").decode().strip() != PHASE00_TREE:
         fail("Phase 00 source tree drift")
     base_paths = tree_paths(PHASE00_HEAD)
-    validate_source_path_set(current_paths(), base_paths | ALL_PHASE_PATHS)
+    validate_source_path_set(current_paths(), base_paths | POST_PHASE_ADDITIONS | ALL_PHASE_PATHS)
     changed = set(run("git", "diff", "--name-only", PHASE00_HEAD).decode().splitlines())
     changed |= set(run("git", "ls-files", "--others", "--exclude-standard").decode().splitlines())
-    if changed != ALL_PHASE_PATHS:
-        fail(f"exact Phase 01 changed-path boundary drift: missing={sorted(ALL_PHASE_PATHS - changed)} extra={sorted(changed - ALL_PHASE_PATHS)}")
-    for relative in sorted(base_paths - MODIFIED_PATHS):
+    if changed != CURRENT_ALLOWED_CHANGED_PATHS:
+        fail(f"exact archive changed-path boundary drift: missing={sorted(CURRENT_ALLOWED_CHANGED_PATHS - changed)} extra={sorted(changed - CURRENT_ALLOWED_CHANGED_PATHS)}")
+    for relative in sorted(base_paths - MODIFIED_PATHS - POST_PHASE_MODIFIED_PATHS):
         path = repository_file(relative)
         if path.read_bytes() != run("git", "show", f"{PHASE00_HEAD}:{relative}"):
             fail(f"Phase 00-owned bytes changed: {relative}")
-    for relative in ALL_PHASE_PATHS:
+    for relative in ALL_PHASE_PATHS | POST_PHASE_ADDITIONS | POST_PHASE_MODIFIED_PATHS:
         repository_file(relative)
 
 
@@ -1338,9 +1350,17 @@ def validate_issue_form() -> None:
 EXPECTED_WORKFLOW_COMMANDS = [
     None,
     "python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3",
-    "phase00_worktree=\"$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)\"\ngit worktree add --detach \"$phase00_worktree\" 9554180db2b73b426a87128e10fbe12c097ee786\n(\n  cd \"$phase00_worktree\"\n  python3 scripts/validate_placeholder.py\n  python3 scripts/test_validate_placeholder.py\n  python3 phase-00/validate.py\n  python3 phase-00/test_validate.py\n)\ngit worktree remove --force \"$phase00_worktree\"\n",
-    "python3 phase-01/validate.py", "python3 phase-01/test_validate.py", "git diff --check HEAD^ HEAD", "git fsck --full",
+    "python3 scripts/validate_placeholder.py\npython3 scripts/test_validate_placeholder.py\n",
+    "phase00_worktree=\"$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)\"\ntrap 'git worktree remove --force \"$phase00_worktree\" 2>/dev/null || true' EXIT\ngit worktree add --detach \"$phase00_worktree\" 9554180db2b73b426a87128e10fbe12c097ee786\n(\n  cd \"$phase00_worktree\"\n  python3 scripts/validate_placeholder.py\n  python3 scripts/test_validate_placeholder.py\n  python3 phase-00/validate.py\n  python3 phase-00/test_validate.py\n)\ngit worktree remove --force \"$phase00_worktree\"\ntrap - EXIT\n",
+    "phase01_worktree=\"$(mktemp -d /tmp/steamcloud-archive-phase01.XXXXXX)\"\ntrap 'git worktree remove --force \"$phase01_worktree\" 2>/dev/null || true' EXIT\ngit worktree add --detach \"$phase01_worktree\" 4ec31555d6b94d5f2a51638c37be11575d3a1740\n(\n  cd \"$phase01_worktree\"\n  python3 phase-01/validate.py\n  python3 phase-01/test_validate.py\n)\ngit worktree remove --force \"$phase01_worktree\"\ntrap - EXIT\n",
+    "git diff --check HEAD^ HEAD",
+    "git fsck --full",
 ]
+EXPECTED_WORKFLOW_STEP_NAMES = {
+    2: "Verify the integrated historical archive",
+    3: "Verify the exact Phase 00 candidate",
+    4: "Verify the exact historical Phase 01 seal",
+}
 
 
 def validate_workflow_document(workflow: dict[str, object], raw: str) -> None:
@@ -1365,9 +1385,9 @@ def validate_workflow_document(workflow: dict[str, object], raw: str) -> None:
             fail(f"workflow step {index} shape drift")
         if step.get("run") != expected_command:
             fail(f"workflow step {index} command drift")
-        if index == 2 and step.get("name") != "Verify the exact Phase 00 candidate":
-            fail("Phase 00 workflow step name drift")
-        if index != 2 and "name" in step:
+        if index in EXPECTED_WORKFLOW_STEP_NAMES and step.get("name") != EXPECTED_WORKFLOW_STEP_NAMES[index]:
+            fail(f"workflow step {index} name drift")
+        if index not in EXPECTED_WORKFLOW_STEP_NAMES and "name" in step:
             fail(f"unexpected workflow step name at {index}")
     folded = raw.casefold()
     for forbidden in ("curl ", "wget ", "gh api", "secrets.", "contents: write", "id-token: write"):
@@ -1549,9 +1569,8 @@ def validate_manifest_document(manifest: dict[str, object], *, verify_files: boo
             fail(f"duplicate manifest path: {path}")
         paths.add(path)
         if verify_files:
-            current_bytes = target.read_bytes()
             source_bytes = run("git", "show", f"{source_commit}:{path}")
-            if current_bytes != source_bytes or sha256(current_bytes) != digest:
+            if sha256(source_bytes) != digest:
                 fail(f"manifest source digest drift: {path}")
     if paths != SOURCE_ENTRY_PATHS:
         fail(f"manifest exact source entry boundary drift: missing={sorted(SOURCE_ENTRY_PATHS - paths)} extra={sorted(paths - SOURCE_ENTRY_PATHS)}")

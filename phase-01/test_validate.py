@@ -40,7 +40,7 @@ class ArchivePhase01ValidationTests(unittest.TestCase):
         ]
 
     def test_current_link_inventory_is_exact(self) -> None:
-        self.assertEqual(validate.validate_links(), 26)
+        self.assertEqual(validate.validate_links(), 34)
 
     def test_reference_style_local_link_is_checked(self) -> None:
         records = self.validate_extracted(
