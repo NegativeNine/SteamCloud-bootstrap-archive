@@ -1,0 +1,105 @@
+{
+  "schema": "solarflare.documentation-d0/v1-candidate",
+  "plan_version": "2026-08-24",
+  "plan_archive_sha256": "c6ea88a5a4dd53f997ec9425299cab8c70a0347fffb402ba98bfad9ed0612cb5",
+  "repository": "NegativeNine/SteamCloud-bootstrap-archive",
+  "repository_id": "1338764433",
+  "owner_agent": "agent-portfolio",
+  "priority": "P2",
+  "documentation_profile": "IMMUTABLE_ARCHIVE",
+  "work_order_disposition": "KEEP_IMMUTABLE_ARCHIVE",
+  "inventory_scope": {
+    "ref": "main",
+    "baseline_commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
+    "tree_complete": true,
+    "tree_truncated": false,
+    "repository_file_count": 25,
+    "documentation_artifact_count": 21,
+    "prose_document_count": 12,
+    "machine_evidence_count": 9
+  },
+  "documents": [
+    {"path":"README.md","git_blob":"c9729b1d6d045e40ea80f3f03f140a20788c5d0b","size_bytes":1763,"provisional_classification":"CANONICAL","role":"archive entrypoint and no-authority notice"},
+    {"path":"CONTRIBUTING.md","git_blob":"fd41f2ed8c0740f13b668dd62a31f2f1a4f3245a","size_bytes":1138,"provisional_classification":"OPERATIONAL","role":"archive-only contribution guidance"},
+    {"path":"docs/architecture/AUTHORITY_AND_BOUNDARIES.md","git_blob":"3c7753631111f1155c5fe38a7108d6180e35fcbc","size_bytes":3509,"provisional_classification":"CANONICAL","role":"archive authority and boundary map"},
+    {"path":"docs/architecture/OBSERVABILITY.md","git_blob":"c8e48304607748648f8e36d38a97a3e9141d5c4a","size_bytes":2374,"provisional_classification":"EVIDENCE","role":"historical observability evidence"},
+    {"path":"docs/archive/placeholder/README.md","git_blob":"e17a8b060dd701a75b38bf0295da8e28907fb19c","size_bytes":3424,"provisional_classification":"HISTORICAL","role":"v1 placeholder archive description"},
+    {"path":"docs/decisions/ADR-002-placeholder-archive-disposition.md","git_blob":"c7f66f06f476837f3c66f6a4c43eafd204b0f596","size_bytes":2180,"provisional_classification":"EVIDENCE","role":"archive disposition decision record"},
+    {"path":"docs/migration/ACCEPTANCE.md","git_blob":"0109aceac8bcd006f8bf2f0c35cab8b99d2104a1","size_bytes":3504,"provisional_classification":"OPERATIONAL","role":"archive validation procedure"},
+    {"path":"docs/migration/ADMINISTRATOR_HANDOFF.md","git_blob":"4f13025f741cb50218a80cbd844f9103220a94fa","size_bytes":5862,"provisional_classification":"OPERATIONAL","role":"unexecuted administrator and external-blocker handoff"},
+    {"path":"docs/migration/BOOTSTRAP_REPORT.md","git_blob":"2fff2fc8667d15a54704985d7459a23c7e250044","size_bytes":25038,"provisional_classification":"EVIDENCE","role":"bootstrap evidence report"},
+    {"path":"docs/migration/CLOSEOUT.md","git_blob":"81dffced0c8c6dfe0eb48d25fcd23794628201f9","size_bytes":8179,"provisional_classification":"CANONICAL","role":"current repository-local closeout with external blockers"},
+    {"path":"docs/roadmap/MIGRATION_ROADMAP.md","git_blob":"42d9d8a5d5bb78833c757c45f12e36bf5b60f1bb","size_bytes":4746,"provisional_classification":"HISTORICAL","role":"historical migration roadmap"},
+    {"path":"docs/security/SECURITY_AND_SECRET_PLACEMENT.md","git_blob":"d7b26efdd1e2fe3c8fe3fbbacad1c40fd5431611","size_bytes":2287,"provisional_classification":"OPERATIONAL","role":"archive security and secret-placement constraints"}
+  ],
+  "machine_evidence": [
+    {"path":"docs/archive/placeholder/V1_SAMPLE_MANIFEST.sha256","git_blob":"a10be230de19d5bf561a6e32237651c6c9a9300a","size_bytes":7814,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/CLOSEOUT.json","git_blob":"8ab3b5c89112cc60327310ddb6780aa215c7ee43","size_bytes":1517,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/COORDINATION.json","git_blob":"2d0fc55ece1c1a00e793abb3e26a4a75d1bc646b","size_bytes":3472,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/FREEZE.json","git_blob":"81f5c2f4c056db6d47d180dea6e967a48731b4eb","size_bytes":2675,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/NAMING_ALIASES.json","git_blob":"5338d1324821f7093a6d6ad15510bd8e59dee5bf","size_bytes":22920,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/PROGRAM_LEDGER.json","git_blob":"da106135677899545c5d7e9ca90c54d6a3b86daf","size_bytes":4487,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/REPOSITORY_INVENTORY.json","git_blob":"a403cec332d1cd7b986c52cd4d6719e87eef0352","size_bytes":3970,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/migration/SIBLING_DEPENDENCIES.json","git_blob":"95ce46428f8b25bf42f766adae6e9db8ec85ae0a","size_bytes":1230,"provisional_classification":"EVIDENCE"},
+    {"path":"docs/roadmap/PHASE_LEDGER.json","git_blob":"811faa90eb8cf345dd86448f92fbc8dcc4d738b5","size_bytes":22663,"provisional_classification":"EVIDENCE"}
+  ],
+  "non_document_files": [
+    {"path":".github/workflows/ci.yml","git_blob":"4655dd9d0005277eea9faac6e54fcb98d6ce7c41","kind":"ARCHIVE_VALIDATION_WORKFLOW"},
+    {"path":".gitignore","git_blob":"820d9e50a5182b957f6aabc9cde2f82378408fd0","kind":"CONFIGURATION"},
+    {"path":"scripts/test_validate_placeholder.py","git_blob":"a5a5bcabdf84c698aa39d7c8a7333693264afbe5","kind":"TEST"},
+    {"path":"scripts/validate_placeholder.py","git_blob":"59ab8c8d9d93c6360989f0659834a6597112dc5d","kind":"VALIDATOR"}
+  ],
+  "canonical_source_candidates": [
+    "README.md",
+    "docs/architecture/AUTHORITY_AND_BOUNDARIES.md",
+    "docs/migration/CLOSEOUT.md"
+  ],
+  "duplicate_groups": [
+    {
+      "id": "ARCHIVE_STATUS_AND_AUTHORITY",
+      "paths": [
+        "README.md",
+        "docs/architecture/AUTHORITY_AND_BOUNDARIES.md",
+        "docs/migration/CLOSEOUT.md",
+        "docs/migration/CLOSEOUT.json",
+        "docs/migration/FREEZE.json",
+        "docs/roadmap/PHASE_LEDGER.json"
+      ],
+      "assessment": "intentional evidence overlap but no single compact archive index",
+      "d1_resolution": "add top-level ARCHIVE-NOTICE, SOURCE-MANIFEST, PROVENANCE, and STATUS documents that point to rather than replace the evidence"
+    }
+  ],
+  "conflicts": [
+    {
+      "id": "BASELINE_SCOPED_BRANCH_AND_PR_STATUS",
+      "paths": ["docs/migration/CLOSEOUT.md"],
+      "assessment": "statements about branch and PR absence are baseline observations and become stale when a documentation branch or PR exists",
+      "resolution": "retain as historical closeout evidence and scope new STATUS to the pinned D0 baseline"
+    }
+  ],
+  "missing_required_documents": [
+    "docs/ARCHIVE-NOTICE.md",
+    "docs/SOURCE-MANIFEST.md",
+    "docs/PROVENANCE.md",
+    "docs/STATUS.md"
+  ],
+  "stage_decision": {
+    "d0_complete_for_baseline": true,
+    "d1_repository_local_classification_sufficient": true,
+    "d1_scope": "add compact archive, source, provenance, and status maps without rewriting historical evidence",
+    "d2_normative_cleanup_ready": false,
+    "d2_blockers": [
+      "restorable mirror and settings export remain external blockers",
+      "secret-history and public-content review remain external blockers",
+      "protected-main or reviewed equivalent is not evidenced",
+      "archive immutability and final repository-owner closeout decision are not independently recorded"
+    ]
+  },
+  "rollback": {
+    "baseline_ref": "main",
+    "baseline_commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
+    "method": "close or revert the documentation branch; preserve every historical and evidence artifact"
+  },
+  "authority_disclaimer": "This inventory documents a public historical naming archive. It does not provide SteamCloud runtime, data, credential, execution, semantic, deployment, qualification, or CurrentAuthority evidence.",
+  "generated_at": "2026-08-25T00:00:00Z"
+}
