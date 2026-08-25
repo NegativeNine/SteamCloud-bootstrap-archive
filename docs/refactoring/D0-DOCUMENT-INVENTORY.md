@@ -2,14 +2,18 @@
 
 - **Status:** complete for the pinned `main` baseline
 - **Owner:** `agent-portfolio`
-- **Documentation profile:** `IMMUTABLE_ARCHIVE`
-- **Work-order disposition:** `KEEP_IMMUTABLE_ARCHIVE`
+- **Documentation profile:** `HISTORICAL_NON_AUTHORITATIVE_ARCHIVE`
+- **Work-order disposition:** `KEEP_HISTORICAL_ARCHIVE`
 - **Baseline:** `f395c6c922124c716d216d80fee42dba7d3547d2`
 - **Repository ID:** `1338764433`
 - **Plan archive SHA-256:** `c6ea88a5a4dd53f997ec9425299cab8c70a0347fffb402ba98bfad9ed0612cb5`
 - **Last validated:** 2026-08-25 UTC
 
-> This repository is a public historical naming archive. This inventory does not provide SteamCloud runtime, data, credential, execution, semantic, deployment, qualification, or `CurrentAuthority` evidence.
+> This repository is a public historical naming archive. This inventory does not provide SteamCloud runtime, data, credential, execution, semantic, deployment, qualification, architecture, schema, protocol-freeze, or `CurrentAuthority` evidence.
+
+The D0 baseline predates the merged Phase 00/01 records and the D0/D1 index
+commits. Its 25-file count and blob identities remain a historical observation;
+they are not rewritten to describe the later tree.
 
 ## Exact inventory summary
 
@@ -23,7 +27,7 @@ The complete tree contains 25 files and is not truncated:
 
 The machine-readable inventory records every path, blob, size, and provisional class.
 
-## Current source-of-truth candidates
+## Historical archive entrypoint candidates
 
 | Path | Role |
 |---|---|
@@ -39,9 +43,21 @@ Archive status and authority are intentionally repeated across README, authority
 
 Statements in the historical closeout about there being no non-`main` branch or open PR are baseline observations. They become stale when this documentation branch exists and must not be presented as timeless repository state.
 
+## Architecture and authority disposition
+
+Architecture and schema material is `HISTORICAL_SEED_NON_NORMATIVE`.
+`authority_change_permitted` is false and this integration has no
+`CurrentAuthority` effect. It does not freeze G1-G5 or consumer schemas,
+authorize production dispatch or blue multiwriter activation, prove destructive
+erasure, promise protocol 1.0, or authorize product migration without authority
+routing.
+
 ## Stage decision
 
-D1 may add compact `ARCHIVE-NOTICE`, `SOURCE-MANIFEST`, `PROVENANCE`, and `STATUS` documents. D2 remains blocked on external backup/settings export, secret-history review, public-content review, protected-main evidence, and final owner-approved archive immutability.
+D1 may add compact `ARCHIVE-NOTICE`, `SOURCE-MANIFEST`, `PROVENANCE`, and
+`STATUS` documents. D2 remains blocked on external backup/settings export,
+secret-history review, public-content review, protected-main evidence, and a
+final owner-approved retention/settings decision.
 
 ## Rollback
 

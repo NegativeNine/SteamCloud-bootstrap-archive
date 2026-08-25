@@ -16,9 +16,14 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - run: python3 -m pip install --disable-pip-version-check markdown-it-py==3.0.0 mdurl==0.1.2 PyYAML==6.0.3
+      - name: Verify the integrated historical archive
+        run: |
+          python3 scripts/validate_placeholder.py
+          python3 scripts/test_validate_placeholder.py
       - name: Verify the exact Phase 00 candidate
         run: |
           phase00_worktree="$(mktemp -d /tmp/steamcloud-archive-phase00.XXXXXX)"
+          trap 'git worktree remove --force "$phase00_worktree" 2>/dev/null || true' EXIT
           git worktree add --detach "$phase00_worktree" 9554180db2b73b426a87128e10fbe12c097ee786
           (
             cd "$phase00_worktree"
@@ -28,7 +33,18 @@ jobs:
             python3 phase-00/test_validate.py
           )
           git worktree remove --force "$phase00_worktree"
-      - run: python3 phase-01/validate.py
-      - run: python3 phase-01/test_validate.py
+          trap - EXIT
+      - name: Verify the exact historical Phase 01 seal
+        run: |
+          phase01_worktree="$(mktemp -d /tmp/steamcloud-archive-phase01.XXXXXX)"
+          trap 'git worktree remove --force "$phase01_worktree" 2>/dev/null || true' EXIT
+          git worktree add --detach "$phase01_worktree" 4ec31555d6b94d5f2a51638c37be11575d3a1740
+          (
+            cd "$phase01_worktree"
+            python3 phase-01/validate.py
+            python3 phase-01/test_validate.py
+          )
+          git worktree remove --force "$phase01_worktree"
+          trap - EXIT
       - run: git diff --check HEAD^ HEAD
       - run: git fsck --full

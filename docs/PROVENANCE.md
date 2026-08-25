@@ -24,6 +24,14 @@ These are repository-local provenance statements. This document does not indepen
 
 This repository is a naming and migration archive only. Current product behavior, APIs, providers, credentials, deployments, data, semantic meaning, effect execution, qualification, and authority must be established in the private history-bearing repository and its independent evidence.
 
+Any architecture package, schema, protocol label, or architecture binding in
+this archive is historical seed/reference material, not a normative contract.
+The sealed Phase 00 and Phase 01 records retain their original bytes and
+provenance; their presence does not make their architecture assertions current.
+
 ## Non-claims
 
-The naming lineage does not prove a deployment, cutover, restore, secret cleanup, provider transition, runtime qualification, or `CurrentAuthority` decision.
+The naming lineage does not prove a deployment, cutover, restore, secret
+cleanup, provider transition, runtime qualification, destructive erasure,
+protocol freeze, schema freeze, product migration, or `CurrentAuthority`
+decision. `authority_change_permitted` is false for this archive integration.

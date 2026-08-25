@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import copy
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,7 @@ from validate_placeholder import (
     unique_object,
     validate_closeout_document,
     validate_coordination,
+    validate_d0_inventory,
     validate_freeze,
     validate_phase_ledger,
     validate_program_ledger,
@@ -52,6 +54,26 @@ class PlaceholderValidatorTests(unittest.TestCase):
             with self.assertRaises(AssertionError) as ctx:
                 load_json(path)
             self.assertIn("duplicate JSON key", str(ctx.exception))
+
+    def test_d0_historical_non_authoritative_classification_is_accepted(self) -> None:
+        inventory = load_json(ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.json")
+        validate_d0_inventory(inventory)
+
+    def test_d0_authority_change_is_refused(self) -> None:
+        inventory = copy.deepcopy(
+            load_json(ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.json")
+        )
+        inventory["archive_classification"]["authority_change_permitted"] = True
+        with self.assertRaisesRegex(AssertionError, "classification drift"):
+            validate_d0_inventory(inventory)
+
+    def test_d0_normative_schema_claim_is_refused(self) -> None:
+        inventory = copy.deepcopy(
+            load_json(ROOT / "docs/refactoring/D0-DOCUMENT-INVENTORY.json")
+        )
+        inventory["archive_classification"]["schema_material"] = "NORMATIVE"
+        with self.assertRaisesRegex(AssertionError, "classification drift"):
+            validate_d0_inventory(inventory)
 
     def test_architecture_zip_fails_structure(self) -> None:
         self.addCleanup(lambda: ARCHITECTURE_ZIP.unlink(missing_ok=True))

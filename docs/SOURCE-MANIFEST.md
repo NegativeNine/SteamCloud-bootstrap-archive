@@ -19,9 +19,19 @@
 
 Every document and machine artifact is bound to its Git blob and size in the D0 JSON. That inventory is the source map for documentation refactoring; it does not replace the original files.
 
+The counts and blobs above describe only the pinned D0 baseline. Phase 00,
+Phase 01, and the D0/D1 index commits now present are post-baseline additions and
+are deliberately excluded from those historical counts. The sealed phase
+artifacts are retained without byte rewriting.
+
 ## Historical source references
 
 The repository records a historical sample recoverable from earlier Git history and names commit `069c244` as a recovery point. That reference remains historical provenance, not an instruction to restore an active application on the archive branch.
+
+Architecture and schema material reachable from the baseline or the historical
+sample is `HISTORICAL_SEED_NON_NORMATIVE`. It is not a current architecture
+contract, protocol freeze, consumer-schema freeze, migration authority, or
+`CurrentAuthority` evidence source.
 
 ## Exclusions
 

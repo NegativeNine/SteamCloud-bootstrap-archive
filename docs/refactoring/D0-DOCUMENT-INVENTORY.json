@@ -6,8 +6,25 @@
   "repository_id": "1338764433",
   "owner_agent": "agent-portfolio",
   "priority": "P2",
-  "documentation_profile": "IMMUTABLE_ARCHIVE",
-  "work_order_disposition": "KEEP_IMMUTABLE_ARCHIVE",
+  "documentation_profile": "HISTORICAL_NON_AUTHORITATIVE_ARCHIVE",
+  "work_order_disposition": "KEEP_HISTORICAL_ARCHIVE",
+  "archive_classification": {
+    "archive_status": "HISTORICAL_NON_AUTHORITATIVE",
+    "architecture_material": "HISTORICAL_SEED_NON_NORMATIVE",
+    "schema_material": "HISTORICAL_SEED_NON_NORMATIVE",
+    "authority_change_permitted": false,
+    "current_authority_effect": "NONE",
+    "blocked_claims": [
+      "G1_G5_PROTOCOL_FREEZE",
+      "CONSUMER_SCHEMA_FREEZE",
+      "PRODUCTION_EFFECT_DISPATCH",
+      "CURRENT_AUTHORITY_MOVEMENT",
+      "BLUE_MULTIWRITER_ACTIVATION",
+      "DESTRUCTIVE_ERASURE_COMPLETED",
+      "PROTOCOL_1_0_COMMITMENT",
+      "PRODUCT_MIGRATION_WITHOUT_AUTHORITY_ROUTING"
+    ]
+  },
   "inventory_scope": {
     "ref": "main",
     "baseline_commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
@@ -49,7 +66,7 @@
     {"path":"scripts/test_validate_placeholder.py","git_blob":"a5a5bcabdf84c698aa39d7c8a7333693264afbe5","kind":"TEST"},
     {"path":"scripts/validate_placeholder.py","git_blob":"59ab8c8d9d93c6360989f0659834a6597112dc5d","kind":"VALIDATOR"}
   ],
-  "canonical_source_candidates": [
+  "historical_archive_entrypoint_candidates": [
     "README.md",
     "docs/architecture/AUTHORITY_AND_BOUNDARIES.md",
     "docs/migration/CLOSEOUT.md"
@@ -92,7 +109,7 @@
       "restorable mirror and settings export remain external blockers",
       "secret-history and public-content review remain external blockers",
       "protected-main or reviewed equivalent is not evidenced",
-      "archive immutability and final repository-owner closeout decision are not independently recorded"
+      "retention and final repository-owner closeout decisions are not independently recorded"
     ]
   },
   "rollback": {
@@ -100,6 +117,6 @@
     "baseline_commit": "f395c6c922124c716d216d80fee42dba7d3547d2",
     "method": "close or revert the documentation branch; preserve every historical and evidence artifact"
   },
-  "authority_disclaimer": "This inventory documents a public historical naming archive. It does not provide SteamCloud runtime, data, credential, execution, semantic, deployment, qualification, or CurrentAuthority evidence.",
+  "authority_disclaimer": "This inventory documents a public historical naming archive. It does not provide SteamCloud runtime, data, credential, execution, semantic, deployment, qualification, architecture, schema, protocol-freeze, or CurrentAuthority evidence.",
   "generated_at": "2026-08-25T00:00:00Z"
 }
